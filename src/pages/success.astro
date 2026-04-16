@@ -1,0 +1,68 @@
+---
+// src/pages/success.astro
+import MainLayout from '../layouts/MainLayout.astro';
+
+// On récupère l'ID de session si besoin (optionnel)
+const sessionId = Astro.url.searchParams.get('session_id');
+---
+
+<MainLayout title="Paiement Réussi - SHIP CARS">
+  <div class="success-container">
+    <div class="card">
+      <div class="icon">🚀</div>
+      <h1>Paiement validé !</h1>
+      <p>Merci d'avoir choisi <strong>SHIP CARS</strong> pour votre location.</p>
+      
+      <div class="caution-box">
+        <h2>Dernière étape : La Caution</h2>
+        <p>Pour finaliser votre dossier, veuillez effectuer la <strong>pré-autorisation (caution) de 800,00€</strong>.</p>
+        
+        <div class="stripe-button-wrapper">
+          <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+
+          <stripe-buy-button
+            buy-button-id="buy_btn_1TLl29Lm0bysFbj9rUtBeBSQ"
+            publishable-key="pk_test_51AhCIJLm0bysFbj9Zn7hSJw9G8qq6pA5z0DpHQjKb3KsKEEle6yl4yhjv8AOlMsUc7VpmKgwWVwBZrWEy8fFCG0000vh1zLidr"
+          >
+          </stripe-buy-button>
+        </div>
+
+        <div class="info-alert">
+          <small>💡 <strong>Rappel :</strong> Cette somme n'est pas débitée, il s'agit d'une empreinte bancaire pour sécuriser la location.</small>
+        </div>
+      </div>
+
+      <p class="mail-info">Un e-mail de confirmation contenant également ce lien de caution a été envoyé par <strong>SHIP CARS</strong>.</p>
+      <a href="/" class="back-home">Retour au catalogue</a>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .success-container { max-width: 650px; margin: 4rem auto; padding: 0 1rem; font-family: 'Inter', sans-serif; }
+  .card { background: white; padding: 3rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); text-align: center; }
+  .icon { font-size: 4.5rem; margin-bottom: 1.5rem; }
+  h1 { color: #1a1a1a; font-size: 2.2rem; margin-bottom: 1rem; }
+  
+  .caution-box { 
+    background: #f0f7ff; 
+    border: 2px solid #3498db; 
+    padding: 2rem; 
+    border-radius: 15px; 
+    margin: 2.5rem 0; 
+  }
+  .caution-box h2 { color: #2c3e50; margin-top: 0; font-size: 1.5rem; }
+  
+  .stripe-button-wrapper {
+    margin: 2rem 0;
+    display: flex;
+    justify-content: center;
+    min-height: 50px;
+  }
+
+  .info-alert { margin-top: 1rem; color: #5d6d7e; line-height: 1.4; }
+  
+  .mail-info { color: #95a5a6; font-size: 0.95rem; margin-top: 2rem; line-height: 1.5; }
+  .back-home { display: inline-block; margin-top: 2rem; color: #3498db; font-weight: 600; text-decoration: none; border-bottom: 1px solid transparent; }
+  .back-home:hover { border-bottom-color: #3498db; }
+</style>

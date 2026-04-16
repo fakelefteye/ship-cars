@@ -1,0 +1,130 @@
+---
+const { id, nom, modele, prix, image } = Astro.props;
+---
+
+<a href={`/vehicules/${id}`} class="card">
+  <div class="card-img-wrap">
+    <img src={image} alt={`${nom} ${modele}`} loading="lazy" />
+    <div class="card-price-badge">{prix}€<span>/jour</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-info">
+      <h3 class="card-nom">{nom}</h3>
+      <p class="card-modele">{modele}</p>
+    </div>
+    <div class="card-cta">
+      <span class="card-btn">Voir les dispo</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </div>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .card:hover {
+    border-color: rgba(201,168,76,0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  }
+
+  .card-img-wrap {
+    position: relative;
+    height: 210px;
+    overflow: hidden;
+    background: var(--bg-3);
+  }
+
+  .card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .card:hover .card-img-wrap img {
+    transform: scale(1.04);
+  }
+
+  .card-price-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(13,15,18,0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold-light);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .card-price-badge span {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .card-body {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .card-nom {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-modele {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+
+  .card-cta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .card-btn {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+
+  .card-arrow {
+    font-size: 0.9rem;
+    color: var(--gold);
+    transition: transform 0.2s;
+  }
+
+  .card:hover .card-btn { color: var(--gold-light); }
+  .card:hover .card-arrow { transform: translateX(3px); }
+</style>

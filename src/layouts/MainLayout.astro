@@ -1,0 +1,198 @@
+---
+const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.props;
+---
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Ship Cars — Location de véhicules à Grenoble, proche de la gare. Réservation en ligne, paiement sécurisé." />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+    <style is:global>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg:        #0d0f12;
+        --bg-2:      #13161b;
+        --bg-3:      #1a1e26;
+        --border:    rgba(255,255,255,0.07);
+        --border-md: rgba(255,255,255,0.13);
+        --gold:      #c9a84c;
+        --gold-light:#e8c97a;
+        --text:      #f0ede8;
+        --text-muted:#8a8f9a;
+        --text-dim:  #555b68;
+        --green:     #3ecf8e;
+        --radius:    12px;
+        --radius-lg: 20px;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(13,15,18,0.88);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 2rem;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 1.2rem;
+        letter-spacing: -0.01em;
+        color: var(--text);
+      }
+
+      .nav-logo-mark {
+        width: 30px;
+        height: 30px;
+        background: var(--gold);
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .nav-logo em { color: var(--gold); font-style: normal; }
+
+      .nav-right { display: flex; align-items: center; gap: 1.5rem; }
+
+      .nav-pill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        padding: 5px 12px;
+        border-radius: 99px;
+      }
+
+      .nav-pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: blink 2.4s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.3; }
+      }
+
+      .nav-admin {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        padding: 5px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
+        font-family: 'DM Sans', sans-serif;
+        letter-spacing: 0.02em;
+      }
+      .nav-admin:hover { color: var(--text-muted); border-color: var(--border-md); background: var(--bg-2); }
+
+      main { flex: 1; }
+
+      .footer {
+        margin-top: 5rem;
+        border-top: 1px solid var(--border);
+        padding: 2.5rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .footer-brand {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-muted);
+      }
+      .footer-brand em { color: var(--gold); font-style: normal; }
+
+      .footer-info {
+        font-size: 0.78rem;
+        color: var(--text-dim);
+        text-align: right;
+        line-height: 1.7;
+      }
+
+      .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+      a { color: inherit; }
+
+      ::selection { background: var(--gold); color: #000; }
+
+      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar-track { background: var(--bg); }
+      ::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 3px; }
+
+      @media (max-width: 600px) {
+        .nav { padding: 0 1rem; }
+        .nav-pill { display: none; }
+        .footer { flex-direction: column; text-align: center; }
+        .footer-info { text-align: center; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-mark">🚗</div>
+        Ship<em>Cars</em>
+      </a>
+      <div class="nav-right">
+        <div class="nav-pill">
+          <div class="nav-pill-dot"></div>
+          Grenoble · Proche gare
+        </div>
+      </div>
+    </nav>
+
+    <main><slot /></main>
+
+    <footer class="footer">
+      <div class="footer-brand">Ship<em>Cars</em></div>
+      <div class="footer-info">
+        © 2026 Ship Cars · Grenoble, proche de la gare<br>
+        Paiement sécurisé via Stripe · Caution par empreinte bancaire
+      </div>
+    </footer>
+  </body>
+</html>

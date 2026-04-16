@@ -1,0 +1,20 @@
+# Secrets (Très important !)
+.env
+.env.local
+
+# Dépendances
+node_modules/
+
+# Dossiers de build (Astro)
+dist/
+.astro/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+.vercel
+
+# Fichiers temporaires / dev locaux
+cookies.txt
+temp_*.html
+page_admin*.html

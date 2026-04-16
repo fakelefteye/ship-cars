@@ -1,0 +1,19 @@
+{
+  "name": "ship-cars-location",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/vercel": "^10.0.4",
+    "@supabase/supabase-js": "^2.39.0",
+    "astro": "^6.1.5",
+    "resend": "^6.10.0",
+    "stripe": "^14.25.0"
+  }
+}

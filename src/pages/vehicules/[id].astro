@@ -1,0 +1,1007 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { supabaseAdmin } from '../../lib/supabase';
+
+const { id } = Astro.params;
+
+const { data: vehicule, error } = await supabaseAdmin
+  .from('vehicules')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+if (error || !vehicule) {
+  return Astro.redirect('/404');
+}
+
+const photos = [
+  vehicule.image_url,
+  vehicule.image_url_2,
+  vehicule.image_url_3,
+  vehicule.image_url_4,
+  vehicule.image_url_5
+].filter(url => url !== null && url !== "");
+---
+
+<MainLayout title={`${vehicule.nom} — Ship Cars`}>
+  <div class="container detail-container">
+
+    <a href="/" class="back-link">← Retour au catalogue</a>
+
+    <div class="detail-grid">
+
+      <!-- GALERIE -->
+      <section class="gallery">
+        <div class="main-img-wrap">
+          <img src={photos[0]} alt={vehicule.nom} id="current-img" />
+          <div class="img-overlay"></div>
+        </div>
+        {photos.length > 1 && (
+          <div class="thumbs">
+            {photos.map((url, i) => (
+              <button
+                class={`thumb ${i === 0 ? 'active' : ''}`}
+                onclick={`switchPhoto('${url}', this)`}
+                type="button"
+              >
+                <img src={url} alt={`Photo ${i + 1}`} />
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <!-- INFOS + RÉSA -->
+      <aside class="info-panel">
+
+        <header class="panel-header">
+          <p class="panel-label">{vehicule.modele} · {vehicule.annee}</p>
+          <h1 class="panel-title">{vehicule.nom}</h1>
+          <div class="panel-price">
+            <span class="price-amount">{vehicule.prix_journalier_base}€</span>
+            <span class="price-unit">/ jour</span>
+          </div>
+        </header>
+
+        <div class="panel-divider"></div>
+
+        <div class="resa-section">
+          <h2 class="resa-title">📅 Réserver ce véhicule</h2>
+
+          <div class="form-group">
+            <label class="form-label">Départ et retour</label>
+            <div class="date-trigger" id="date-trigger" role="button" tabindex="0">
+              <div class="date-pill">
+                <span class="date-pill-icon">🚗</span>
+                <div class="date-pill-content">
+                  <span class="date-pill-label">Départ</span>
+                  <span class="date-pill-value" id="start-display">Choisir une date</span>
+                </div>
+              </div>
+              <div class="date-pill-sep">→</div>
+              <div class="date-pill">
+                <span class="date-pill-icon">🔙</span>
+                <div class="date-pill-content">
+                  <span class="date-pill-label">Retour</span>
+                  <span class="date-pill-value" id="end-display">Choisir une date</span>
+                </div>
+              </div>
+            </div>
+            <input type="text" id="date-range" class="hidden-picker-input" readonly aria-hidden="true" />
+            <div class="calendar-legend">
+              <span class="legend-item"><span class="legend-dot available"></span>Disponible</span>
+              <span class="legend-item"><span class="legend-dot partial"></span>Partiellement</span>
+              <span class="legend-item"><span class="legend-dot occupied"></span>Occupé</span>
+            </div>
+          </div>
+
+          <div id="conflict-error" class="conflict-error" style="display:none;">
+            ⚠️ Créneau en conflit avec une réservation existante. Veuillez ajuster vos horaires.
+          </div>
+
+          <!-- Option siège auto -->
+          <label class="option-card" id="siege-card">
+            <input type="checkbox" id="siege-checkbox" disabled />
+            <div class="option-content">
+              <div class="option-header">
+                <span class="option-icon">👶</span>
+                <div class="option-text">
+                  <span class="option-title">Siège auto enfant</span>
+                  <span class="option-desc" id="siege-status">Sélectionnez vos dates pour vérifier la disponibilité</span>
+                </div>
+                <span class="option-price" id="siege-price"></span>
+              </div>
+            </div>
+          </label>
+
+          <div id="resa-summary" style="display:none;">
+            <div class="summary-box">
+              <div class="summary-row">
+                <span>Durée</span>
+                <strong id="duration-text">—</strong>
+              </div>
+              <div class="summary-row">
+                <span>Location</span>
+                <strong id="location-amount">—</strong>
+              </div>
+              <div class="summary-row" id="siege-row" style="display:none;">
+                <span>Siège auto</span>
+                <strong id="siege-amount">—</strong>
+              </div>
+              <div class="summary-row">
+                <span>Total</span>
+                <strong class="summary-total" id="total-amount">—</strong>
+              </div>
+            </div>
+            <div class="caution-notice">
+              <div class="caution-icon">⚠️</div>
+              <div>
+                <strong>Caution : 800 €</strong>
+                <p>Pré-autorisation bancaire après le paiement — aucune somme débitée.</p>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-book" class="btn-book" disabled>
+            Payer la location
+          </button>
+          <p class="secure-note">🔒 Paiement sécurisé via Stripe</p>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</MainLayout>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+
+<script is:inline>
+  function switchPhoto(url, btn) {
+    document.getElementById('current-img').src = url;
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+
+<script define:vars={{ prixJournalier: vehicule.prix_journalier_base, vehiculeId: vehicule.id }}>
+  async function initCalendar() {
+    let reservations = [];
+    try {
+      const res = await fetch(`/api/reservations/occupied-dates?id=${vehiculeId}`);
+      if (res.ok) {
+        const raw = await res.json();
+        reservations = raw.map(r => ({ from: new Date(r.from), to: new Date(r.to) }));
+      }
+    } catch (e) { console.error(e); }
+
+    // 🔍 Diagnostic : affiche les réservations chargées dans la console
+    console.log('[Calendrier] Réservations chargées :', reservations.map(r => ({
+      from: r.from.toLocaleString('fr-FR'),
+      to: r.to.toLocaleString('fr-FR')
+    })));
+
+    // Un jour est totalement bloqué uniquement s'il est entièrement couvert par une résa
+    function isFullyBlocked(date) {
+      const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+      return reservations.some(r => r.from <= dayStart && r.to >= dayEnd);
+    }
+
+    // Un jour est partiel si un bord de réservation tombe dedans sans couvrir totalement
+    function isPartiallyBlocked(date) {
+      const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+      return reservations.some(r => {
+        const fromInDay = r.from >= dayStart && r.from <= dayEnd;
+        const toInDay = r.to >= dayStart && r.to <= dayEnd;
+        const fullyCovers = r.from <= dayStart && r.to >= dayEnd;
+        return (fromInDay || toInDay) && !fullyCovers;
+      });
+    }
+
+    // Vérifie si [start, end] chevauche une réservation (à la minute près)
+    function hasTimeConflict(start, end) {
+      return reservations.some(r => start < r.to && end > r.from);
+    }
+
+    // Calcule l'heure recommandée pour un jour partiel
+    // role 'start' : prend la FIN de la résa qui se termine ce jour-là + 30 min (battement)
+    // role 'end'   : prend le DÉBUT de la résa qui commence ce jour-là - 30 min (battement)
+    function getRecommendedTime(date, role) {
+      const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+      const MARGIN = 30 * 60 * 1000; // 30 minutes
+
+      if (role === 'start') {
+        // La voiture revient ce jour-là → on peut repartir après r.to + 30 min
+        const endingToday = reservations
+          .filter(r => r.to >= dayStart && r.to <= dayEnd)
+          .sort((a, b) => b.to - a.to)[0]; // prend la plus tardive
+        if (endingToday) return new Date(endingToday.to.getTime() + MARGIN);
+      } else {
+        // Une résa démarre ce jour-là → il faut rendre avant r.from - 30 min
+        const startingToday = reservations
+          .filter(r => r.from >= dayStart && r.from <= dayEnd)
+          .sort((a, b) => a.from - b.from)[0]; // prend la plus matinale
+        if (startingToday) return new Date(startingToday.from.getTime() - MARGIN);
+      }
+      return null;
+    }
+
+    let previousCount = 0;
+
+    function formatDateTime(d) {
+      const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+      const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return `${date} · ${time}`;
+    }
+
+    function updateDisplay(dates) {
+      const startEl = document.getElementById('start-display');
+      const endEl = document.getElementById('end-display');
+      const trigger = document.getElementById('date-trigger');
+      if (dates[0]) {
+        startEl.textContent = formatDateTime(dates[0]);
+        startEl.classList.add('filled');
+      } else {
+        startEl.textContent = 'Choisir une date';
+        startEl.classList.remove('filled');
+      }
+      if (dates[1]) {
+        endEl.textContent = formatDateTime(dates[1]);
+        endEl.classList.add('filled');
+      } else {
+        endEl.textContent = 'Choisir une date';
+        endEl.classList.remove('filled');
+      }
+      trigger.classList.toggle('has-selection', dates.length > 0);
+    }
+
+    const fpInstance = flatpickr("#date-range", {
+      mode: "range",
+      enableTime: true,
+      time_24hr: true,
+      minuteIncrement: 30,
+      minDate: "today",
+      dateFormat: "Y-m-d H:i",
+      locale: "fr",
+      clickOpens: false,
+      disable: [ isFullyBlocked ],
+      onDayCreate(_d, _s, _fp, dayElem) {
+        if (dayElem.classList.contains('flatpickr-disabled')) return;
+        if (isPartiallyBlocked(dayElem.dateObj)) {
+          dayElem.classList.add('partially-occupied');
+          dayElem.setAttribute('title', 'Journée partiellement réservée — l\'heure sera pré-remplie');
+          // Injection d'un marqueur visible (fiable, indépendant de ::after)
+          const marker = document.createElement('span');
+          marker.className = 'partial-marker';
+          dayElem.appendChild(marker);
+        }
+      },
+      onChange(selectedDates, _dateStr, instance) {
+        // Auto-remplissage de l'heure quand une nouvelle date est ajoutée
+        if (selectedDates.length > previousCount && selectedDates.length <= 2) {
+          const idx = selectedDates.length - 1;
+          const addedDate = selectedDates[idx];
+          const role = idx === 0 ? 'start' : 'end';
+          const recommended = getRecommendedTime(addedDate, role);
+
+          if (recommended) {
+            const adjusted = new Date(addedDate);
+            adjusted.setHours(recommended.getHours(), recommended.getMinutes(), 0, 0);
+
+            // Évite la boucle si l'heure est déjà celle recommandée
+            if (adjusted.getTime() !== addedDate.getTime()) {
+              const newDates = selectedDates.slice();
+              newDates[idx] = adjusted;
+              previousCount = newDates.length;
+              instance.setDate(newDates, false);
+              updateDisplay(newDates);
+              return;
+            }
+          }
+        }
+        previousCount = selectedDates.length;
+        updateDisplay(selectedDates);
+      },
+      async onClose(selectedDates) {
+        const errorEl = document.getElementById('conflict-error');
+        const summaryEl = document.getElementById('resa-summary');
+        const btn = document.getElementById('btn-book');
+
+        if (selectedDates.length !== 2) return;
+        const [start, end] = selectedDates;
+
+        if (hasTimeConflict(start, end)) {
+          errorEl.style.display = 'block';
+          summaryEl.style.display = 'none';
+          btn.disabled = true;
+          return;
+        }
+
+        errorEl.style.display = 'none';
+
+        const diffH = (end - start) / 3600000;
+        const diffDays = Math.max(1, Math.ceil(diffH / 24));
+        const locationAmount = diffDays * prixJournalier;
+
+        document.getElementById('duration-text').textContent = `${diffDays} jour(s) (${Math.floor(diffH)}h)`;
+        document.getElementById('location-amount').textContent = `${locationAmount.toFixed(2)} €`;
+        summaryEl.style.display = 'block';
+
+        btn.dataset.start = start.toISOString();
+        btn.dataset.end = end.toISOString();
+        btn.dataset.location = locationAmount.toFixed(2);
+
+        // Vérifie la dispo du siège auto pour ces dates
+        await refreshSiegeAvailability(start, end);
+        recalcTotal();
+
+        btn.disabled = false;
+      }
+    });
+
+    // ── Gestion du siège auto ─────────────────────────
+    const siegeCheckbox = document.getElementById('siege-checkbox');
+    const siegeCard = document.getElementById('siege-card');
+    const siegeStatus = document.getElementById('siege-status');
+    const siegePriceEl = document.getElementById('siege-price');
+    const siegeRow = document.getElementById('siege-row');
+    const siegeAmountEl = document.getElementById('siege-amount');
+
+    let siegeInfo = { configured: false, available: false, prix: 0, remaining: 0 };
+
+    async function refreshSiegeAvailability(start, end) {
+      siegeCheckbox.checked = false;
+      siegeCheckbox.disabled = true;
+      siegeRow.style.display = 'none';
+
+      try {
+        const params = new URLSearchParams({
+          start: start.toISOString(),
+          end: end.toISOString(),
+        });
+        const res = await fetch(`/api/reservations/siege-availability?${params}`);
+        siegeInfo = await res.json();
+      } catch (e) {
+        console.error('Erreur dispo siège auto:', e);
+        siegeInfo = { configured: false, available: false, prix: 0, remaining: 0 };
+      }
+
+      if (!siegeInfo.configured) {
+        siegeCard.classList.add('disabled');
+        siegeStatus.textContent = 'Option non disponible';
+        siegePriceEl.textContent = '';
+        return;
+      }
+
+      siegePriceEl.textContent = `+${Number(siegeInfo.prix).toFixed(2)} €`;
+
+      if (siegeInfo.available) {
+        siegeCard.classList.remove('disabled');
+        siegeCheckbox.disabled = false;
+        siegeStatus.textContent = siegeInfo.remaining === 1
+          ? 'Dernier siège disponible sur ce créneau'
+          : `${siegeInfo.remaining} sièges disponibles sur ce créneau`;
+      } else {
+        siegeCard.classList.add('disabled');
+        siegeStatus.textContent = 'Indisponible sur ce créneau';
+      }
+    }
+
+    function recalcTotal() {
+      const btn = document.getElementById('btn-book');
+      const location = parseFloat(btn.dataset.location || '0');
+      const siegePrix = siegeCheckbox.checked ? Number(siegeInfo.prix) : 0;
+      const total = (location + siegePrix).toFixed(2);
+
+      if (siegeCheckbox.checked) {
+        siegeRow.style.display = 'flex';
+        siegeAmountEl.textContent = `${siegePrix.toFixed(2)} €`;
+      } else {
+        siegeRow.style.display = 'none';
+      }
+
+      document.getElementById('total-amount').textContent = `${total} €`;
+      btn.dataset.total = total;
+      btn.dataset.siege = siegeCheckbox.checked ? '1' : '0';
+    }
+
+    siegeCheckbox.addEventListener('change', recalcTotal);
+
+    // Ouvre le calendrier au clic sur la pilule Départ/Retour
+    const trigger = document.getElementById('date-trigger');
+    trigger.addEventListener('click', () => fpInstance.open());
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fpInstance.open(); }
+    });
+  }
+
+  initCalendar();
+
+  document.getElementById('btn-book').addEventListener('click', async (e) => {
+    const btn = e.target;
+    btn.disabled = true;
+    btn.textContent = "Redirection vers Stripe…";
+    try {
+      const res = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vehicule_id:  vehiculeId,
+          vehicule_nom: document.querySelector('.panel-title').textContent,
+          date_debut:   btn.dataset.start,
+          date_fin:     btn.dataset.end,
+          montant:      btn.dataset.total,
+          siege_auto:   btn.dataset.siege === '1'
+        })
+      });
+      const { url, error } = await res.json();
+      if (url) { window.location.href = url; }
+      else throw new Error(error || "Erreur Stripe");
+    } catch (err) {
+      alert("Erreur : " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Payer la location";
+    }
+  });
+</script>
+
+<style>
+  .detail-container { padding-top: 2.5rem; padding-bottom: 4rem; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--gold); }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  /* ── Galerie ── */
+  .gallery {}
+
+  .main-img-wrap {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-3);
+    aspect-ratio: 16/10;
+  }
+
+  .main-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.2s;
+  }
+
+  .img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .thumbs {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .thumb {
+    width: 80px;
+    height: 58px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    background: var(--bg-3);
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 0.15s;
+  }
+
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb:hover, .thumb.active { border-color: var(--gold); }
+
+  /* ── Panel ── */
+  .info-panel {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    position: sticky;
+    top: 84px;
+  }
+
+  .panel-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .panel-price {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .price-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--gold);
+  }
+
+  .price-unit {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .panel-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .resa-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group { margin-bottom: 1.25rem; }
+
+  .form-label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Input caché qui sert de cible à Flatpickr */
+  .hidden-picker-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Déclencheur Départ / Retour */
+  .date-trigger {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--bg-3) 0%, rgba(201,168,76,0.05) 100%);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius);
+    padding: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .date-trigger:hover,
+  .date-trigger:focus-visible,
+  .date-trigger.has-selection {
+    border-color: rgba(201,168,76,0.5);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    outline: none;
+  }
+
+  .date-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-2);
+    border-radius: calc(var(--radius) - 2px);
+    min-width: 0;
+  }
+  .date-pill-icon {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+  .date-pill-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+  .date-pill-label {
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .date-pill-value {
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .date-pill-value.filled {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .date-pill-sep {
+    color: var(--gold);
+    font-size: 1.1rem;
+    font-weight: 800;
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  .calendar-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .legend-dot.available { background: var(--gold); }
+  .legend-dot.partial {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold) 49%, #e74c3c 51%, #e74c3c 100%);
+  }
+  .legend-dot.occupied { background: #4a2020; border: 1px solid #e74c3c; }
+
+  .conflict-error {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    color: #ff8b7a;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  /* ── Flatpickr dark premium override ── */
+  .flatpickr-calendar {
+    background: var(--bg-2) !important;
+    border: 1px solid var(--border-md) !important;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.1) !important;
+    border-radius: 14px !important;
+    padding: 8px !important;
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  .flatpickr-calendar.arrowTop:before,
+  .flatpickr-calendar.arrowTop:after { border-bottom-color: var(--border-md) !important; }
+  .flatpickr-months { padding-top: 6px !important; }
+  .flatpickr-months .flatpickr-month,
+  .flatpickr-current-month,
+  .flatpickr-monthDropdown-months,
+  .flatpickr-current-month input.cur-year,
+  .flatpickr-weekday {
+    color: var(--text) !important;
+    background: transparent !important;
+  }
+  .flatpickr-weekday {
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    color: var(--text-muted) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    color: var(--gold) !important;
+    fill: var(--gold) !important;
+    padding: 8px !important;
+  }
+  .flatpickr-months .flatpickr-prev-month:hover svg,
+  .flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--gold-light) !important;
+  }
+  .flatpickr-day {
+    color: var(--text) !important;
+    border-radius: 8px !important;
+    font-weight: 500;
+    transition: all 0.15s;
+    max-width: 40px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+  }
+  .flatpickr-day:hover {
+    background: rgba(201,168,76,0.12) !important;
+    border-color: transparent !important;
+  }
+  .flatpickr-day.today {
+    border-color: rgba(201,168,76,0.5) !important;
+    color: var(--gold-light) !important;
+  }
+  .flatpickr-day.flatpickr-disabled,
+  .flatpickr-day.flatpickr-disabled:hover {
+    color: rgba(255, 110, 100, 0.35) !important;
+    background-color: rgba(231, 76, 60, 0.12) !important;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(231, 76, 60, 0.25) 0 2px,
+      transparent 2px 6px
+    ) !important;
+    text-decoration: line-through !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+    border: 1px solid rgba(231, 76, 60, 0.3) !important;
+  }
+  .flatpickr-day.partially-occupied,
+  .flatpickr-day.partially-occupied:hover {
+    background: linear-gradient(135deg,
+      rgba(201, 168, 76, 0.3) 0%,
+      rgba(201, 168, 76, 0.3) 48%,
+      rgba(231, 76, 60, 0.55) 52%,
+      rgba(231, 76, 60, 0.55) 100%
+    ) !important;
+    position: relative !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    border: 2px solid #ff5546 !important;
+    box-shadow: 0 0 8px rgba(255, 85, 70, 0.4) !important;
+  }
+  /* Marqueur visible (span injecté) sous le chiffre */
+  .flatpickr-day.partially-occupied .partial-marker {
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: #ff5546;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 8px rgba(255, 85, 70, 1);
+    z-index: 3;
+    pointer-events: none;
+    display: block;
+  }
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+    background: var(--gold) !important;
+    border-color: var(--gold) !important;
+    color: #000 !important;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(201,168,76,0.4) !important;
+  }
+  .flatpickr-day.inRange {
+    background: rgba(201,168,76,0.18) !important;
+    border-color: transparent !important;
+    box-shadow: -5px 0 0 rgba(201,168,76,0.18), 5px 0 0 rgba(201,168,76,0.18) !important;
+  }
+  /* Time picker */
+  .flatpickr-time {
+    background: var(--bg-3) !important;
+    border-top: 1px solid var(--border) !important;
+    border-radius: 0 0 10px 10px;
+    margin-top: 6px !important;
+  }
+  .flatpickr-time input,
+  .flatpickr-time .flatpickr-time-separator,
+  .flatpickr-time .flatpickr-am-pm {
+    color: var(--text) !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+  }
+  .flatpickr-time input:hover,
+  .flatpickr-time input:focus {
+    background: rgba(201,168,76,0.1) !important;
+  }
+  .flatpickr-time .numInputWrapper span.arrowUp:after { border-bottom-color: var(--gold) !important; }
+  .flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color: var(--gold) !important; }
+
+  /* ── Option card (siège auto) ── */
+  .option-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+  }
+  .option-card:hover:not(.disabled) {
+    border-color: rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.04);
+  }
+  .option-card.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .option-card input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+  .option-card input[type="checkbox"]:disabled { cursor: not-allowed; }
+  .option-card:has(input:checked) {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.07);
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.3);
+  }
+  .option-content { flex: 1; min-width: 0; }
+  .option-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .option-text { flex: 1; min-width: 0; }
+  .option-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .option-desc {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .option-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--gold-light);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .summary-box {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+
+  .summary-row:not(:last-child) { border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
+
+  .summary-total {
+    color: var(--gold-light) !important;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+  }
+
+  .caution-notice {
+    display: flex;
+    gap: 10px;
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.82rem;
+  }
+
+  .caution-icon { font-size: 1rem; flex-shrink: 0; }
+
+  .caution-notice strong {
+    display: block;
+    color: var(--gold-light);
+    margin-bottom: 3px;
+  }
+
+  .caution-notice p { color: var(--text-dim); line-height: 1.5; }
+
+  .btn-book {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    padding: 1.1rem 1.25rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 4px 14px rgba(201,168,76,0.35),
+      0 0 0 1px rgba(255,255,255,0.08) inset;
+    transition: background-position 0.4s ease, transform 0.15s, box-shadow 0.2s;
+  }
+  .btn-book::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,255,255,0.35) 50%,
+      transparent 100%);
+    transition: left 0.6s ease;
+  }
+  .btn-book:hover:not(:disabled) {
+    background-position: 100% 0%;
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 22px rgba(201,168,76,0.55),
+      0 0 0 1px rgba(255,255,255,0.12) inset;
+  }
+  .btn-book:hover:not(:disabled)::before { left: 100%; }
+  .btn-book:active:not(:disabled) { transform: translateY(0); }
+
+  .btn-book:disabled {
+    background: var(--bg-3);
+    color: var(--text-dim);
+    cursor: not-allowed;
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
+
+  .secure-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .info-panel { position: static; }
+  }
+</style>
