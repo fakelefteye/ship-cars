@@ -11,6 +11,11 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const { vehicule_id, vehicule_nom, date_debut, date_fin, montant, siege_auto, promo_code, reduction } = await request.json();
 
+    // Base URL pour les redirects Stripe :
+    // 1. PUBLIC_SITE_URL si défini dans .env (prioritaire — utile en prod)
+    // 2. Sinon, on dérive depuis l'origine de la requête (suit automatiquement shipcars.fr vs localhost)
+    const baseUrl = import.meta.env.PUBLIC_SITE_URL || new URL(request.url).origin;
+
     // Re-vérifie le code promo côté serveur pour empêcher toute manipulation client
     let verifiedPromoCode: string | null = null;
     let verifiedReduction = 0;
@@ -77,8 +82,8 @@ export const POST: APIRoute = async ({ request }) => {
         promo_code: verifiedPromoCode || '',
         reduction: verifiedReduction.toFixed(2),
       },
-      success_url: `${import.meta.env.PUBLIC_SITE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${import.meta.env.PUBLIC_SITE_URL}/vehicules/${vehicule_id}`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/vehicules/${vehicule_id}`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
