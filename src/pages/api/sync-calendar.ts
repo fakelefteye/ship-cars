@@ -1,6 +1,6 @@
 // src/pages/api/sync-calendar.ts
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { fetchGetaroundRentals } from '../../lib/getaround-api';
 
 export const GET: APIRoute = async () => {

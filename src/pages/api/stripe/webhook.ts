@@ -2,7 +2,7 @@
 export const prerender = false;
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import { supabase } from '../../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../../lib/supabase';
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 const resend = new Resend(import.meta.env.RESEND_API_KEY);

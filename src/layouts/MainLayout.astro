@@ -16,19 +16,33 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        --bg:        #0d0f12;
-        --bg-2:      #13161b;
-        --bg-3:      #1a1e26;
-        --border:    rgba(255,255,255,0.07);
-        --border-md: rgba(255,255,255,0.13);
-        --gold:      #c9a84c;
-        --gold-light:#e8c97a;
-        --text:      #f0ede8;
-        --text-muted:#8a8f9a;
-        --text-dim:  #555b68;
-        --green:     #3ecf8e;
-        --radius:    12px;
-        --radius-lg: 20px;
+        /* Ship Cars — charte couleurs logo */
+        --navy-deep:   #0a1421;   /* fond principal — bleu nuit profond */
+        --navy:        #0f1e33;   /* fond carte */
+        --navy-light:  #1a2d47;   /* fond carte hover */
+        --navy-accent: #20385a;   /* bordure accent */
+
+        --teal:        #4dd4c8;   /* teal du "Ship" */
+        --teal-bright: #5eead4;   /* variante claire */
+        --teal-soft:   rgba(77,212,200,0.12);
+
+        --silver:      #d4d8de;   /* argenté du "CARS" */
+        --silver-dim:  #a8afbd;
+
+        /* alias fonctionnels */
+        --bg:          var(--navy-deep);
+        --bg-2:        var(--navy);
+        --bg-3:        var(--navy-light);
+        --border:      rgba(212,216,222,0.08);
+        --border-md:   rgba(77,212,200,0.22);
+        --gold:        var(--teal);         /* ancien accent gold -> teal */
+        --gold-light:  var(--teal-bright);
+        --text:        #f0f3f7;
+        --text-muted:  #8a95a8;
+        --text-dim:    #55627a;
+        --green:       #3ecf8e;
+        --radius:      12px;
+        --radius-lg:   20px;
       }
 
       html { scroll-behavior: smooth; }
@@ -47,7 +61,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
         position: sticky;
         top: 0;
         z-index: 100;
-        background: rgba(13,15,18,0.88);
+        background: rgba(10,20,33,0.88);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
         border-bottom: 1px solid var(--border);
@@ -71,18 +85,23 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
       }
 
       .nav-logo-mark {
-        width: 30px;
-        height: 30px;
-        background: var(--gold);
-        border-radius: 7px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
         display: grid;
         place-items: center;
-        font-size: 14px;
-        line-height: 1;
         flex-shrink: 0;
+        overflow: hidden;
       }
 
-      .nav-logo em { color: var(--gold); font-style: normal; }
+      .nav-logo-mark img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .nav-logo em { color: var(--teal); font-style: normal; }
 
       .nav-right { display: flex; align-items: center; gap: 1.5rem; }
 
@@ -144,7 +163,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
         font-size: 1rem;
         color: var(--text-muted);
       }
-      .footer-brand em { color: var(--gold); font-style: normal; }
+      .footer-brand em { color: var(--teal); font-style: normal; }
 
       .footer-info {
         font-size: 0.78rem;
@@ -157,7 +176,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
 
       a { color: inherit; }
 
-      ::selection { background: var(--gold); color: #000; }
+      ::selection { background: var(--teal); color: var(--navy-deep); }
 
       ::-webkit-scrollbar { width: 5px; }
       ::-webkit-scrollbar-track { background: var(--bg); }
@@ -174,7 +193,9 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
   <body>
     <nav class="nav">
       <a href="/" class="nav-logo">
-        <div class="nav-logo-mark">🚗</div>
+        <div class="nav-logo-mark">
+          <img src="/logo.png" alt="Ship Cars" />
+        </div>
         Ship<em>Cars</em>
       </a>
       <div class="nav-right">

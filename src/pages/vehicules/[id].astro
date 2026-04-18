@@ -61,6 +61,10 @@ const photos = [
             <span class="price-amount">{vehicule.prix_journalier_base}€</span>
             <span class="price-unit">/ jour</span>
           </div>
+          <div class="panel-included">
+            <span class="included-icon">🛣️</span>
+            <span><strong>100 km/jour inclus</strong> dans la location</span>
+          </div>
         </header>
 
         <div class="panel-divider"></div>
@@ -114,6 +118,16 @@ const photos = [
             </div>
           </label>
 
+          <!-- Code promo -->
+          <div class="promo-input-group" id="promo-group" style="display:none;">
+            <label class="form-label" for="promo-code-input">Code promo (optionnel)</label>
+            <div class="promo-input-row">
+              <input type="text" id="promo-code-input" placeholder="Ex: GNB10" autocomplete="off" />
+              <button type="button" id="promo-apply-btn" class="btn-promo-apply">Appliquer</button>
+            </div>
+            <p class="promo-feedback" id="promo-feedback"></p>
+          </div>
+
           <div id="resa-summary" style="display:none;">
             <div class="summary-box">
               <div class="summary-row">
@@ -127,6 +141,14 @@ const photos = [
               <div class="summary-row" id="siege-row" style="display:none;">
                 <span>Siège auto</span>
                 <strong id="siege-amount">—</strong>
+              </div>
+              <div class="summary-row promo-row" id="promo-row" style="display:none;">
+                <span>Code promo <em id="promo-row-code"></em></span>
+                <strong id="promo-amount">—</strong>
+              </div>
+              <div class="summary-row included-row">
+                <span>🛣️ Kilométrage</span>
+                <strong><span id="km-included">—</span> inclus</strong>
               </div>
               <div class="summary-row">
                 <span>Total</span>
@@ -329,14 +351,21 @@ const photos = [
 
         document.getElementById('duration-text').textContent = `${diffDays} jour(s) (${Math.floor(diffH)}h)`;
         document.getElementById('location-amount').textContent = `${locationAmount.toFixed(2)} €`;
+        document.getElementById('km-included').textContent = `${diffDays * 100} km`;
         summaryEl.style.display = 'block';
+        document.getElementById('promo-group').style.display = 'block';
 
         btn.dataset.start = start.toISOString();
         btn.dataset.end = end.toISOString();
         btn.dataset.location = locationAmount.toFixed(2);
+        btn.dataset.days = String(diffDays);
 
         // Vérifie la dispo du siège auto pour ces dates
         await refreshSiegeAvailability(start, end);
+
+        // Si un code est déjà appliqué, on le revalide sur les nouvelles dates
+        if (appliedPromo) await revalidatePromo();
+
         recalcTotal();
 
         btn.disabled = false;
@@ -391,11 +420,30 @@ const photos = [
       }
     }
 
+    // Code promo appliqué
+    let appliedPromo = null; // { code, pourcentage }
+
     function recalcTotal() {
       const btn = document.getElementById('btn-book');
       const location = parseFloat(btn.dataset.location || '0');
       const siegePrix = siegeCheckbox.checked ? Number(siegeInfo.prix) : 0;
-      const total = (location + siegePrix).toFixed(2);
+      const sousTotal = location + siegePrix;
+
+      const promoRow = document.getElementById('promo-row');
+      const promoAmountEl = document.getElementById('promo-amount');
+      const promoRowCode = document.getElementById('promo-row-code');
+
+      let reduction = 0;
+      if (appliedPromo) {
+        reduction = +(sousTotal * (appliedPromo.pourcentage / 100)).toFixed(2);
+        promoRow.style.display = 'flex';
+        promoRowCode.textContent = appliedPromo.code;
+        promoAmountEl.textContent = `-${reduction.toFixed(2)} €`;
+      } else {
+        promoRow.style.display = 'none';
+      }
+
+      const total = Math.max(0, sousTotal - reduction).toFixed(2);
 
       if (siegeCheckbox.checked) {
         siegeRow.style.display = 'flex';
@@ -407,9 +455,117 @@ const photos = [
       document.getElementById('total-amount').textContent = `${total} €`;
       btn.dataset.total = total;
       btn.dataset.siege = siegeCheckbox.checked ? '1' : '0';
+      btn.dataset.promo = appliedPromo ? appliedPromo.code : '';
+      btn.dataset.reduction = reduction.toFixed(2);
     }
 
     siegeCheckbox.addEventListener('change', recalcTotal);
+
+    // ── Code promo ────────────────────────
+    const promoInput = document.getElementById('promo-code-input');
+    const promoBtn = document.getElementById('promo-apply-btn');
+    const promoFeedback = document.getElementById('promo-feedback');
+
+    async function applyPromo() {
+      const code = (promoInput.value || '').trim().toUpperCase();
+      promoFeedback.className = 'promo-feedback';
+
+      if (!code) {
+        appliedPromo = null;
+        promoFeedback.textContent = '';
+        promoBtn.textContent = 'Appliquer';
+        recalcTotal();
+        return;
+      }
+
+      promoBtn.disabled = true;
+      promoBtn.textContent = '...';
+
+      const btn = document.getElementById('btn-book');
+      try {
+        const res = await fetch('/api/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            date_debut: btn.dataset.start || null,
+            date_fin: btn.dataset.end || null,
+          }),
+        });
+        const data = await res.json();
+
+        if (data.valid) {
+          appliedPromo = { code: data.code, pourcentage: data.pourcentage };
+          promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
+          promoFeedback.classList.add('ok');
+          promoBtn.textContent = 'Retirer';
+        } else {
+          appliedPromo = null;
+          promoFeedback.textContent = `❌ ${data.reason || 'Code invalide'}`;
+          promoFeedback.classList.add('ko');
+          promoBtn.textContent = 'Appliquer';
+        }
+      } catch (e) {
+        appliedPromo = null;
+        promoFeedback.textContent = '❌ Erreur réseau';
+        promoFeedback.classList.add('ko');
+        promoBtn.textContent = 'Appliquer';
+      } finally {
+        promoBtn.disabled = false;
+        recalcTotal();
+      }
+    }
+
+    // Re-valide silencieusement le code déjà appliqué quand les dates changent
+    async function revalidatePromo() {
+      if (!appliedPromo) return;
+      const btn = document.getElementById('btn-book');
+      try {
+        const res = await fetch('/api/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: appliedPromo.code,
+            date_debut: btn.dataset.start || null,
+            date_fin: btn.dataset.end || null,
+          }),
+        });
+        const data = await res.json();
+        promoFeedback.className = 'promo-feedback';
+        if (data.valid) {
+          appliedPromo = { code: data.code, pourcentage: data.pourcentage };
+          promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
+          promoFeedback.classList.add('ok');
+        } else {
+          appliedPromo = null;
+          promoFeedback.textContent = `⚠️ ${data.reason || 'Code non applicable sur ces dates'}`;
+          promoFeedback.classList.add('ko');
+          promoBtn.textContent = 'Appliquer';
+        }
+      } catch (e) {
+        // silencieux en cas d'erreur réseau
+      }
+    }
+
+    promoBtn.addEventListener('click', () => {
+      if (appliedPromo) {
+        // Retirer
+        appliedPromo = null;
+        promoInput.value = '';
+        promoFeedback.textContent = '';
+        promoBtn.textContent = 'Appliquer';
+        recalcTotal();
+      } else {
+        applyPromo();
+      }
+    });
+
+    promoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyPromo();
+      }
+    });
 
     // Ouvre le calendrier au clic sur la pilule Départ/Retour
     const trigger = document.getElementById('date-trigger');
@@ -435,7 +591,9 @@ const photos = [
           date_debut:   btn.dataset.start,
           date_fin:     btn.dataset.end,
           montant:      btn.dataset.total,
-          siege_auto:   btn.dataset.siege === '1'
+          siege_auto:   btn.dataset.siege === '1',
+          promo_code:   btn.dataset.promo || null,
+          reduction:    parseFloat(btn.dataset.reduction || '0'),
         })
       });
       const { url, error } = await res.json();
@@ -563,11 +721,65 @@ const photos = [
     color: var(--text-muted);
   }
 
+  .panel-included {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+    padding: 8px 12px;
+    background: rgba(77,212,200,0.08);
+    border: 1px solid rgba(77,212,200,0.22);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .panel-included strong { color: var(--teal); font-weight: 600; }
+  .panel-included .included-icon { font-size: 1rem; }
+
   .panel-divider {
     height: 1px;
     background: var(--border);
     margin: 1.5rem 0;
   }
+
+  /* ── Code promo ── */
+  .promo-input-group { margin-top: 1rem; margin-bottom: 1rem; }
+  .promo-input-row { display: flex; gap: 8px; }
+  .promo-input-row input {
+    flex: 1;
+    background: var(--bg-3);
+    border: 1px solid var(--border-md);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .promo-input-row input:focus { outline: none; border-color: var(--teal); }
+  .btn-promo-apply {
+    background: transparent;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-promo-apply:hover { background: rgba(77,212,200,0.12); }
+  .btn-promo-apply:disabled { opacity: 0.5; cursor: not-allowed; }
+  .promo-feedback { font-size: 0.8rem; margin-top: 6px; min-height: 1em; }
+  .promo-feedback.ok { color: var(--teal); }
+  .promo-feedback.ko { color: #e74c3c; }
+
+  .summary-row.promo-row strong { color: var(--teal); }
+  .summary-row.promo-row em { font-style: normal; opacity: 0.7; font-size: 0.78rem; }
+  .summary-row.included-row { font-size: 0.82rem; color: var(--text-dim); }
+  .summary-row.included-row strong { color: var(--text-muted); font-weight: 400; }
 
   .resa-title {
     font-family: 'Syne', sans-serif;
@@ -602,7 +814,7 @@ const photos = [
     display: flex;
     align-items: stretch;
     gap: 8px;
-    background: linear-gradient(135deg, var(--bg-3) 0%, rgba(201,168,76,0.05) 100%);
+    background: linear-gradient(135deg, var(--bg-3) 0%, rgba(77,212,200,0.05) 100%);
     border: 1px solid var(--border-md);
     border-radius: var(--radius);
     padding: 8px;
@@ -612,8 +824,8 @@ const photos = [
   .date-trigger:hover,
   .date-trigger:focus-visible,
   .date-trigger.has-selection {
-    border-color: rgba(201,168,76,0.5);
-    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    border-color: rgba(77,212,200,0.5);
+    box-shadow: 0 0 0 3px rgba(77,212,200,0.1);
     outline: none;
   }
 
@@ -703,7 +915,7 @@ const photos = [
   .flatpickr-calendar {
     background: var(--bg-2) !important;
     border: 1px solid var(--border-md) !important;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.1) !important;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(77,212,200,0.1) !important;
     border-radius: 14px !important;
     padding: 8px !important;
     font-family: 'DM Sans', sans-serif !important;
@@ -746,11 +958,11 @@ const photos = [
     line-height: 38px !important;
   }
   .flatpickr-day:hover {
-    background: rgba(201,168,76,0.12) !important;
+    background: rgba(77,212,200,0.12) !important;
     border-color: transparent !important;
   }
   .flatpickr-day.today {
-    border-color: rgba(201,168,76,0.5) !important;
+    border-color: rgba(77,212,200,0.5) !important;
     color: var(--gold-light) !important;
   }
   .flatpickr-day.flatpickr-disabled,
@@ -805,12 +1017,12 @@ const photos = [
     border-color: var(--gold) !important;
     color: #000 !important;
     font-weight: 700;
-    box-shadow: 0 2px 8px rgba(201,168,76,0.4) !important;
+    box-shadow: 0 2px 8px rgba(77,212,200,0.4) !important;
   }
   .flatpickr-day.inRange {
-    background: rgba(201,168,76,0.18) !important;
+    background: rgba(77,212,200,0.18) !important;
     border-color: transparent !important;
-    box-shadow: -5px 0 0 rgba(201,168,76,0.18), 5px 0 0 rgba(201,168,76,0.18) !important;
+    box-shadow: -5px 0 0 rgba(77,212,200,0.18), 5px 0 0 rgba(77,212,200,0.18) !important;
   }
   /* Time picker */
   .flatpickr-time {
@@ -828,7 +1040,7 @@ const photos = [
   }
   .flatpickr-time input:hover,
   .flatpickr-time input:focus {
-    background: rgba(201,168,76,0.1) !important;
+    background: rgba(77,212,200,0.1) !important;
   }
   .flatpickr-time .numInputWrapper span.arrowUp:after { border-bottom-color: var(--gold) !important; }
   .flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color: var(--gold) !important; }
@@ -847,8 +1059,8 @@ const photos = [
     transition: border-color 0.2s, background 0.2s, opacity 0.2s;
   }
   .option-card:hover:not(.disabled) {
-    border-color: rgba(201,168,76,0.4);
-    background: rgba(201,168,76,0.04);
+    border-color: rgba(77,212,200,0.4);
+    background: rgba(77,212,200,0.04);
   }
   .option-card.disabled {
     opacity: 0.55;
@@ -864,8 +1076,8 @@ const photos = [
   .option-card input[type="checkbox"]:disabled { cursor: not-allowed; }
   .option-card:has(input:checked) {
     border-color: var(--gold);
-    background: rgba(201,168,76,0.07);
-    box-shadow: 0 0 0 1px rgba(201,168,76,0.3);
+    background: rgba(77,212,200,0.07);
+    box-shadow: 0 0 0 1px rgba(77,212,200,0.3);
   }
   .option-content { flex: 1; min-width: 0; }
   .option-header {
@@ -923,8 +1135,8 @@ const photos = [
   .caution-notice {
     display: flex;
     gap: 10px;
-    background: rgba(201,168,76,0.06);
-    border: 1px solid rgba(201,168,76,0.2);
+    background: rgba(77,212,200,0.06);
+    border: 1px solid rgba(77,212,200,0.2);
     border-radius: var(--radius);
     padding: 0.9rem 1rem;
     margin-bottom: 1.25rem;
@@ -958,7 +1170,7 @@ const photos = [
     position: relative;
     overflow: hidden;
     box-shadow:
-      0 4px 14px rgba(201,168,76,0.35),
+      0 4px 14px rgba(77,212,200,0.35),
       0 0 0 1px rgba(255,255,255,0.08) inset;
     transition: background-position 0.4s ease, transform 0.15s, box-shadow 0.2s;
   }
@@ -979,7 +1191,7 @@ const photos = [
     background-position: 100% 0%;
     transform: translateY(-2px);
     box-shadow:
-      0 8px 22px rgba(201,168,76,0.55),
+      0 8px 22px rgba(77,212,200,0.55),
       0 0 0 1px rgba(255,255,255,0.12) inset;
   }
   .btn-book:hover:not(:disabled)::before { left: 100%; }

@@ -1,6 +1,6 @@
 // src/pages/api/reservations/occupied-dates.ts
 export const prerender = false;
-import { supabase } from '../../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../../lib/supabase';
 
 export const GET = async ({ url }) => {
   const vehiculeId = url.searchParams.get('id');

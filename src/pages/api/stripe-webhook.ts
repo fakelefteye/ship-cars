@@ -1,6 +1,6 @@
 // src/pages/api/stripe-webhook.ts
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 
 // Ce code est déclenché par Stripe de manière invisible
 export const POST: APIRoute = async ({ request }) => {

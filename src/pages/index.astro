@@ -137,7 +137,7 @@ const { data: vehicules, error } = await supabaseAdmin
   .hero-glow-1 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(77,212,200,0.14) 0%, transparent 70%);
     top: -100px;
     left: -100px;
   }
@@ -145,7 +145,7 @@ const { data: vehicules, error } = await supabaseAdmin
   .hero-glow-2 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(62,207,142,0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(32,56,90,0.5) 0%, transparent 70%);
     bottom: 0;
     right: 5%;
   }
@@ -171,9 +171,9 @@ const { data: vehicules, error } = await supabaseAdmin
     align-items: center;
     gap: 8px;
     font-size: 0.78rem;
-    color: var(--gold);
-    background: rgba(201,168,76,0.1);
-    border: 1px solid rgba(201,168,76,0.25);
+    color: var(--teal);
+    background: rgba(77,212,200,0.1);
+    border: 1px solid rgba(77,212,200,0.28);
     padding: 6px 14px;
     border-radius: 99px;
     margin-bottom: 2rem;
@@ -185,7 +185,8 @@ const { data: vehicules, error } = await supabaseAdmin
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--gold);
+    background: var(--teal);
+    box-shadow: 0 0 8px rgba(77,212,200,0.8);
     animation: blink 2s ease-in-out infinite;
   }
 
@@ -206,7 +207,7 @@ const { data: vehicules, error } = await supabaseAdmin
 
   .hero-title em {
     font-style: normal;
-    color: var(--gold);
+    color: var(--teal);
   }
 
   .hero-sub {
@@ -227,21 +228,23 @@ const { data: vehicules, error } = await supabaseAdmin
 
   .btn-primary {
     display: inline-block;
-    background: var(--gold);
-    color: #000;
+    background: var(--teal);
+    color: var(--navy-deep);
     font-family: 'Syne', sans-serif;
     font-weight: 700;
     font-size: 0.95rem;
     padding: 14px 28px;
     border-radius: var(--radius);
     text-decoration: none;
-    transition: background 0.2s, transform 0.15s;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
     white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(77,212,200,0.25);
   }
 
   .btn-primary:hover {
-    background: var(--gold-light);
+    background: var(--teal-bright);
     transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(77,212,200,0.4);
   }
 
   .hero-stats {
@@ -287,7 +290,7 @@ const { data: vehicules, error } = await supabaseAdmin
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--gold);
+    color: var(--teal);
     margin-bottom: 0.75rem;
     font-family: 'DM Sans', sans-serif;
   }

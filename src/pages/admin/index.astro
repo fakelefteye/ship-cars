@@ -70,6 +70,11 @@ const { data: accessoires, error: accessoiresError } = await supabaseAdmin
   .select('*')
   .order('nom');
 
+const { data: codesPromo } = await supabaseAdmin
+  .from('codes_promo')
+  .select('*')
+  .order('created_at', { ascending: false });
+
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
 const deleted = url.searchParams.get('deleted');
@@ -143,6 +148,76 @@ const updated = url.searchParams.get('updated');
       </div>
     </section>
     
+    <!-- CODES PROMO -->
+    <section class="admin-card">
+      <h2>🎟️ Codes promo ({codesPromo?.length || 0})</h2>
+      <p class="subtitle">Créez, activez ou désactivez les codes de réduction. Les codes désactivés sont refusés au checkout.</p>
+
+      <form id="promo-create-form" class="promo-create-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="promo-code">Code</label>
+            <input type="text" id="promo-code" name="code" placeholder="Ex: GNB10" required style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label for="promo-pourcentage">Réduction (%)</label>
+            <input type="number" id="promo-pourcentage" name="pourcentage" min="1" max="100" step="1" placeholder="10" required />
+          </div>
+          <div class="form-group">
+            <label for="promo-description">Description (optionnel)</label>
+            <input type="text" id="promo-description" name="description" placeholder="Ex: Lancement Grenoble" />
+          </div>
+        </div>
+        <div class="form-row promo-date-row">
+          <div class="form-group">
+            <label for="promo-date-debut">Valable à partir du <span class="optional">(optionnel)</span></label>
+            <input type="date" id="promo-date-debut" name="date_debut_validite" />
+          </div>
+          <div class="form-group">
+            <label for="promo-date-fin">Valable jusqu'au <span class="optional">(optionnel)</span></label>
+            <input type="date" id="promo-date-fin" name="date_fin_validite" />
+          </div>
+        </div>
+        <p class="promo-hint">💡 Laisse vide pour un code valable quelle que soit la date de location. Les dates renseignées s'appliquent à la <strong>période de location</strong> du client.</p>
+        <button type="submit" class="btn-submit">➕ Créer le code</button>
+      </form>
+
+      <div class="promo-list" id="promo-list">
+        {codesPromo?.map((p) => {
+          const fmt = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null;
+          const debut = fmt(p.date_debut_validite);
+          const fin = fmt(p.date_fin_validite);
+          let windowLabel = null;
+          if (debut && fin) windowLabel = `📅 ${debut} → ${fin}`;
+          else if (debut) windowLabel = `📅 à partir du ${debut}`;
+          else if (fin) windowLabel = `📅 jusqu'au ${fin}`;
+          return (
+            <div class={`promo-row ${p.actif ? '' : 'off'}`} data-id={p.id}>
+              <div class="promo-info">
+                <div class="promo-code-badge">{p.code}</div>
+                <div class="promo-meta">
+                  <strong>-{p.pourcentage}%</strong>
+                  {p.description && <span class="promo-desc">· {p.description}</span>}
+                  {windowLabel && <span class="promo-window">{windowLabel}</span>}
+                </div>
+              </div>
+              <div class="promo-actions">
+                <label class="promo-toggle">
+                  <input type="checkbox" class="promo-toggle-input" data-id={p.id} checked={p.actif} />
+                  <span class="promo-toggle-slider"></span>
+                  <span class="promo-toggle-label">{p.actif ? 'Actif' : 'Désactivé'}</span>
+                </label>
+                <button class="btn-delete-promo" data-id={p.id}>🗑️</button>
+              </div>
+            </div>
+          );
+        })}
+        {(!codesPromo || codesPromo.length === 0) && (
+          <p class="empty">Aucun code promo. Créez-en un ci-dessus.</p>
+        )}
+      </div>
+    </section>
+
     <!-- FORMULAIRE AJOUT -->
     <section class="admin-card">
       <h2>Ajouter un véhicule ou un accessoire</h2>
@@ -328,7 +403,93 @@ const updated = url.searchParams.get('updated');
 
     // Attacher les event listeners aux boutons
     attachButtonListeners();
+    attachPromoListeners();
   });
+
+  function attachPromoListeners() {
+    const form = document.getElementById('promo-create-form');
+    if (form) {
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const code = document.getElementById('promo-code').value.trim().toUpperCase();
+        const pourcentage = parseFloat(document.getElementById('promo-pourcentage').value);
+        const description = document.getElementById('promo-description').value.trim();
+        const date_debut_validite = document.getElementById('promo-date-debut').value || null;
+        const date_fin_validite = document.getElementById('promo-date-fin').value || null;
+        try {
+          const res = await fetch('/api/admin/promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ action: 'create', code, pourcentage, description, date_debut_validite, date_fin_validite }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            showNotification('Code créé', 'success');
+            setTimeout(() => window.location.reload(), 600);
+          } else {
+            showNotification('❌ ' + (data.error || 'Erreur'), 'error');
+          }
+        } catch (err) {
+          showNotification('❌ Erreur réseau', 'error');
+        }
+      });
+    }
+
+    document.querySelectorAll('.promo-toggle-input').forEach(function(input) {
+      input.addEventListener('change', async function() {
+        const id = this.getAttribute('data-id');
+        const actif = this.checked;
+        const label = this.closest('.promo-toggle').querySelector('.promo-toggle-label');
+        const row = this.closest('.promo-row');
+        try {
+          const res = await fetch('/api/admin/promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ action: 'toggle', id, actif }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            if (label) label.textContent = actif ? 'Actif' : 'Désactivé';
+            if (row) row.classList.toggle('off', !actif);
+            showNotification(actif ? 'Code activé' : 'Code désactivé', 'success');
+          } else {
+            this.checked = !actif;
+            showNotification('❌ ' + (data.error || 'Erreur'), 'error');
+          }
+        } catch (err) {
+          this.checked = !actif;
+          showNotification('❌ Erreur réseau', 'error');
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-delete-promo').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
+        const id = this.getAttribute('data-id');
+        if (!confirm('Supprimer ce code promo ?')) return;
+        try {
+          const res = await fetch('/api/admin/promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ action: 'delete', id }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            const row = this.closest('.promo-row');
+            if (row) row.remove();
+            showNotification('Code supprimé', 'success');
+          } else {
+            showNotification('❌ ' + (data.error || 'Erreur'), 'error');
+          }
+        } catch (err) {
+          showNotification('❌ Erreur réseau', 'error');
+        }
+      });
+    });
+  }
 
   function attachButtonListeners() {
     // Gérer la soumission du formulaire d'ajout
@@ -835,6 +996,38 @@ const updated = url.searchParams.get('updated');
   .btn-stock:hover { background: #2980b9; }
   .stock-input { width: 80px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 1rem; font-weight: bold; }
   .price-input { width: 100px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 1rem; font-weight: bold; }
+
+  /* Codes promo */
+  .promo-create-form { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+  .promo-create-form .form-row { grid-template-columns: 1fr 1fr 2fr; }
+  .promo-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .promo-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border: 1px solid #e9ecef; border-radius: 10px; background: #fafafa; transition: opacity 0.2s; }
+  .promo-row.off { opacity: 0.55; background: #f3f3f3; }
+  .promo-info { display: flex; align-items: center; gap: 1rem; flex: 1; }
+  .promo-code-badge { font-family: 'Courier New', monospace; font-weight: 700; background: #4dd4c8; color: #0a1421; padding: 0.4rem 0.8rem; border-radius: 6px; letter-spacing: 0.05em; }
+  .promo-row.off .promo-code-badge { background: #b7bec6; color: #555; }
+  .promo-meta { font-size: 0.9rem; color: #333; display: flex; gap: 0.5rem; align-items: center; }
+  .promo-meta strong { font-size: 1rem; }
+  .promo-desc { color: #888; font-weight: 300; }
+  .promo-window { color: #4dd4c8; font-size: 0.82rem; font-weight: 500; background: rgba(77,212,200,0.1); padding: 2px 8px; border-radius: 6px; }
+  .promo-hint { font-size: 0.82rem; color: #666; background: #f8f9fa; padding: 0.75rem 1rem; border-left: 3px solid #4dd4c8; border-radius: 4px; margin: 0; }
+  .promo-date-row { grid-template-columns: 1fr 1fr; }
+  .optional { color: #aaa; font-weight: 400; font-size: 0.82em; }
+  .promo-actions { display: flex; gap: 1rem; align-items: center; }
+  .promo-toggle { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; }
+  .promo-toggle-input { display: none; }
+  .promo-toggle-slider { width: 38px; height: 22px; background: #ccc; border-radius: 22px; position: relative; transition: background 0.2s; }
+  .promo-toggle-slider::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.2s; }
+  .promo-toggle-input:checked + .promo-toggle-slider { background: #4dd4c8; }
+  .promo-toggle-input:checked + .promo-toggle-slider::after { transform: translateX(16px); }
+  .promo-toggle-label { font-size: 0.85rem; font-weight: 600; color: #555; min-width: 64px; }
+  .btn-delete-promo { background: transparent; border: 1px solid #eee; padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+  .btn-delete-promo:hover { background: #fdecec; border-color: #e74c3c; }
+  @media (max-width: 600px) {
+    .promo-create-form .form-row { grid-template-columns: 1fr; }
+    .promo-row { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+    .promo-actions { justify-content: space-between; }
+  }
 
   /* Styles pour les notifications */
   .notification { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 6px; color: white; font-weight: bold; z-index: 1001; }

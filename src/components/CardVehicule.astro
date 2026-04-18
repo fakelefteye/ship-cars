@@ -11,6 +11,7 @@ const { id, nom, modele, prix, image } = Astro.props;
     <div class="card-info">
       <h3 class="card-nom">{nom}</h3>
       <p class="card-modele">{modele}</p>
+      <p class="card-included">🛣️ 100 km/jour inclus</p>
     </div>
     <div class="card-cta">
       <span class="card-btn">Voir les dispo</span>
@@ -34,7 +35,7 @@ const { id, nom, modele, prix, image } = Astro.props;
   }
 
   .card:hover {
-    border-color: rgba(201,168,76,0.35);
+    border-color: rgba(77,212,200,0.35);
     transform: translateY(-3px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.35);
   }
@@ -61,9 +62,9 @@ const { id, nom, modele, prix, image } = Astro.props;
     position: absolute;
     bottom: 12px;
     right: 12px;
-    background: rgba(13,15,18,0.85);
+    background: rgba(10,20,33,0.85);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(201,168,76,0.3);
+    border: 1px solid rgba(77,212,200,0.3);
     color: var(--gold-light);
     font-family: 'Syne', sans-serif;
     font-weight: 700;
@@ -103,6 +104,14 @@ const { id, nom, modele, prix, image } = Astro.props;
     font-size: 0.8rem;
     color: var(--text-dim);
     font-weight: 300;
+  }
+
+  .card-included {
+    font-size: 0.72rem;
+    color: var(--teal);
+    margin-top: 6px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
 
   .card-cta {
