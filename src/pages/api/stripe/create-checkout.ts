@@ -9,7 +9,10 @@ const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { vehicule_id, vehicule_nom, date_debut, date_fin, montant, siege_auto, promo_code, reduction } = await request.json();
+    const {
+    vehicule_id, vehicule_nom, date_debut, date_fin, montant, siege_auto, promo_code, reduction,
+    email_client, locataire_nom, locataire_date_naissance, locataire_permis_numero, locataire_permis_date, locataire_adresse,
+  } = await request.json();
 
     // Base URL pour les redirects Stripe :
     // 1. PUBLIC_SITE_URL si défini dans .env (prioritaire — utile en prod)
@@ -52,6 +55,12 @@ export const POST: APIRoute = async ({ request }) => {
         siege_auto: !!siege_auto,
         code_promo: verifiedPromoCode,
         reduction_montant: verifiedReduction,
+        email_client:             email_client             || null,
+        locataire_nom:            locataire_nom            || null,
+        locataire_date_naissance: locataire_date_naissance || null,
+        locataire_permis_numero:  locataire_permis_numero  || null,
+        locataire_permis_date:    locataire_permis_date    || null,
+        locataire_adresse:        locataire_adresse        || null,
       })
       .select()
       .single();

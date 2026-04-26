@@ -173,6 +173,54 @@ const photos = [
       </aside>
     </div>
   </div>
+  <!-- MODAL COORDONNÉES LOCATAIRE -->
+  <div id="modal-locataire" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close" aria-label="Fermer">×</button>
+      <h2 class="modal-title">Vos coordonnées</h2>
+      <p class="modal-sub">Requis pour générer votre contrat de location. Données sécurisées.</p>
+
+      <form id="form-locataire" class="locataire-form" novalidate>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-label" for="loc-nom">Nom et prénom *</label>
+            <input type="text" id="loc-nom" placeholder="Jean Dupont" autocomplete="name" required />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="loc-email">Email *</label>
+            <input type="email" id="loc-email" placeholder="jean@email.com" autocomplete="email" required />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-label" for="loc-naissance">Date de naissance *</label>
+            <input type="date" id="loc-naissance" required />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="loc-permis">N° de permis *</label>
+            <input type="text" id="loc-permis" placeholder="14AB12345" autocomplete="off" required />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-label" for="loc-permis-date">Date d'obtention du permis *</label>
+            <input type="date" id="loc-permis-date" required />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="loc-adresse">Adresse complète *</label>
+            <input type="text" id="loc-adresse" placeholder="4 rue des Fleurs, 38000, Grenoble" autocomplete="street-address" required />
+          </div>
+        </div>
+
+        <div id="modal-error" class="modal-error" style="display:none;"></div>
+
+        <button type="submit" id="btn-modal-submit" class="btn-modal-submit">
+          Continuer vers le paiement →
+        </button>
+        <p class="modal-secure">🔒 Paiement sécurisé via Stripe · Données chiffrées</p>
+      </form>
+    </div>
+  </div>
 </MainLayout>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
@@ -577,32 +625,77 @@ const photos = [
 
   initCalendar();
 
-  document.getElementById('btn-book').addEventListener('click', async (e) => {
-    const btn = e.target;
-    btn.disabled = true;
-    btn.textContent = "Redirection vers Stripe…";
+  const modal = document.getElementById('modal-locataire');
+
+  document.getElementById('btn-book').addEventListener('click', () => {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  });
+
+  document.getElementById('modal-close').addEventListener('click', () => {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.getElementById('form-locataire').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn    = document.getElementById('btn-book');
+    const submit = document.getElementById('btn-modal-submit');
+    const errEl  = document.getElementById('modal-error');
+
+    const nom       = document.getElementById('loc-nom').value.trim();
+    const email     = document.getElementById('loc-email').value.trim();
+    const naiss     = document.getElementById('loc-naissance').value;
+    const adresse   = document.getElementById('loc-adresse').value.trim();
+    const permis    = document.getElementById('loc-permis').value.trim().toUpperCase();
+    const permisDate = document.getElementById('loc-permis-date').value;
+
+    if (!nom || !email || !naiss || !adresse || !permis || !permisDate) {
+      errEl.textContent = 'Veuillez remplir tous les champs obligatoires.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = 'Redirection vers Stripe…';
+    errEl.style.display = 'none';
+
     try {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          vehicule_id:  vehiculeId,
-          vehicule_nom: document.querySelector('.panel-title').textContent,
-          date_debut:   btn.dataset.start,
-          date_fin:     btn.dataset.end,
-          montant:      btn.dataset.total,
-          siege_auto:   btn.dataset.siege === '1',
-          promo_code:   btn.dataset.promo || null,
-          reduction:    parseFloat(btn.dataset.reduction || '0'),
+          vehicule_id:              vehiculeId,
+          vehicule_nom:             document.querySelector('.panel-title').textContent,
+          date_debut:               btn.dataset.start,
+          date_fin:                 btn.dataset.end,
+          montant:                  btn.dataset.total,
+          siege_auto:               btn.dataset.siege === '1',
+          promo_code:               btn.dataset.promo || null,
+          reduction:                parseFloat(btn.dataset.reduction || '0'),
+          email_client:             email,
+          locataire_nom:            nom,
+          locataire_date_naissance: naiss,
+          locataire_permis_numero:  permis,
+          locataire_permis_date:    permisDate,
+          locataire_adresse:        adresse,
         })
       });
       const { url, error } = await res.json();
       if (url) { window.location.href = url; }
-      else throw new Error(error || "Erreur Stripe");
+      else throw new Error(error || 'Erreur Stripe');
     } catch (err) {
-      alert("Erreur : " + err.message);
-      btn.disabled = false;
-      btn.textContent = "Payer la location";
+      errEl.textContent = 'Erreur : ' + err.message;
+      errEl.style.display = 'block';
+      submit.disabled = false;
+      submit.textContent = 'Continuer vers le paiement →';
     }
   });
 </script>
@@ -1215,5 +1308,143 @@ const photos = [
   @media (max-width: 900px) {
     .detail-grid { grid-template-columns: 1fr; }
     .info-panel { position: static; }
+  }
+
+  /* ── MODAL LOCATAIRE ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,20,33,0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .modal-box {
+    background: var(--bg-2);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    line-height: 1;
+  }
+  .modal-close:hover { background: var(--border-md); color: var(--text); }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  .modal-sub {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
+  }
+
+  .locataire-form { display: flex; flex-direction: column; gap: 1rem; }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .form-field input {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    color-scheme: dark;
+  }
+  .form-field input:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(77,212,200,0.1);
+  }
+  .form-field input::placeholder { color: var(--text-dim); }
+
+  .modal-error {
+    background: rgba(231,76,60,0.1);
+    border: 1px solid rgba(231,76,60,0.4);
+    color: #ff8b7a;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+
+  .btn-modal-submit {
+    width: 100%;
+    background: var(--teal);
+    color: var(--navy-deep);
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 1rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 14px rgba(77,212,200,0.3);
+  }
+  .btn-modal-submit:hover:not(:disabled) { background: var(--teal-bright); transform: translateY(-1px); }
+  .btn-modal-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .modal-secure {
+    text-align: center;
+    font-size: 0.74rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+  }
+
+  @media (max-width: 600px) {
+    .form-row-2 { grid-template-columns: 1fr; }
+    .modal-box { padding: 1.5rem; }
   }
 </style>
