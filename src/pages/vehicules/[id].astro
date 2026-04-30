@@ -212,6 +212,52 @@ const photos = [
           </div>
         </div>
 
+        <!-- Upload permis -->
+        <div class="upload-section">
+          <div class="upload-section-header">
+            <span class="upload-section-icon">📷</span>
+            <div>
+              <p class="upload-section-title">Vérification du permis de conduire</p>
+              <p class="upload-section-desc">Requis pour valider votre dossier. Photos sécurisées et chiffrées.</p>
+            </div>
+          </div>
+          <div class="upload-grid">
+            <div class="upload-zone" id="zone-recto">
+              <input type="file" id="permis-recto" accept="image/*,.heic,.heif" class="upload-input" />
+              <label for="permis-recto" class="upload-label">
+                <img class="upload-preview-img" id="img-recto" style="display:none;" alt="Permis recto" />
+                <div class="upload-placeholder" id="ph-recto">
+                  <span class="up-icon">🪪</span>
+                  <span class="up-name">Permis <strong>recto</strong></span>
+                  <span class="up-hint">Cliquez pour ajouter</span>
+                </div>
+              </label>
+            </div>
+            <div class="upload-zone" id="zone-verso">
+              <input type="file" id="permis-verso" accept="image/*,.heic,.heif" class="upload-input" />
+              <label for="permis-verso" class="upload-label">
+                <img class="upload-preview-img" id="img-verso" style="display:none;" alt="Permis verso" />
+                <div class="upload-placeholder" id="ph-verso">
+                  <span class="up-icon">🪪</span>
+                  <span class="up-name">Permis <strong>verso</strong></span>
+                  <span class="up-hint">Cliquez pour ajouter</span>
+                </div>
+              </label>
+            </div>
+            <div class="upload-zone upload-zone-selfie" id="zone-selfie">
+              <input type="file" id="permis-selfie" accept="image/*,.heic,.heif" class="upload-input" />
+              <label for="permis-selfie" class="upload-label">
+                <img class="upload-preview-img" id="img-selfie" style="display:none;" alt="Selfie avec permis" />
+                <div class="upload-placeholder" id="ph-selfie">
+                  <span class="up-icon">🤳</span>
+                  <span class="up-name"><strong>Selfie</strong> avec votre permis</span>
+                  <span class="up-hint">Vous tenant le permis visible face caméra</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div id="modal-error" class="modal-error" style="display:none;"></div>
 
         <button type="submit" id="btn-modal-submit" class="btn-modal-submit">
@@ -644,6 +690,29 @@ const photos = [
     }
   });
 
+  // Prévisualisation des photos de permis
+  function setupUploadZone(inputId, imgId, phId, zoneId) {
+    const input = document.getElementById(inputId);
+    const img   = document.getElementById(imgId);
+    const ph    = document.getElementById(phId);
+    const zone  = document.getElementById(zoneId);
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target.result;
+        img.style.display = 'block';
+        ph.style.display = 'none';
+        zone.classList.add('has-file');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  setupUploadZone('permis-recto',  'img-recto',  'ph-recto',  'zone-recto');
+  setupUploadZone('permis-verso',  'img-verso',  'ph-verso',  'zone-verso');
+  setupUploadZone('permis-selfie', 'img-selfie', 'ph-selfie', 'zone-selfie');
+
   document.getElementById('form-locataire').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn    = document.getElementById('btn-book');
@@ -663,11 +732,46 @@ const photos = [
       return;
     }
 
+    const rectoFile  = document.getElementById('permis-recto').files[0];
+    const versoFile  = document.getElementById('permis-verso').files[0];
+    const selfieFile = document.getElementById('permis-selfie').files[0];
+
+    if (!rectoFile || !versoFile || !selfieFile) {
+      errEl.textContent = 'Veuillez ajouter les 3 photos du permis (recto, verso, selfie).';
+      errEl.style.display = 'block';
+      return;
+    }
+
     submit.disabled = true;
-    submit.textContent = 'Redirection vers Stripe…';
     errEl.style.display = 'none';
 
+    // 1. Upload des photos de permis
+    let permisUrls = {};
     try {
+      submit.textContent = 'Envoi des documents…';
+      const fd = new FormData();
+      fd.append('recto',  rectoFile);
+      fd.append('verso',  versoFile);
+      fd.append('selfie', selfieFile);
+      const uploadRes = await fetch('/api/reservations/upload-permis', { method: 'POST', body: fd });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error || 'Erreur upload documents');
+      permisUrls = {
+        permis_recto_url:  uploadData.recto_url,
+        permis_verso_url:  uploadData.verso_url,
+        permis_selfie_url: uploadData.selfie_url,
+      };
+    } catch (err) {
+      errEl.textContent = 'Erreur documents : ' + err.message;
+      errEl.style.display = 'block';
+      submit.disabled = false;
+      submit.textContent = 'Continuer vers le paiement →';
+      return;
+    }
+
+    // 2. Redirection vers Stripe
+    try {
+      submit.textContent = 'Redirection vers Stripe…';
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -686,6 +790,7 @@ const photos = [
           locataire_permis_numero:  permis,
           locataire_permis_date:    permisDate,
           locataire_adresse:        adresse,
+          ...permisUrls,
         })
       });
       const { url, error } = await res.json();
@@ -788,7 +893,7 @@ const photos = [
   }
 
   .panel-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 1.9rem;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -803,7 +908,7 @@ const photos = [
   }
 
   .price-amount {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 2.2rem;
     font-weight: 800;
     color: var(--gold);
@@ -845,7 +950,7 @@ const photos = [
     color: var(--text);
     padding: 10px 12px;
     border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -857,7 +962,7 @@ const photos = [
     color: var(--teal);
     padding: 10px 16px;
     border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -875,7 +980,7 @@ const photos = [
   .summary-row.included-row strong { color: var(--text-muted); font-weight: 400; }
 
   .resa-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--text);
@@ -953,7 +1058,7 @@ const photos = [
   }
   .date-pill-value {
     color: var(--text-muted);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 0.88rem;
     font-weight: 500;
     white-space: nowrap;
@@ -1011,7 +1116,7 @@ const photos = [
     box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(77,212,200,0.1) !important;
     border-radius: 14px !important;
     padding: 8px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Exo 2', sans-serif !important;
   }
   .flatpickr-calendar.arrowTop:before,
   .flatpickr-calendar.arrowTop:after { border-bottom-color: var(--border-md) !important; }
@@ -1193,7 +1298,7 @@ const photos = [
     margin-top: 2px;
   }
   .option-price {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-weight: 700;
     color: var(--gold-light);
     font-size: 0.95rem;
@@ -1221,7 +1326,7 @@ const photos = [
 
   .summary-total {
     color: var(--gold-light) !important;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 1.05rem;
   }
 
@@ -1252,7 +1357,7 @@ const photos = [
     background-size: 200% 100%;
     background-position: 0% 0%;
     color: #000;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-weight: 800;
     font-size: 1.05rem;
     letter-spacing: 0.02em;
@@ -1358,7 +1463,7 @@ const photos = [
   .modal-close:hover { background: var(--border-md); color: var(--text); }
 
   .modal-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--text);
@@ -1396,7 +1501,7 @@ const photos = [
     color: var(--text);
     padding: 10px 12px;
     border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 0.9rem;
     width: 100%;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -1422,7 +1527,7 @@ const photos = [
     width: 100%;
     background: var(--teal);
     color: var(--navy-deep);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-weight: 800;
     font-size: 1rem;
     padding: 1rem;
@@ -1443,8 +1548,120 @@ const photos = [
     margin-top: 0.4rem;
   }
 
+  /* ── Upload permis ── */
+  .upload-section {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+  }
+
+  .upload-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .upload-section-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+
+  .upload-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+  }
+
+  .upload-section-desc {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+  }
+
+  .upload-zone-selfie {
+    grid-column: 1 / -1;
+  }
+
+  .upload-zone { position: relative; }
+
+  .upload-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    border: 1.5px dashed var(--border-md);
+    border-radius: 10px;
+    background: var(--bg-2);
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .upload-zone-selfie .upload-label { height: 80px; }
+
+  .upload-label:hover {
+    border-color: var(--teal);
+    background: rgba(77,212,200,0.04);
+  }
+
+  .upload-zone.has-file .upload-label {
+    border-color: var(--teal);
+    border-style: solid;
+  }
+
+  .upload-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+  }
+
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  .up-icon { font-size: 1.4rem; }
+
+  .up-name {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+
+  .up-name strong { color: var(--text); }
+
+  .up-hint {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
   @media (max-width: 600px) {
     .form-row-2 { grid-template-columns: 1fr; }
     .modal-box { padding: 1.5rem; }
+    .upload-grid { grid-template-columns: 1fr; }
+    .upload-zone-selfie { grid-column: auto; }
   }
 </style>

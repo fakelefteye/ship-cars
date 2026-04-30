@@ -11,7 +11,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Exo+2:wght@700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet" />
     <style is:global>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -48,7 +48,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
       html { scroll-behavior: smooth; }
 
       body {
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'Exo 2', sans-serif;
         background: var(--bg);
         color: var(--text);
         min-height: 100vh;
@@ -77,7 +77,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
         align-items: center;
         gap: 10px;
         text-decoration: none;
-        font-family: 'Syne', sans-serif;
+        font-family: 'Exo 2', sans-serif;
         font-weight: 800;
         font-size: 1.2rem;
         letter-spacing: -0.01em;
@@ -139,7 +139,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
         border: 1px solid var(--border);
         border-radius: 6px;
         transition: color 0.15s, border-color 0.15s, background 0.15s;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'Exo 2', sans-serif;
         letter-spacing: 0.02em;
       }
       .nav-admin:hover { color: var(--text-muted); border-color: var(--border-md); background: var(--bg-2); }
@@ -158,7 +158,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
       }
 
       .footer-brand {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Exo 2', sans-serif;
         font-weight: 700;
         font-size: 1rem;
         color: var(--text-muted);
@@ -194,7 +194,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     <nav class="nav">
       <a href="/" class="nav-logo">
         <div class="nav-logo-mark">
-          <img src="/logo.png" alt="Ship Cars" />
+          <img src="/logo_ship_cars.png" alt="Ship Cars" />
         </div>
         Ship<em>Cars</em>
       </a>

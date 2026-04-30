@@ -12,6 +12,7 @@ export const POST: APIRoute = async ({ request }) => {
     const {
     vehicule_id, vehicule_nom, date_debut, date_fin, montant, siege_auto, promo_code, reduction,
     email_client, locataire_nom, locataire_date_naissance, locataire_permis_numero, locataire_permis_date, locataire_adresse,
+    permis_recto_url, permis_verso_url, permis_selfie_url,
   } = await request.json();
 
     // Base URL pour les redirects Stripe :
@@ -61,6 +62,9 @@ export const POST: APIRoute = async ({ request }) => {
         locataire_permis_numero:  locataire_permis_numero  || null,
         locataire_permis_date:    locataire_permis_date    || null,
         locataire_adresse:        locataire_adresse        || null,
+        permis_recto_url:         permis_recto_url         || null,
+        permis_verso_url:         permis_verso_url         || null,
+        permis_selfie_url:        permis_selfie_url        || null,
       })
       .select()
       .single();
