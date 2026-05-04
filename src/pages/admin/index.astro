@@ -84,7 +84,12 @@ const updated = url.searchParams.get('updated');
 <MainLayout title="Administration - Ship Cars">
   <div class="admin-container">
     <header class="admin-header">
-      <h1>Tableau de bord</h1>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <h1>Tableau de bord</h1>
+        <a href="/admin/calendrier" style="background:#4dd4c8;color:#0f1e33;padding:0.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:0.88rem;text-decoration:none;">
+          📅 Gérer le calendrier
+        </a>
+      </div>
       {success && <p class="success-msg">✅ L'élément a été ajouté avec succès !</p>}
       {deleted && <p class="success-msg">✅ L'élément a été supprimé avec succès !</p>}
       {updated && <p class="success-msg">✅ L'élément a été modifié avec succès !</p>}
