@@ -14,6 +14,18 @@ if (error || !vehicule) {
   return Astro.redirect('/404');
 }
 
+// Règles de location (durée min/max, délai, plage dispo)
+const { data: regles } = await supabaseAdmin
+  .from('regles_location')
+  .select('duree_min_heures, duree_max_jours, delai_reservation_heures, plage_disponibilite_jours')
+  .eq('vehicule_id', id)
+  .maybeSingle();
+
+const dureeMinHeures          = regles?.duree_min_heures          ?? 24;
+const dureeMaxJours           = regles?.duree_max_jours           ?? null;
+const delaiReservationHeures  = regles?.delai_reservation_heures  ?? 0;
+const plageDispo              = regles?.plage_disponibilite_jours ?? 90;
+
 const photos = [
   vehicule.image_url,
   vehicule.image_url_2,
@@ -281,7 +293,14 @@ const photos = [
   }
 </script>
 
-<script define:vars={{ prixJournalier: vehicule.prix_journalier_base, vehiculeId: vehicule.id }}>
+<script define:vars={{
+  prixJournalier: vehicule.prix_journalier_base,
+  vehiculeId: vehicule.id,
+  dureeMinHeures: dureeMinHeures,
+  dureeMaxJours: dureeMaxJours,
+  delaiHeures: delaiReservationHeures,
+  plageDispo: plageDispo,
+}}>
   async function initCalendar() {
     let reservations = [];
     try {
@@ -375,12 +394,21 @@ const photos = [
       trigger.classList.toggle('has-selection', dates.length > 0);
     }
 
+    // Calcule la minDate en tenant compte du délai de réservation
+    const minDateObj = new Date();
+    if (delaiHeures > 0) minDateObj.setHours(minDateObj.getHours() + delaiHeures);
+
+    // Calcule la maxDate selon la plage de disponibilité
+    const maxDateObj = new Date();
+    maxDateObj.setDate(maxDateObj.getDate() + plageDispo);
+
     const fpInstance = flatpickr("#date-range", {
       mode: "range",
       enableTime: true,
       time_24hr: true,
       minuteIncrement: 30,
-      minDate: "today",
+      minDate: minDateObj,
+      maxDate: maxDateObj,
       dateFormat: "Y-m-d H:i",
       locale: "fr",
       clickOpens: false,
@@ -439,9 +467,39 @@ const photos = [
 
         errorEl.style.display = 'none';
 
-        const diffH = (end - start) / 3600000;
+        const diffH    = (end - start) / 3600000;
         const diffDays = Math.max(1, Math.ceil(diffH / 24));
-        const locationAmount = diffDays * prixJournalier;
+
+        // Validation durée minimale
+        if (dureeMinHeures > 0 && diffH < dureeMinHeures) {
+          const minLabel = dureeMinHeures >= 24
+            ? Math.round(dureeMinHeures / 24) + ' jour(s)'
+            : dureeMinHeures + ' heure(s)';
+          errorEl.textContent = `⚠️ Durée minimale de location : ${minLabel}.`;
+          errorEl.style.display = 'block';
+          summaryEl.style.display = 'none';
+          btn.disabled = true;
+          return;
+        }
+
+        // Validation durée maximale
+        if (dureeMaxJours && diffDays > dureeMaxJours) {
+          errorEl.textContent = `⚠️ Durée maximale de location : ${dureeMaxJours} jour(s).`;
+          errorEl.style.display = 'block';
+          summaryEl.style.display = 'none';
+          btn.disabled = true;
+          return;
+        }
+
+        // Calcul du prix via l'API (tarification dynamique)
+        let locationAmount = diffDays * prixJournalier; // fallback
+        try {
+          const prixRes = await fetch(
+            `/api/reservations/prix?vehicule_id=${vehiculeId}&date_debut=${encodeURIComponent(start.toISOString())}&date_fin=${encodeURIComponent(end.toISOString())}`
+          );
+          const prixData = await prixRes.json();
+          if (prixData.total) locationAmount = prixData.total;
+        } catch (e) { /* fallback silencieux */ }
 
         document.getElementById('duration-text').textContent = `${diffDays} jour(s) (${Math.floor(diffH)}h)`;
         document.getElementById('location-amount').textContent = `${locationAmount.toFixed(2)} €`;
