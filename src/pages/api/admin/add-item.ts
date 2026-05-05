@@ -44,11 +44,11 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         annee: formData.get('annee') ? parseInt(formData.get('annee') as string) : null,
         prix_journalier_base: formData.get('prix') ? parseFloat(formData.get('prix') as string) : 0,
         image_url: formData.get('image_url')?.toString() || null,
-        // Gestion propre des 4 photos supplémentaires
         image_url_2: formData.get('image_url_2')?.toString() || null,
         image_url_3: formData.get('image_url_3')?.toString() || null,
         image_url_4: formData.get('image_url_4')?.toString() || null,
         image_url_5: formData.get('image_url_5')?.toString() || null,
+        getaround_id: formData.get('getaround_id')?.toString() || null,
       });
 
       if (error) throw error;

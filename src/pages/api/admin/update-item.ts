@@ -35,6 +35,7 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         image_url_3: formData.get('image_url_3'),
         image_url_4: formData.get('image_url_4'),
         image_url_5: formData.get('image_url_5'),
+        getaround_id: formData.get('getaround_id'),
         stock: formData.get('stock'),
         stock_total: formData.get('stock_total') // Pour les mises à jour JSON
       };
@@ -48,7 +49,7 @@ export const POST: APIRoute = async ({ request, redirect }) => {
 
     // Traitement selon le type
     if (type === 'vehicule') {
-      const { error } = await supabaseAdmin.from('vehicules').update({
+      const updatePayload: Record<string, any> = {
         nom: data.nom?.toString(),
         modele: data.modele?.toString() || null,
         annee: data.annee ? parseInt(data.annee as string) : null,
@@ -58,7 +59,12 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         image_url_3: data.image_url_3?.toString() || null,
         image_url_4: data.image_url_4?.toString() || null,
         image_url_5: data.image_url_5?.toString() || null,
-      }).eq('id', id);
+      };
+      // getaround_id : inclure seulement si fourni (évite d'écraser une valeur existante)
+      if ('getaround_id' in data) {
+        updatePayload.getaround_id = data.getaround_id?.toString() || null;
+      }
+      const { error } = await supabaseAdmin.from('vehicules').update(updatePayload).eq('id', id);
 
       if (error) throw error;
 

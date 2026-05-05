@@ -2,8 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(git commit -m ' *)",
-      "WebFetch(domain:fr.getaround.com)"
+      "WebFetch(domain:fr.getaround.com)",
+      "Bash(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\\\\popup\" -Force)",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\\\\background\" -Force)",
+      "Bash(Write-Host \"Dossiers créés\")",
+      "Bash(code \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\")"
     ],
-    "defaultMode": "dontAsk"
+    "defaultMode": "dontAsk",
+    "additionalDirectories": [
+      "c:\\Users\\aolsu\\Documents\\sites wordpress\\scrape-getaround"
+    ]
   }
 }

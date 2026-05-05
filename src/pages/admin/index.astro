@@ -111,6 +111,10 @@ const updated = url.searchParams.get('updated');
               {vehicule.modele && <span> - {vehicule.modele}</span>}
               {vehicule.annee && <span> ({vehicule.annee})</span>}
               <span class="price">{vehicule.prix_journalier_base}€/jour</span>
+              {vehicule.getaround_id
+                ? <span class="ga-badge ga-ok" title={`ID Getaround : ${vehicule.getaround_id}`}>🔗 GA #{vehicule.getaround_id}</span>
+                : <span class="ga-badge ga-missing">⚠️ Pas d'ID Getaround</span>
+              }
             </div>
             <div class="item-actions">
               <button class="btn-edit" data-type="vehicule" data-id={vehicule.id}>✏️ Modifier</button>
@@ -261,6 +265,11 @@ const updated = url.searchParams.get('updated');
           <div class="form-group">
             <label for="prix">Prix journalier</label>
             <input type="number" step="0.01" id="prix" name="prix" placeholder="0.00" required />
+          </div>
+
+          <div class="form-group">
+            <label for="getaround_id">ID Getaround <span style="font-weight:400;color:#6b7280;">(optionnel — pour la synchronisation du calendrier)</span></label>
+            <input type="text" id="getaround_id" name="getaround_id" placeholder="Ex: 123456" />
           </div>
 
           <div class="form-group" id="images-container">
@@ -728,14 +737,20 @@ const updated = url.searchParams.get('updated');
             <label>Photo principale (URL)</label>
             <input type="text" name="image_url" value="${item.image_url || ''}" required>
           </div>
-          
+
           <div class="additional-photos">
             <input type="text" name="image_url_2" placeholder="Photo 2" value="${item.image_url_2 || ''}">
             <input type="text" name="image_url_3" placeholder="Photo 3" value="${item.image_url_3 || ''}">
             <input type="text" name="image_url_4" placeholder="Photo 4" value="${item.image_url_4 || ''}">
             <input type="text" name="image_url_5" placeholder="Photo 5" value="${item.image_url_5 || ''}">
           </div>
-          
+
+          <div class="form-group" style="margin-top:1rem;">
+            <label>ID Getaround <span style="font-weight:400;color:#6b7280;">(pour la synchronisation du calendrier)</span></label>
+            <input type="text" name="getaround_id" value="${item.getaround_id || ''}" placeholder="Ex: 123456">
+            <small style="color:#6b7280;font-size:0.78rem;">Trouvez cet ID dans l'URL de votre voiture sur getaround.com</small>
+          </div>
+
           <button type="submit" class="btn-submit">💾 Mettre à jour</button>
         </form>
       `;
@@ -968,6 +983,9 @@ const updated = url.searchParams.get('updated');
   .item-info strong { display: block; color: #333; margin-bottom: 0.25rem; }
   .item-info span { color: #666; font-size: 0.9rem; margin-right: 1rem; }
   .price { color: #2ecc71; font-weight: bold; }
+  .ga-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; margin-left: 6px; }
+  .ga-ok      { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .ga-missing { background: rgba(234,179,8,0.12);  color: #fbbf24; }
   .stock { color: #f39c12; }
   .item-actions { display: flex; gap: 0.5rem; }
   .btn-edit, .btn-delete { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
