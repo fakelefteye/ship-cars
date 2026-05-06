@@ -1,7 +1,7 @@
 // src/lib/getaround.ts — Client API Getaround Owner v1
 export const prerender = false;
 
-const API_BASE = 'https://api.getaround.com/owner/v1';
+const API_BASE = 'https://api-eu.getaround.com/owner/v1';
 
 function apiKey(): string {
   return import.meta.env.GETAROUND_API_KEY ?? '';

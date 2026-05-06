@@ -9,7 +9,9 @@
       "Bash(Write-Host \"Dossiers créés\")",
       "Bash(code \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\")",
       "mcp__claude_ai_Vercel__get_project",
-      "mcp__claude_ai_Vercel__list_deployments"
+      "mcp__claude_ai_Vercel__list_deployments",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(git commit *)"
     ],
     "defaultMode": "dontAsk",
     "additionalDirectories": [
