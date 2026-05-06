@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm audit *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "mcp__claude_ai_Supabase__list_projects"
     ]
   }
 }

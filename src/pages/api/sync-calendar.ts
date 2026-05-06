@@ -1,14 +1,15 @@
 // src/pages/api/sync-calendar.ts
-// Synchronise les locations Getaround → table indisponibilites de Supabase.
-// Appelable manuellement depuis l'admin ou via un cron externe.
+// Synchronise les indisponibilités Getaround (locations + blocages propriétaire)
+// vers la table indisponibilites de Supabase.
+// Utilise GET /cars/{id}/unavailabilities.json qui retourne toutes les périodes
+// (reason: "booked" pour les locations clients, autres raisons pour blocages manuels).
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { supabaseAdmin as supabase } from '../../lib/supabase';
-import { getRentals } from '../../lib/getaround';
+import { getUnavailablePeriods } from '../../lib/getaround';
 
 export const GET: APIRoute = async ({ request }) => {
-  // Protection basique par clé ou cookie admin
   const url = new URL(request.url);
   const adminPassword = import.meta.env.ADMIN_PASSWORD;
   const cookies = request.headers.get('cookie') || '';
@@ -19,7 +20,6 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   try {
-    // 1. Récupère toutes les voitures avec leur getaround_id
     const { data: vehicules, error: vErr } = await supabase
       .from('vehicules')
       .select('id, nom, getaround_id')
@@ -32,56 +32,60 @@ export const GET: APIRoute = async ({ request }) => {
       );
     }
 
-    const carIdToVehiculeId = Object.fromEntries(
-      vehicules.map((v) => [String(v.getaround_id), v.id]),
-    );
-
-    // 2. Récupère toutes les locations depuis Getaround
-    const rentals = await getRentals();
+    // Fenêtre de sync : aujourd'hui → +6 mois
+    const now = new Date();
+    const inSixMonths = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+    const startDate = now.toISOString();
+    const endDate = inSixMonths.toISOString();
 
     let synced = 0;
-    let cancelled = 0;
+    let deleted = 0;
     const errors: string[] = [];
+    const detail: Record<string, number> = {};
 
-    // 3. Upsert les locations actives dans indisponibilites
-    for (const rental of rentals) {
-      const vehiculeId = carIdToVehiculeId[String(rental.car_id)];
-      if (!vehiculeId) continue; // voiture non gérée sur ce site
+    for (const vehicule of vehicules) {
+      const carId = String(vehicule.getaround_id);
 
-      if (rental.state === 'cancelled') {
-        // Supprime l'entrée si la location est annulée
-        const { error } = await supabase
-          .from('indisponibilites')
-          .delete()
-          .eq('getaround_rental_id', rental.id);
-        if (!error) cancelled++;
-        continue;
-      }
+      // Récupère les indisponibilités depuis Getaround
+      const periods = await getUnavailablePeriods(carId, startDate, endDate);
 
-      const { error } = await supabase.from('indisponibilites').upsert(
-        {
-          vehicule_id: vehiculeId,
-          date_debut: rental.start_at,
-          date_fin: rental.end_at,
+      // Supprime les anciennes entrées sync (source=getaround, sans rental_id)
+      // Les entrées créées par webhook (avec getaround_rental_id) sont préservées.
+      const { count } = await supabase
+        .from('indisponibilites')
+        .delete({ count: 'exact' })
+        .eq('vehicule_id', vehicule.id)
+        .eq('source', 'getaround')
+        .is('getaround_rental_id', null);
+
+      deleted += count ?? 0;
+
+      // Réinsère les périodes actuelles
+      for (const period of periods) {
+        const { error } = await supabase.from('indisponibilites').insert({
+          vehicule_id: vehicule.id,
+          date_debut: period.starts_at,
+          date_fin: period.ends_at,
           source: 'getaround',
-          getaround_rental_id: rental.id,
-          note: `Location Getaround #${rental.id}`,
-        },
-        { onConflict: 'getaround_rental_id' },
-      );
+          note: period.reason ? `Getaround (${period.reason})` : 'Getaround',
+        });
 
-      if (error) {
-        errors.push(`rental ${rental.id}: ${error.message}`);
-      } else {
-        synced++;
+        if (error) {
+          errors.push(`${vehicule.nom} [${carId}]: ${error.message}`);
+        } else {
+          synced++;
+        }
       }
+
+      detail[vehicule.nom] = periods.length;
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         synced,
-        cancelled,
+        deleted,
+        detail,
         errors: errors.length ? errors : undefined,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },

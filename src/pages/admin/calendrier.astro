@@ -4,7 +4,6 @@
 import MainLayout from '../../layouts/MainLayout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
 
-const url = new URL(Astro.request.url);
 const cookies = Astro.request.headers.get('cookie') || '';
 const isAuthenticated = cookies.includes('admin_auth=true');
 
@@ -106,7 +105,7 @@ function fmt(d: string) {
             <tbody>
               {indisponibilites.map((item) => (
                 <tr data-id={item.id}>
-                  <td><strong>{item.vehicules?.nom ?? '—'}</strong></td>
+                  <td><strong>{(item.vehicules as any)?.nom ?? '—'}</strong></td>
                   <td>
                     <span class={`badge badge-${item.source}`}>
                       {item.source === 'getaround' ? '🔗 Getaround' : '✋ Manuel'}
@@ -155,7 +154,7 @@ function fmt(d: string) {
             <tbody>
               {reservations.map((res) => (
                 <tr data-id={res.id}>
-                  <td><strong>{res.vehicules?.nom ?? '—'}</strong></td>
+                  <td><strong>{(res.vehicules as any)?.nom ?? '—'}</strong></td>
                   <td>{res.locataire_nom || res.email_client || '—'}</td>
                   <td>{fmt(res.date_debut)}</td>
                   <td>{fmt(res.date_fin)}</td>
@@ -198,8 +197,11 @@ function fmt(d: string) {
       resultEl.style.display = 'block';
       if (data.success) {
         resultEl.className = 'sync-result success';
-        resultEl.textContent = `✅ Synchronisation réussie — ${data.synced} location(s) importées, ${data.cancelled} annulation(s) traitées.`;
-        setTimeout(() => location.reload(), 1500);
+        const detailStr = data.detail
+          ? Object.entries(data.detail).map(([nom, n]) => `${nom}: ${n}`).join(', ')
+          : '';
+        resultEl.textContent = `✅ ${data.synced} créneau(x) importé(s) depuis Getaround${detailStr ? ' — ' + detailStr : ''}.`;
+        setTimeout(() => location.reload(), 2000);
       } else {
         resultEl.className = 'sync-result error';
         resultEl.textContent = `❌ Erreur : ${data.error}`;
@@ -237,7 +239,13 @@ function fmt(d: string) {
       });
       const data = await res.json();
       if (data.success) {
-        location.reload();
+        const gaStatus = data.getaround_blocked
+          ? '✅ Synchronisé sur Getaround'
+          : '⚠️ Non synchronisé sur Getaround (vérifiez la clé API ou l\'ID voiture)';
+        errEl.style.display = 'block';
+        errEl.style.color = data.getaround_blocked ? '#4ade80' : '#fbbf24';
+        errEl.textContent = `✅ Créneau bloqué sur le site — ${gaStatus}`;
+        setTimeout(() => location.reload(), 2500);
       } else {
         errEl.textContent = data.error || 'Erreur inconnue';
         errEl.style.display = 'block';
@@ -418,7 +426,6 @@ function fmt(d: string) {
   }
 
   .error-msg {
-    color: #f87171;
     font-size: 0.83rem;
     margin-bottom: 0.75rem;
   }
