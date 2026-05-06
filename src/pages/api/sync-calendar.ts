@@ -88,6 +88,10 @@ export const GET: APIRoute = async ({ request }) => {
     );
   } catch (err: any) {
     console.error('[sync-calendar]', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({
+      error: err.message,
+      cause: err.cause?.message,
+      code: err.cause?.code,
+    }), { status: 500 });
   }
 };
