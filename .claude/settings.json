@@ -7,7 +7,9 @@
       "Bash(Out-Null)",
       "Bash(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\\\\background\" -Force)",
       "Bash(Write-Host \"Dossiers créés\")",
-      "Bash(code \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\")"
+      "Bash(code \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\scrape-getaround\")",
+      "mcp__claude_ai_Vercel__get_project",
+      "mcp__claude_ai_Vercel__list_deployments"
     ],
     "defaultMode": "dontAsk",
     "additionalDirectories": [
