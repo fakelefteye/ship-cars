@@ -11,7 +11,8 @@
       "mcp__claude_ai_Vercel__get_project",
       "mcp__claude_ai_Vercel__list_deployments",
       "mcp__claude_ai_Supabase__execute_sql",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "WebFetch(domain:api.getaround.com)"
     ],
     "defaultMode": "dontAsk",
     "additionalDirectories": [
