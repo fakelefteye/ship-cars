@@ -64,20 +64,25 @@ export async function blockDates(
   startAt: string,
   endAt: string,
 ): Promise<GetaroundUnavailablePeriod | null> {
-  const res = await fetch(`${API_BASE}/cars/${carId}/unavailable_periods`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({
-      unavailable_period: { start_date: startAt, end_date: endAt },
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error('[Getaround] blockDates error', res.status, err);
+  try {
+    const res = await fetch(`${API_BASE}/cars/${carId}/unavailable_periods`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        unavailable_period: { start_date: startAt, end_date: endAt },
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('[Getaround] blockDates error', res.status, err);
+      return null;
+    }
+    const data = await res.json();
+    return data.unavailable_period ?? null;
+  } catch (e) {
+    console.error('[Getaround] blockDates network error', e);
     return null;
   }
-  const data = await res.json();
-  return data.unavailable_period ?? null;
 }
 
 /**
@@ -85,24 +90,34 @@ export async function blockDates(
  * Renvoie true si succès.
  */
 export async function unblockDates(carId: string, periodId: string): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/cars/${carId}/unavailable_periods/${periodId}`, {
-    method: 'DELETE',
-    headers: headers(),
-  });
-  if (!res.ok) {
-    console.error('[Getaround] unblockDates error', res.status, carId, periodId);
+  try {
+    const res = await fetch(`${API_BASE}/cars/${carId}/unavailable_periods/${periodId}`, {
+      method: 'DELETE',
+      headers: headers(),
+    });
+    if (!res.ok) {
+      console.error('[Getaround] unblockDates error', res.status, carId, periodId);
+    }
+    return res.ok;
+  } catch (e) {
+    console.error('[Getaround] unblockDates network error', e);
+    return false;
   }
-  return res.ok;
 }
 
 /** Liste les périodes d'indisponibilité d'une voiture */
 export async function getUnavailablePeriods(
   carId: string,
 ): Promise<GetaroundUnavailablePeriod[]> {
-  const res = await fetch(`${API_BASE}/cars/${carId}/unavailable_periods`, {
-    headers: headers(),
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.unavailable_periods ?? [];
+  try {
+    const res = await fetch(`${API_BASE}/cars/${carId}/unavailable_periods`, {
+      headers: headers(),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.unavailable_periods ?? [];
+  } catch (e) {
+    console.error('[Getaround] getUnavailablePeriods network error', e);
+    return [];
+  }
 }

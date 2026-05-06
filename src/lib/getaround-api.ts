@@ -19,12 +19,16 @@ export async function fetchGetaroundRentals() {
 
 // Fonction pour envoyer un message automatique
 export async function sendGetaroundMessage(rentalId: string, text: string) {
-  await fetch(`https://fr.getaround.com/api/owner/v1/rentals/${rentalId}/messages`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GETAROUND_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ message: { body: text } })
-  });
+  try {
+    await fetch(`https://fr.getaround.com/api/owner/v1/rentals/${rentalId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GETAROUND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: { body: text } })
+    });
+  } catch (e) {
+    console.error('[Getaround] sendGetaroundMessage network error', e);
+  }
 }
