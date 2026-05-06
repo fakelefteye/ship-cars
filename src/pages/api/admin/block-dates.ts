@@ -42,10 +42,9 @@ export const POST: APIRoute = async ({ request }) => {
     .single();
 
   // Bloque sur Getaround si la voiture y est référencée
-  let getaroundPeriodId: string | null = null;
+  let blockedOnGetaround = false;
   if (vehicule?.getaround_id) {
-    const period = await blockDates(String(vehicule.getaround_id), date_debut, date_fin);
-    getaroundPeriodId = period?.id ?? null;
+    blockedOnGetaround = await blockDates(String(vehicule.getaround_id), date_debut, date_fin);
   }
 
   // Insère dans indisponibilites
@@ -56,7 +55,6 @@ export const POST: APIRoute = async ({ request }) => {
       date_debut,
       date_fin,
       source: 'manual',
-      getaround_unavailable_period_id: getaroundPeriodId,
       note: note || 'Blocage manuel admin',
     })
     .select()
@@ -67,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   return new Response(
-    JSON.stringify({ success: true, record, getaround_blocked: !!getaroundPeriodId }),
+    JSON.stringify({ success: true, record, getaround_blocked: blockedOnGetaround }),
     { status: 200, headers: { 'Content-Type': 'application/json' } },
   );
 };
@@ -93,15 +91,16 @@ export const DELETE: APIRoute = async ({ request }) => {
   // Récupère l'entrée pour savoir s'il y a un blocage Getaround à supprimer
   const { data: record } = await supabase
     .from('indisponibilites')
-    .select('getaround_unavailable_period_id, vehicule_id, vehicules(getaround_id)')
+    .select('date_debut, date_fin, vehicule_id, vehicules(getaround_id)')
     .eq('id', indisponibilite_id)
     .single();
 
   let getaroundUnblocked = false;
-  if (record?.getaround_unavailable_period_id && record?.vehicules?.getaround_id) {
+  if (record?.date_debut && record?.date_fin && record?.vehicules?.getaround_id) {
     getaroundUnblocked = await unblockDates(
       String(record.vehicules.getaround_id),
-      String(record.getaround_unavailable_period_id),
+      record.date_debut,
+      record.date_fin,
     );
   }
 
