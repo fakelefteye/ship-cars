@@ -48,8 +48,9 @@ export const GET: APIRoute = async ({ request }) => {
     .select('id, nom, getaround_id')
     .not('getaround_id', 'is', null);
 
-  const now = new Date().toISOString();
-  const in6m = new Date(Date.now() + 180 * 86400_000).toISOString();
+  const toGA = (iso: string) => iso.replace(/\.\d{3}Z$/, '+00:00').replace(/Z$/, '+00:00');
+  const now = toGA(new Date().toISOString());
+  const in6m = toGA(new Date(Date.now() + 180 * 86400_000).toISOString());
 
   for (const v of vehicules ?? []) {
     const carId = v.getaround_id;

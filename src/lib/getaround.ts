@@ -14,6 +14,11 @@ function headers(): Record<string, string> {
   };
 }
 
+// Convertit une date ISO en format accepté par l'API Getaround : YYYY-MM-DDTHH:MM:SS+00:00
+function toGA(iso: string): string {
+  return iso.replace(/\.\d{3}Z$/, '+00:00').replace(/Z$/, '+00:00');
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface GetaroundRental {
@@ -70,7 +75,7 @@ export async function blockDates(
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json`, {
       method: 'POST',
       headers: headers(),
-      body: JSON.stringify({ starts_at: startsAt, ends_at: endsAt }),
+      body: JSON.stringify({ starts_at: toGA(startsAt), ends_at: toGA(endsAt) }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -97,7 +102,7 @@ export async function unblockDates(
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json`, {
       method: 'DELETE',
       headers: headers(),
-      body: JSON.stringify({ starts_at: startsAt, ends_at: endsAt }),
+      body: JSON.stringify({ starts_at: toGA(startsAt), ends_at: toGA(endsAt) }),
     });
     if (!res.ok) {
       console.error('[Getaround] unblockDates error', res.status, carId, startsAt, endsAt);
@@ -122,8 +127,8 @@ export async function getUnavailablePeriods(
     const now = new Date();
     const inOneYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
     const params = new URLSearchParams({
-      start_date: startDate ?? now.toISOString(),
-      end_date:   endDate   ?? inOneYear.toISOString(),
+      start_date: toGA(startDate ?? now.toISOString()),
+      end_date:   toGA(endDate   ?? inOneYear.toISOString()),
     });
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json?${params}`, {
       headers: headers(),
