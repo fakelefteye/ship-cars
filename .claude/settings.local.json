@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm audit *)",
       "Bash(git add *)",
-      "mcp__claude_ai_Supabase__list_projects"
+      "mcp__claude_ai_Supabase__list_projects",
+      "WebFetch(domain:api-eu.getaround.com)"
     ]
   }
 }

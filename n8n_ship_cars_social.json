@@ -1,0 +1,199 @@
+{
+  "name": "SHIP CARS — Social Media Automation",
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "⏰ Planification (Lun/Mer/Ven 10h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 10 * * 1,3,5" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-theme",
+      "name": "🎯 Choisir le thème du jour",
+      "type": "n8n-nodes-base.code",
+      "position": [440, 300],
+      "parameters": {
+        "jsCode": "// Rotation des thèmes selon le jour de la semaine\nconst jour = new Date().getDay(); // 1=Lundi, 3=Mercredi, 5=Vendredi\n\nconst themes = {\n  1: { // LUNDI — Véhicule\n    categorie: 'vehicule',\n    titre: 'Présentation véhicule',\n    instruction: `Tu es community manager pour SHIP CARS, société de location de véhicules basée à Grenoble (38650 SINARD). \nCrée un post engageant qui met en avant la flotte SHIP CARS. Mentionne que les véhicules sont disponibles depuis Grenoble, parfaits pour explorer les Alpes, le Vercors ou la Chartreuse. Ton dynamique, accrocheur, avec emoji. Inclus un appel à l'action vers shipcars.fr.`\n  },\n  3: { // MERCREDI — Destination locale\n    categorie: 'destination',\n    titre: 'Destination & activité montagne',\n    instruction: `Tu es community manager pour SHIP CARS, société de location de véhicules à Grenoble. \nCrée un post sur une destination incontournable autour de Grenoble UNIQUEMENT ACCESSIBLE EN VOITURE. Alterne entre ces idées : Les 2 Alpes (glacier l'été - ski sur neige en juillet!), Chamrousse, Alpe d'Huez, Col du Galibier, Lac de la Muzelle (depuis Vénosc), Plateau d'Emparis, Vercors (Gorges de la Bourne), Chartreuse (Grande Chartreuse), Lac du Monteynard, Col d'Ornon, Lac de Laffrey, Dévoluy, Col de la Croix de Fer. Insiste sur le fait qu'on ne peut y accéder qu'en voiture. Ton aventurier, inspirant. Inclus un appel à l'action vers shipcars.fr.`\n  },\n  5: { // VENDREDI — Promo / conseil\n    categorie: 'promo_conseil',\n    titre: 'Promo ou conseil pratique',\n    instruction: `Tu es community manager pour SHIP CARS, société de location de véhicules à Grenoble. \nCrée alternativement soit : (1) une offre promotionnelle (week-end en montagne, tarif spécial été/ski, départ depuis la gare de Grenoble), soit (2) un conseil pratique de conduite en montagne (routes de cols, pneus hiver, que vérifier avant de partir en altitude). Ton utile et sympa. Inclus un appel à l'action vers shipcars.fr.`\n  }\n};\n\nconst theme = themes[jour] || themes[1];\nconst dateStr = new Date().toLocaleDateString('fr-FR');\n\nreturn [{\n  json: {\n    ...theme,\n    date: dateStr,\n    jour: jour\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-claude",
+      "name": "🤖 Générer contenu avec Claude AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [700, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 2048,\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": \"{{ $json.instruction }}\\n\\nGénère 5 variantes de posts adaptées à ces plateformes. Réponds UNIQUEMENT en JSON valide avec cette structure :\\n{\\n  \\\"instagram\\\": { \\\"texte\\\": \\\"...\\\", \\\"hashtags\\\": \\\"...\\\", \\\"conseil_visuel\\\": \\\"...\\\" },\\n  \\\"facebook\\\": { \\\"texte\\\": \\\"...\\\" },\\n  \\\"linkedin\\\": { \\\"texte\\\": \\\"...\\\" },\\n  \\\"tiktok\\\": { \\\"script\\\": \\\"...\\\", \\\"caption\\\": \\\"...\\\", \\\"hashtags\\\": \\\"...\\\" },\\n  \\\"snapchat\\\": { \\\"texte_court\\\": \\\"...\\\" }\\n}\\nPour Instagram : émojis, max 2200 caractères, hashtags séparés. Pour Facebook : ton conversationnel, peut être plus long. Pour LinkedIn : professionnel, B2B, parler aux entreprises grenobloises. Pour TikTok : script de 30-60 secondes + caption courte. Pour Snapchat : texte ultra-court (max 80 caractères), percutant.\"\n  }]\n}"
+      }
+    },
+    {
+      "id": "code-parse",
+      "name": "📋 Parser et formater le contenu",
+      "type": "n8n-nodes-base.code",
+      "position": [960, 300],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst theme = $('🎯 Choisir le thème du jour').first().json;\n\n// Extraire le texte de la réponse Claude\nconst rawContent = response.content[0].text;\n\n// Parser le JSON retourné par Claude\nlet contenu;\ntry {\n  // Chercher le JSON dans la réponse (Claude peut ajouter du texte autour)\n  const jsonMatch = rawContent.match(/\\{[\\s\\S]*\\}/);\n  contenu = JSON.parse(jsonMatch[0]);\n} catch(e) {\n  // Fallback si le parsing échoue\n  contenu = {\n    instagram: { texte: rawContent.substring(0, 500), hashtags: '#ShipCars #LocationVoiture #Grenoble #Alpes', conseil_visuel: 'Photo de voiture en montagne' },\n    facebook: { texte: rawContent.substring(0, 800) },\n    linkedin: { texte: rawContent.substring(0, 600) },\n    tiktok: { script: rawContent.substring(0, 400), caption: 'Location voiture Grenoble 🚗', hashtags: '#ShipCars #Grenoble' },\n    snapchat: { texte_court: 'Location voiture à Grenoble 🚗 shipcars.fr' }\n  };\n}\n\nconst date = theme.date;\nconst categorie = theme.categorie;\n\nreturn [{\n  json: {\n    categorie,\n    date,\n    instagram: contenu.instagram,\n    facebook: contenu.facebook,\n    linkedin: contenu.linkedin,\n    tiktok: contenu.tiktok,\n    snapchat: contenu.snapchat\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-facebook",
+      "name": "📘 Publier sur Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1220, 140],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.FACEBOOK_PAGE_ID }}/feed",
+        "sendBody": true,
+        "bodyContentType": "form",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "message", "value": "={{ $json.facebook.texte }}" },
+            { "name": "access_token", "value": "={{ $env.FACEBOOK_PAGE_ACCESS_TOKEN }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-instagram-container",
+      "name": "📸 Instagram — Créer conteneur",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1220, 280],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.INSTAGRAM_ACCOUNT_ID }}/media",
+        "sendBody": true,
+        "bodyContentType": "form",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "image_url", "value": "={{ $env.DEFAULT_IMAGE_URL }}" },
+            { "name": "caption", "value": "={{ $json.instagram.texte + '\\n\\n' + $json.instagram.hashtags }}" },
+            { "name": "access_token", "value": "={{ $env.FACEBOOK_PAGE_ACCESS_TOKEN }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wait-instagram",
+      "name": "⏳ Attente 5s (Instagram)",
+      "type": "n8n-nodes-base.wait",
+      "position": [1440, 280],
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "http-instagram-publish",
+      "name": "📸 Instagram — Publier",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1640, 280],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.INSTAGRAM_ACCOUNT_ID }}/media_publish",
+        "sendBody": true,
+        "bodyContentType": "form",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "creation_id", "value": "={{ $json.id }}" },
+            { "name": "access_token", "value": "={{ $env.FACEBOOK_PAGE_ACCESS_TOKEN }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-linkedin",
+      "name": "💼 Publier sur LinkedIn",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1220, 420],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/v2/ugcPosts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.LINKEDIN_ACCESS_TOKEN }}" },
+            { "name": "X-Restli-Protocol-Version", "value": "2.0.0" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"author\": \"urn:li:organization:{{ $env.LINKEDIN_ORG_ID }}\",\n  \"lifecycleState\": \"PUBLISHED\",\n  \"specificContent\": {\n    \"com.linkedin.ugc.ShareContent\": {\n      \"shareCommentary\": {\n        \"text\": \"{{ $json.linkedin.texte }}\"\n      },\n      \"shareMediaCategory\": \"NONE\"\n    }\n  },\n  \"visibility\": {\n    \"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"\n  }\n}"
+      }
+    },
+    {
+      "id": "email-tiktok-snap",
+      "name": "📧 Email — Scripts TikTok & Snap",
+      "type": "n8n-nodes-base.gmail",
+      "position": [1220, 560],
+      "parameters": {
+        "operation": "send",
+        "to": "={{ $env.NOTIFICATION_EMAIL }}",
+        "subject": "=🎬 SHIP CARS — Contenu TikTok & Snap du {{ $json.date }}",
+        "emailType": "html",
+        "message": "=<h2>Contenu SHIP CARS du {{ $json.date }}</h2><h3>🎵 TikTok</h3><p><strong>Script :</strong></p><pre>{{ $json.tiktok.script }}</pre><p><strong>Caption :</strong> {{ $json.tiktok.caption }}</p><p><strong>Hashtags :</strong> {{ $json.tiktok.hashtags }}</p><hr><h3>👻 Snapchat</h3><p>{{ $json.snapchat.texte_court }}</p><hr><p><em>Catégorie : {{ $json.categorie }}</em></p>"
+      }
+    },
+    {
+      "id": "code-log",
+      "name": "✅ Log résultat",
+      "type": "n8n-nodes-base.code",
+      "position": [1880, 300],
+      "parameters": {
+        "jsCode": "const date = new Date().toISOString();\nconsole.log(`[SHIP CARS] Posts publiés le ${date}`);\nreturn [{ json: { success: true, date, message: 'Posts publiés sur Facebook, Instagram, LinkedIn. Email envoyé pour TikTok/Snap.' } }];"
+      }
+    }
+  ],
+  "connections": {
+    "⏰ Planification (Lun/Mer/Ven 10h)": {
+      "main": [[{ "node": "🎯 Choisir le thème du jour", "type": "main", "index": 0 }]]
+    },
+    "🎯 Choisir le thème du jour": {
+      "main": [[{ "node": "🤖 Générer contenu avec Claude AI", "type": "main", "index": 0 }]]
+    },
+    "🤖 Générer contenu avec Claude AI": {
+      "main": [[{ "node": "📋 Parser et formater le contenu", "type": "main", "index": 0 }]]
+    },
+    "📋 Parser et formater le contenu": {
+      "main": [[
+        { "node": "📘 Publier sur Facebook", "type": "main", "index": 0 },
+        { "node": "📸 Instagram — Créer conteneur", "type": "main", "index": 0 },
+        { "node": "💼 Publier sur LinkedIn", "type": "main", "index": 0 },
+        { "node": "📧 Email — Scripts TikTok & Snap", "type": "main", "index": 0 }
+      ]]
+    },
+    "📸 Instagram — Créer conteneur": {
+      "main": [[{ "node": "⏳ Attente 5s (Instagram)", "type": "main", "index": 0 }]]
+    },
+    "⏳ Attente 5s (Instagram)": {
+      "main": [[{ "node": "📸 Instagram — Publier", "type": "main", "index": 0 }]]
+    },
+    "📸 Instagram — Publier": {
+      "main": [[{ "node": "✅ Log résultat", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": ["ship-cars", "social-media", "automation"]
+}
