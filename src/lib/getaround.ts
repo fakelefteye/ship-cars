@@ -14,9 +14,14 @@ function headers(): Record<string, string> {
   };
 }
 
-// RFC3339 sans millisecondes : "2026-05-08T17:30:00Z" (format accepté par Getaround)
+// RFC3339 sans millisecondes : "2026-05-08T17:30:00Z" — pour POST/DELETE body
 function toGA(iso: string): string {
   return iso.replace(/\.\d{3}Z$/, 'Z');
+}
+
+// YYYY-MM-DD — pour les paramètres GET (unavailabilities)
+function toDateParam(iso: string): string {
+  return iso.slice(0, 10);
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -127,8 +132,8 @@ export async function getUnavailablePeriods(
     const now = new Date();
     const inOneYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
     const params = new URLSearchParams({
-      start_date: toGA(startDate ?? now.toISOString()),
-      end_date:   toGA(endDate   ?? inOneYear.toISOString()),
+      start_date: toDateParam(startDate ?? now.toISOString()),
+      end_date:   toDateParam(endDate   ?? inOneYear.toISOString()),
     });
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json?${params}`, {
       headers: headers(),

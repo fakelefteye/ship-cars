@@ -48,10 +48,10 @@ export const GET: APIRoute = async ({ request }) => {
     .select('id, nom, getaround_id')
     .not('getaround_id', 'is', null);
 
-  // Dates de test — midnight UTC, sans encodage des colons
+  // Dates de test
   const d1 = new Date(); d1.setUTCHours(0,0,0,0);
   const d2 = new Date(d1.getTime() + 180 * 86400_000);
-  const raw = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z'); // "2026-05-08T00:00:00Z"
+  const toDate = (d: Date) => d.toISOString().slice(0, 10); // "2026-05-08"
 
   const tryFetch = async (url: string) => {
     const r = await fetch(url, { headers });
@@ -64,14 +64,10 @@ export const GET: APIRoute = async ({ request }) => {
     const carId = v.getaround_id;
     const existsInGA = carsFromGA.some((c: any) => String(c.id) === String(carId));
     const base = `${API_BASE}/cars/${carId}/unavailabilities.json`;
-    const s = raw(d1), e = raw(d2);
+    const s = toDate(d1), e = toDate(d2);
 
-    // Les 4 combinaisons à tester
     const tests: Record<string, any> = {
-      'start_date brut (T:Z non encodé)':    await tryFetch(`${base}?start_date=${s}&end_date=${e}`),
-      'starts_at brut':                       await tryFetch(`${base}?starts_at=${s}&ends_at=${e}`),
-      'start_date encodé (%3A)':              await tryFetch(`${base}?start_date=${encodeURIComponent(s)}&end_date=${encodeURIComponent(e)}`),
-      'start-date (tiret)':                   await tryFetch(`${base}?start-date=${s}&end-date=${e}`),
+      'start_date YYYY-MM-DD': await tryFetch(`${base}?start_date=${s}&end_date=${e}`),
     };
 
     results.push({ test: `${v.nom} (GA id: ${carId})`, id_valide: existsInGA, ...tests });
