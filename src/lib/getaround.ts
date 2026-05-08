@@ -14,9 +14,9 @@ function headers(): Record<string, string> {
   };
 }
 
-// Convertit une date ISO en format accepté par l'API Getaround : YYYY-MM-DDTHH:MM:SS+00:00
+// RFC3339 sans millisecondes : "2026-05-08T17:30:00Z" (format accepté par Getaround)
 function toGA(iso: string): string {
-  return iso.replace(/\.\d{3}Z$/, '+00:00').replace(/Z$/, '+00:00');
+  return iso.replace(/\.\d{3}Z$/, 'Z');
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
