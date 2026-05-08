@@ -17,12 +17,11 @@ function headers(): Record<string, string> {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface GetaroundRental {
-  id: string;
-  car_id: string;
-  start_at: string;
-  end_at: string;
+  id: number | string;
+  car_id: number | string;
+  starts_at: string;
+  ends_at: string;
   state: string; // 'booked' | 'cancelled' | 'ended' | ...
-  user?: { first_name?: string; email?: string };
 }
 
 export interface GetaroundUnavailablePeriod {
@@ -34,31 +33,33 @@ export interface GetaroundUnavailablePeriod {
 
 // ─── Locations (Rentals) ─────────────────────────────────────────────────────
 
-/** Récupère toutes les locations depuis Getaround */
-export async function getRentals(): Promise<GetaroundRental[]> {
-  const res = await fetch(`${API_BASE}/rentals`, { headers: headers() });
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[Getaround] getRentals error', res.status, err);
-    return [];
+/**
+ * Récupère une location par son ID.
+ * GET /rentals/{id}.json
+ * L'API renvoie soit { rental: {...} } soit l'objet directement.
+ */
+export async function getRental(rentalId: string | number): Promise<GetaroundRental | null> {
+  try {
+    const res = await fetch(`${API_BASE}/rentals/${rentalId}.json`, { headers: headers() });
+    if (!res.ok) {
+      console.error('[Getaround] getRental error', res.status, rentalId);
+      return null;
+    }
+    const data = await res.json();
+    // L'API peut renvoyer { rental: {...} } ou directement {...}
+    return data.rental ?? (data.id ? data : null);
+  } catch (e) {
+    console.error('[Getaround] getRental network error', e);
+    return null;
   }
-  const data = await res.json();
-  return data.rentals ?? [];
 }
 
-/** Récupère une location spécifique */
-export async function getRental(rentalId: string): Promise<GetaroundRental | null> {
-  const res = await fetch(`${API_BASE}/rentals/${rentalId}`, { headers: headers() });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.rental ?? null;
-}
-
-// ─── Périodes d'indisponibilité ───────────────────────────────────────────────
+// ─── Indisponibilités ─────────────────────────────────────────────────────────
 
 /**
  * Bloque un créneau sur Getaround pour une voiture.
- * L'API renvoie 204 No Content (pas d'ID) — on retourne un booléen.
+ * POST /cars/{car_id}/unavailabilities.json
+ * Renvoie 204 No Content — on retourne un booléen.
  */
 export async function blockDates(
   carId: string,
@@ -73,7 +74,7 @@ export async function blockDates(
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      console.error('[Getaround] blockDates error', res.status, err);
+      console.error('[Getaround] blockDates error', res.status, JSON.stringify(err));
       return false;
     }
     return true;
@@ -85,7 +86,7 @@ export async function blockDates(
 
 /**
  * Supprime une indisponibilité sur Getaround par plage de dates.
- * L'API prend starts_at/ends_at dans le corps (pas d'ID).
+ * DELETE /cars/{car_id}/unavailabilities.json
  */
 export async function unblockDates(
   carId: string,
@@ -108,7 +109,10 @@ export async function unblockDates(
   }
 }
 
-/** Liste les indisponibilités d'une voiture entre deux dates */
+/**
+ * Liste les indisponibilités d'une voiture entre deux dates.
+ * GET /cars/{car_id}/unavailabilities.json?start_date=...&end_date=...
+ */
 export async function getUnavailablePeriods(
   carId: string,
   startDate?: string,
@@ -119,13 +123,17 @@ export async function getUnavailablePeriods(
     const inOneYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
     const params = new URLSearchParams({
       start_date: startDate ?? now.toISOString(),
-      end_date: endDate ?? inOneYear.toISOString(),
+      end_date:   endDate   ?? inOneYear.toISOString(),
     });
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json?${params}`, {
       headers: headers(),
     });
-    if (!res.ok) return [];
-    return await res.json();
+    if (!res.ok) {
+      console.error('[Getaround] getUnavailablePeriods error', res.status, carId);
+      return [];
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (e) {
     console.error('[Getaround] getUnavailablePeriods network error', e);
     return [];

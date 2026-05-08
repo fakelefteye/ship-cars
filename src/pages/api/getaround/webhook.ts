@@ -1,25 +1,29 @@
 // src/pages/api/getaround/webhook.ts
-// Reçoit les événements temps réel de Getaround (résa créée / annulée).
-// URL à communiquer à Getaround : https://[votre-domaine]/api/getaround/webhook
+// Reçoit les événements temps réel de Getaround.
+// URL à enregistrer dans Getaround : https://[votre-domaine]/api/getaround/webhook
+//
+// Flux rental.booked / rental.canceled :
+//   1. Le webhook envoie le rental_id dans data
+//   2. On appelle GET /rentals/{id}.json pour récupérer starts_at, ends_at, car_id
+//   3. On upsert / supprime dans indisponibilites
+//
+// Flux unavailability.created / unavailability.deleted :
+//   Les dates sont dans le payload directement (starts_at, ends_at, car_id)
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
+import { getRental } from '../../../lib/getaround';
 
-// Vérifie la signature HMAC SHA1 envoyée par Getaround dans X-Drivy-Signature
 function verifySignature(rawBody: string, signature: string | null): boolean {
   const secret = import.meta.env.GETAROUND_WEBHOOK_SECRET;
   if (!secret) {
-    // Si le secret n'est pas configuré, on laisse passer (dev / test ping)
-    console.warn('[getaround/webhook] GETAROUND_WEBHOOK_SECRET non configuré — signature non vérifiée');
+    console.warn('[webhook] GETAROUND_WEBHOOK_SECRET non configuré — signature non vérifiée');
     return true;
   }
   if (!signature) return false;
-
   const expected = 'sha1=' + createHmac('sha1', secret).update(rawBody).digest('hex');
-
-  // Comparaison en temps constant pour éviter les timing attacks
   try {
     return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
   } catch {
@@ -28,84 +32,136 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
 }
 
 export const POST: APIRoute = async ({ request }) => {
-  // 1. Lire le corps brut AVANT de le parser (nécessaire pour la signature)
-  const rawBody = await request.text();
+  const rawBody  = await request.text();
   const signature = request.headers.get('x-drivy-signature');
 
-  // 2. Vérifier la signature
   if (!verifySignature(rawBody, signature)) {
-    console.error('[getaround/webhook] Signature invalide');
+    console.error('[webhook] Signature invalide');
     return new Response('Signature invalide', { status: 401 });
   }
 
-  // 3. Parser le payload
   let payload: any;
-  try {
-    payload = JSON.parse(rawBody);
-  } catch {
-    return new Response('Invalid JSON', { status: 400 });
-  }
+  try { payload = JSON.parse(rawBody); }
+  catch { return new Response('Invalid JSON', { status: 400 }); }
 
   const eventType: string = payload?.type ?? '';
-  console.log('[getaround/webhook] event:', eventType, 'at:', payload?.occurred_at);
+  console.log('[webhook] event:', eventType, 'at:', payload?.occurred_at);
 
-  // 4. Répondre immédiatement au ping de test
+  // Ping de test Getaround
   if (eventType === 'ping') {
     return new Response(JSON.stringify({ received: true, pong: true }), { status: 200 });
   }
 
-  // 5. Traitement asynchrone des événements de location
-  const rental = payload?.data?.rental ?? payload?.data ?? null;
-
-  if (!rental?.id) {
-    return new Response(JSON.stringify({ received: true, skipped: 'no rental data' }), {
-      status: 200,
-    });
-  }
-
-  // Cherche le véhicule correspondant au car_id Getaround
-  const { data: vehicule } = await supabase
-    .from('vehicules')
-    .select('id')
-    .eq('getaround_id', String(rental.car_id))
-    .single();
-
-  // Événements de création / confirmation
+  // ── Événements de LOCATION ──────────────────────────────────────────────────
   if (
     eventType === 'rental.booked' ||
     eventType === 'rental.created' ||
     eventType === 'rental.confirmed' ||
-    eventType === 'rental.started'
-  ) {
-    if (vehicule) {
-      await supabase.from('indisponibilites').upsert(
-        {
-          vehicule_id: vehicule.id,
-          date_debut: rental.start_at,
-          date_fin: rental.end_at,
-          source: 'getaround',
-          getaround_rental_id: String(rental.id),
-          note: `Location Getaround #${rental.id}`,
-        },
-        { onConflict: 'getaround_rental_id' },
-      );
-    }
-  }
-
-  // Événements d'annulation
-  if (
+    eventType === 'rental.started' ||
     eventType === 'rental.cancelled' ||
-    eventType === 'rental.canceled' ||
-    rental.state === 'cancelled'
+    eventType === 'rental.canceled'
   ) {
-    await supabase
-      .from('indisponibilites')
-      .delete()
-      .eq('getaround_rental_id', String(rental.id));
+    // Le webhook envoie le rental_id dans data (data.rental_id ou data.id)
+    const data      = payload?.data ?? {};
+    const rentalId  = data.rental_id ?? data.id ?? data;
+
+    if (!rentalId) {
+      console.warn('[webhook] rental_id introuvable dans payload', JSON.stringify(payload));
+      return new Response(JSON.stringify({ received: true, skipped: 'no rental_id' }), { status: 200 });
+    }
+
+    // Annulation : on supprime sans appeler l'API (le rental n'est peut-être plus accessible)
+    if (eventType === 'rental.cancelled' || eventType === 'rental.canceled') {
+      await supabase
+        .from('indisponibilites')
+        .delete()
+        .eq('getaround_rental_id', String(rentalId));
+      console.log('[webhook] rental annulé, indisponibilite supprimée:', rentalId);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // Réservation : on récupère les détails via GET /rentals/{id}.json
+    const rental = await getRental(rentalId);
+    if (!rental) {
+      console.error('[webhook] Impossible de récupérer le rental', rentalId);
+      return new Response(JSON.stringify({ received: true, error: 'rental fetch failed' }), { status: 200 });
+    }
+
+    console.log('[webhook] rental récupéré:', rental.id, rental.starts_at, '→', rental.ends_at, 'car:', rental.car_id);
+
+    // Trouve le véhicule correspondant
+    const { data: vehicule } = await supabase
+      .from('vehicules')
+      .select('id')
+      .eq('getaround_id', String(rental.car_id))
+      .single();
+
+    if (!vehicule) {
+      console.warn('[webhook] voiture Getaround non trouvée:', rental.car_id);
+      return new Response(JSON.stringify({ received: true, skipped: 'car not found' }), { status: 200 });
+    }
+
+    await supabase.from('indisponibilites').upsert(
+      {
+        vehicule_id:          vehicule.id,
+        date_debut:           rental.starts_at,
+        date_fin:             rental.ends_at,
+        source:               'getaround',
+        getaround_rental_id:  String(rental.id),
+        note:                 `Location Getaround #${rental.id}`,
+      },
+      { onConflict: 'getaround_rental_id' },
+    );
+
+    console.log('[webhook] indisponibilite upsertée pour rental', rental.id);
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
   }
 
-  return new Response(JSON.stringify({ received: true }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  // ── Événements d'INDISPONIBILITÉ (blocage propriétaire depuis l'app GA) ──────
+  if (eventType === 'unavailability.created') {
+    const { starts_at, ends_at, car_id } = payload?.data ?? {};
+    if (starts_at && ends_at && car_id) {
+      const { data: vehicule } = await supabase
+        .from('vehicules')
+        .select('id')
+        .eq('getaround_id', String(car_id))
+        .single();
+
+      if (vehicule) {
+        await supabase.from('indisponibilites').insert({
+          vehicule_id: vehicule.id,
+          date_debut:  starts_at,
+          date_fin:    ends_at,
+          source:      'getaround',
+          note:        'Blocage Getaround (app propriétaire)',
+        });
+      }
+    }
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
+  }
+
+  if (eventType === 'unavailability.deleted') {
+    const { starts_at, ends_at, car_id } = payload?.data ?? {};
+    if (starts_at && ends_at && car_id) {
+      const { data: vehicule } = await supabase
+        .from('vehicules')
+        .select('id')
+        .eq('getaround_id', String(car_id))
+        .single();
+
+      if (vehicule) {
+        await supabase
+          .from('indisponibilites')
+          .delete()
+          .eq('vehicule_id', vehicule.id)
+          .eq('date_debut', starts_at)
+          .eq('date_fin', ends_at)
+          .is('getaround_rental_id', null);
+      }
+    }
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
+  }
+
+  // Événement inconnu — on répond 200 quand même
+  return new Response(JSON.stringify({ received: true, skipped: eventType }), { status: 200 });
 };
