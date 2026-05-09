@@ -313,7 +313,11 @@ const photos = [
       const res = await fetch(`/api/reservations/occupied-dates?id=${vehiculeId}`);
       if (res.ok) {
         const raw = await res.json();
-        reservations = raw.map(r => ({ from: new Date(r.from), to: new Date(r.to) }));
+        // Interpréter les dates YYYY-MM-DD comme heure locale (pas UTC) pour éviter le décalage +2h
+        reservations = raw.map(r => ({
+          from: new Date(r.from.includes('T') ? r.from : r.from + 'T00:00:00'),
+          to:   new Date(r.to.includes('T')   ? r.to   : r.to   + 'T23:59:59'),
+        }));
       }
     } catch (e) { console.error(e); }
 

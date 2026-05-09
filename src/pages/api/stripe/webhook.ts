@@ -215,7 +215,8 @@ export const POST = async ({ request }) => {
         const gaId = (resForBlock.vehicules as any)?.getaround_id;
         if (gaId) {
           try {
-            const period = await blockDates(String(gaId), resForBlock.date_debut, resForBlock.date_fin);
+            const toISO = (d: string) => d.includes('T') ? d : d + 'T00:00:00Z';
+            const period = await blockDates(String(gaId), toISO(resForBlock.date_debut), toISO(resForBlock.date_fin));
             if (period?.id) {
               await supabase
                 .from('reservations')
