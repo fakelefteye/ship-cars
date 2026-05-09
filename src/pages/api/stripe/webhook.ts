@@ -3,6 +3,7 @@ export const prerender = false;
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
+import { blockDates } from '../../../lib/getaround';
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 const resend = new Resend(import.meta.env.RESEND_API_KEY);
@@ -203,7 +204,34 @@ export const POST = async ({ request }) => {
         console.log(`✅ Réservation ${reservationId} marquée comme PAYÉE.`);
       }
 
-      // 2. Récupération de la réservation complète avec le véhicule
+      // 2. Blocage Getaround après paiement confirmé
+      const { data: resForBlock } = await supabase
+        .from('reservations')
+        .select('date_debut, date_fin, vehicules(getaround_id)')
+        .eq('id', reservationId)
+        .single();
+
+      if (resForBlock) {
+        const gaId = (resForBlock.vehicules as any)?.getaround_id;
+        if (gaId) {
+          try {
+            const period = await blockDates(String(gaId), resForBlock.date_debut, resForBlock.date_fin);
+            if (period?.id) {
+              await supabase
+                .from('reservations')
+                .update({ getaround_unavailable_period_id: String(period.id) })
+                .eq('id', reservationId);
+              console.log(`✅ Getaround bloqué — voiture ${gaId}, période ${period.id}`);
+            } else {
+              console.error(`❌ Getaround a refusé le blocage pour voiture ${gaId}`);
+            }
+          } catch (err) {
+            console.error('❌ Erreur technique Getaround blockDates:', err);
+          }
+        }
+      }
+
+      // 3. Récupération de la réservation complète avec le véhicule
       const { data: res } = await supabase
         .from('reservations')
         .select('*, vehicules(*)')
@@ -219,7 +247,7 @@ export const POST = async ({ request }) => {
 
         const emailClient = res.email_client || customerEmail;
 
-        // 3a. Email au locataire
+        // 4a. Email au locataire
         if (emailClient) {
           try {
             await resend.emails.send({
@@ -234,7 +262,7 @@ export const POST = async ({ request }) => {
           }
         }
 
-        // 3b. Email au propriétaire
+        // 4b. Email au propriétaire
         try {
           await resend.emails.send({
             from: 'Ship Cars <onboarding@resend.dev>',
