@@ -172,9 +172,12 @@ function ownerEmailHtml(contractHtml: string, res: Record<string, any>): string 
 }
 
 export const POST = async ({ request }) => {
-  const body = await request.text();
-  const sig = request.headers.get('stripe-signature');
-  const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET;
+  // Stripe valide la signature sur les bytes bruts — arrayBuffer évite toute
+  // transformation d'encodage ou de fins de ligne que text() pourrait introduire.
+  const rawBody  = await request.arrayBuffer();
+  const body     = Buffer.from(rawBody);
+  const sig      = request.headers.get('stripe-signature') ?? '';
+  const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET ?? '';
 
   let event;
   try {
