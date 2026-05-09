@@ -22,365 +22,384 @@ const { data: indisponibilites } = await supabaseAdmin
 ---
 
 <MainLayout title="Calendrier — Admin Ship Cars">
+  <!-- FullCalendar CSS + JS via CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/fr.global.min.js"></script>
+
   <script is:inline define:vars={{
     RESA_DATA: reservations ?? [],
     INDIS_DATA: indisponibilites ?? [],
     VEHS_DATA: vehicules ?? []
   }}>
-  (() => {
-    const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.addEventListener('DOMContentLoaded', () => {
+
     const COLORS = {
-      paye:                { bg:'rgba(21,128,61,0.85)',   text:'#bbf7d0', border:'#16a34a' },
-      confirmee:           { bg:'rgba(29,78,216,0.85)',   text:'#bfdbfe', border:'#3b82f6' },
-      en_attente_paiement: { bg:'rgba(180,83,9,0.85)',    text:'#fed7aa', border:'#f97316' },
-      getaround:           { bg:'rgba(126,34,206,0.85)',  text:'#e9d5ff', border:'#a855f7' },
-      manual:              { bg:'rgba(161,98,7,0.85)',    text:'#fef08a', border:'#eab308' },
+      paye:                { bg:'#15803d', border:'#166534', text:'#bbf7d0' },
+      confirmee:           { bg:'#1d4ed8', border:'#1e3a8a', text:'#bfdbfe' },
+      en_attente_paiement: { bg:'#b45309', border:'#92400e', text:'#fed7aa' },
+      getaround:           { bg:'#7e22ce', border:'#581c87', text:'#e9d5ff' },
+      manual:              { bg:'#a16207', border:'#713f12', text:'#fef08a' },
     };
 
-    let year  = new Date().getFullYear();
-    let month = new Date().getMonth();
+    const STATUS_LABELS = {
+      paye: 'Payée ✓',
+      confirmee: 'Confirmée',
+      en_attente_paiement: 'En attente de paiement',
+    };
+
     let filterVId = '';
 
-    function getEvents() {
+    function buildEvents() {
       const evs = [];
       (RESA_DATA || []).forEach(r => {
         if (filterVId && r.vehicule_id !== filterVId) return;
+        const c = COLORS[r.statut] || COLORS.confirmee;
+        const nom = r.vehicules?.nom ?? '?';
         evs.push({
-          id: r.id, type: 'resa', colorKey: r.statut,
-          vehicule: r.vehicules?.nom ?? '?',
-          client: r.locataire_nom || r.email_client || '?',
-          email: r.email_client, statut: r.statut,
-          start: new Date(r.date_debut), end: new Date(r.date_fin), raw: r,
+          id: 'resa-' + r.id,
+          title: nom + ' — ' + (r.locataire_nom || r.email_client || '?'),
+          start: r.date_debut,
+          end: r.date_fin,
+          backgroundColor: c.bg,
+          borderColor: c.border,
+          textColor: c.text,
+          extendedProps: { type: 'resa', raw: r, vehicule: nom },
         });
       });
       (INDIS_DATA || []).forEach(i => {
         if (filterVId && i.vehicule_id !== filterVId) return;
+        const c = COLORS[i.source] || COLORS.manual;
+        const nom = i.vehicules?.nom ?? '?';
+        const label = i.source === 'getaround' ? '(Getaround)' : i.note || '(Bloqué)';
         evs.push({
-          id: i.id, type: 'indispo', colorKey: i.source,
-          vehicule: i.vehicules?.nom ?? '?',
-          note: i.note, source: i.source,
-          start: new Date(i.date_debut), end: new Date(i.date_fin), raw: i,
+          id: 'indis-' + i.id,
+          title: nom + ' ' + label,
+          start: i.date_debut,
+          end: i.date_fin,
+          backgroundColor: c.bg,
+          borderColor: c.border,
+          textColor: c.text,
+          extendedProps: { type: 'indispo', raw: i, vehicule: nom },
         });
       });
       return evs;
     }
 
-    function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
-    function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
-    function sameDay(a, b) {
-      return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-    }
-    function dayDiff(a, b) { return Math.round((b - a) / 86400000); }
-
-    function assignLanes(evs) {
-      const sorted = [...evs].sort((a,b) => a.start - b.start);
-      const result = [];
-      const laneEnds = [];
-      for (const ev of sorted) {
-        let lane = laneEnds.findIndex(e => e <= ev.start);
-        if (lane === -1) lane = laneEnds.length;
-        laneEnds[lane] = ev.end;
-        result.push({ ev, lane });
-      }
-      return result;
-    }
-
-    function render() {
-      document.getElementById('cal-title').textContent = MONTHS[month] + ' ' + year;
-      const body = document.getElementById('cal-body');
-      const today = new Date();
-
-      let startDow = new Date(year, month, 1).getDay();
-      startDow = startDow === 0 ? 6 : startDow - 1;
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const numWeeks = Math.ceil((startDow + daysInMonth) / 7);
-      const allEvents = getEvents();
-      let html = '';
-
-      for (let w = 0; w < numWeeks; w++) {
-        const weekActualStart = new Date(year, month, w * 7 - startDow + 1);
-        const weekEnd = addDays(weekActualStart, 7);
-
-        const weekEvs = allEvents.filter(ev => {
-          const es = dayStart(ev.start);
-          const ee = dayStart(ev.end);
-          return es < weekEnd && ee >= weekActualStart;
-        });
-
-        const positioned = assignLanes(weekEvs);
-        const maxLane = positioned.length > 0 ? Math.max(...positioned.map(p => p.lane)) : -1;
-        const evAreaH = maxLane >= 0 ? (maxLane + 1) * 26 + 6 : 0;
-
-        let cellsHtml = '';
-        for (let d = 0; d < 7; d++) {
-          const dayNum = w * 7 + d - startDow + 1;
-          const isInMonth = dayNum >= 1 && dayNum <= daysInMonth;
-          const cellDate = isInMonth ? new Date(year, month, dayNum) : null;
-          const isToday = cellDate && sameDay(cellDate, today);
-          const isWeekend = d >= 5;
-          cellsHtml += `<div class="cal-cell${!isInMonth ? ' other-month' : ''}${isToday ? ' is-today' : ''}${isWeekend ? ' weekend' : ''}">`;
-          if (isInMonth) cellsHtml += `<span class="day-n${isToday ? ' today-n' : ''}">${dayNum}</span>`;
-          cellsHtml += '</div>';
-        }
-
-        let barsHtml = '';
-        for (const { ev, lane } of positioned) {
-          const evStartDay = dayStart(ev.start);
-          const evEndDay   = dayStart(ev.end);
-          const visStart = evStartDay < weekActualStart ? weekActualStart : evStartDay;
-          const visEnd   = evEndDay >= weekEnd ? addDays(weekEnd, -1) : evEndDay;
-          const startCol = dayDiff(weekActualStart, visStart);
-          const endCol   = dayDiff(weekActualStart, visEnd) + 1;
-          const left  = (startCol / 7 * 100).toFixed(2) + '%';
-          const width = ((endCol - startCol) / 7 * 100).toFixed(2) + '%';
-          const top   = (lane * 26 + 3) + 'px';
-          const c = COLORS[ev.colorKey] || { bg:'#1e293b', text:'#94a3b8', border:'#334155' };
-          const isStart = evStartDay >= weekActualStart;
-          const isEnd   = evEndDay < weekEnd;
-          const rl = isStart ? '4px' : '0';
-          const rr = isEnd   ? '4px' : '0';
-          const label = ev.type === 'resa'
-            ? ev.vehicule + ' — ' + ev.client
-            : ev.vehicule + (ev.note ? ' — ' + ev.note : ev.source === 'getaround' ? ' (Getaround)' : ' (Bloqué)');
-          const prefix = (!isStart) ? '◀ ' : '';
-          const suffix = (!isEnd)   ? ' ▶' : '';
-          barsHtml += `<div class="ev-bar" style="left:${left};width:${width};top:${top};background:${c.bg};color:${c.text};border-left:3px solid ${c.border};border-radius:${rl} ${rr} ${rr} ${rl}" data-id="${ev.id}" data-type="${ev.type}" title="${label}"><span class="ev-lbl">${prefix}${label}${suffix}</span></div>`;
-        }
-
-        html += `<div class="week-row"><div class="week-cells">${cellsHtml}</div><div class="week-evs" style="height:${evAreaH}px">${barsHtml}</div></div>`;
-      }
-
-      body.innerHTML = html;
-      body.querySelectorAll('.ev-bar').forEach(bar => {
-        bar.addEventListener('click', e => {
-          e.stopPropagation();
-          openModal(bar.dataset.id, bar.dataset.type, allEvents);
-        });
+    function fmtDate(str) {
+      return new Date(str).toLocaleString('fr-FR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
       });
     }
 
-    function fmtDate(d) {
-      return d.toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    }
+    function openModal(info) {
+      const ev = info.event;
+      const props = ev.extendedProps;
+      const raw = props.raw;
+      const type = props.type;
 
-    function openModal(id, type, events) {
-      const ev = events.find(e => String(e.id) === String(id) && e.type === type);
-      if (!ev) return;
-      const c = COLORS[ev.colorKey] || { border:'#4dd4c8', text:'#4dd4c8' };
-      let html = '';
+      document.getElementById('modal-overlay').style.display = 'flex';
+      const body = document.getElementById('modal-body');
+
+      let statusBadge = '';
+      let actionBtn = '';
+      let rows = '';
 
       if (type === 'resa') {
-        const labels = { paye:'Payée ✓', confirmee:'Confirmée', en_attente_paiement:'En attente de paiement' };
-        html = `
-          <div class="modal-tag" style="border-color:${c.border};color:${c.text}">Réservation — ${labels[ev.statut] || ev.statut}</div>
-          <h2 class="modal-title">${ev.vehicule}</h2>
-          <div class="modal-rows">
-            <div class="mr"><span>Client</span><strong>${ev.client}</strong></div>
-            ${ev.email ? `<div class="mr"><span>Email</span><strong>${ev.email}</strong></div>` : ''}
-            <div class="mr"><span>Début</span><strong>${fmtDate(ev.start)}</strong></div>
-            <div class="mr"><span>Fin</span><strong>${fmtDate(ev.end)}</strong></div>
-          </div>
-          <div class="modal-actions">
-            <button class="btn-danger" data-action="cancel-resa" data-id="${ev.id}">Annuler la réservation + libérer sur Getaround</button>
-          </div>`;
+        const statut = raw.statut;
+        const badgeColor = { paye:'#15803d', confirmee:'#1d4ed8', en_attente_paiement:'#b45309' }[statut] || '#555';
+        statusBadge = `<span class="modal-badge" style="background:${badgeColor}20;color:${badgeColor};border:1px solid ${badgeColor}40">${STATUS_LABELS[statut] || statut}</span>`;
+        rows = `
+          <div class="modal-row"><span class="modal-label">Véhicule</span><span class="modal-value">${props.vehicule}</span></div>
+          <div class="modal-row"><span class="modal-label">Client</span><span class="modal-value">${raw.locataire_nom || '—'}</span></div>
+          <div class="modal-row"><span class="modal-label">Email</span><span class="modal-value">${raw.email_client || '—'}</span></div>
+          <div class="modal-row"><span class="modal-label">Début</span><span class="modal-value">${fmtDate(raw.date_debut)}</span></div>
+          <div class="modal-row"><span class="modal-label">Fin</span><span class="modal-value">${fmtDate(raw.date_fin)}</span></div>
+        `;
+        actionBtn = `<button class="btn-cancel" data-action="cancel-resa" data-id="${raw.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          Annuler la réservation + libérer sur Getaround
+        </button>`;
       } else {
-        html = `
-          <div class="modal-tag" style="border-color:${c.border};color:${c.text}">${ev.source === 'getaround' ? 'Indisponibilité Getaround' : 'Blocage manuel'}</div>
-          <h2 class="modal-title">${ev.vehicule}</h2>
-          <div class="modal-rows">
-            <div class="mr"><span>Début</span><strong>${fmtDate(ev.start)}</strong></div>
-            <div class="mr"><span>Fin</span><strong>${fmtDate(ev.end)}</strong></div>
-            ${ev.note ? `<div class="mr"><span>Motif</span><strong>${ev.note}</strong></div>` : ''}
-          </div>
-          <div class="modal-actions">
-            <button class="btn-danger" data-action="unblock" data-id="${ev.id}">Supprimer ce blocage + libérer sur Getaround</button>
-          </div>`;
+        const isGA = raw.source === 'getaround';
+        statusBadge = `<span class="modal-badge" style="background:${isGA ? '#7e22ce' : '#a16207'}20;color:${isGA ? '#a855f7' : '#d97706'};border:1px solid ${isGA ? '#7e22ce' : '#a16207'}40">${isGA ? 'Blocage Getaround' : 'Blocage manuel'}</span>`;
+        rows = `
+          <div class="modal-row"><span class="modal-label">Véhicule</span><span class="modal-value">${props.vehicule}</span></div>
+          <div class="modal-row"><span class="modal-label">Début</span><span class="modal-value">${fmtDate(raw.date_debut)}</span></div>
+          <div class="modal-row"><span class="modal-label">Fin</span><span class="modal-value">${fmtDate(raw.date_fin)}</span></div>
+          ${raw.note ? `<div class="modal-row"><span class="modal-label">Motif</span><span class="modal-value">${raw.note}</span></div>` : ''}
+        `;
+        actionBtn = `<button class="btn-cancel" data-action="unblock" data-id="${raw.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          Supprimer ce blocage + libérer sur Getaround
+        </button>`;
       }
 
-      document.getElementById('modal-body').innerHTML = html;
-      document.getElementById('modal').style.display = 'flex';
+      body.innerHTML = `
+        <div class="modal-head">
+          ${statusBadge}
+          <h2 class="modal-title">${type === 'resa' ? 'Réservation' : 'Indisponibilité'}</h2>
+        </div>
+        <div class="modal-rows">${rows}</div>
+        <div class="modal-footer">${actionBtn}</div>
+        <div class="action-msg" style="display:none"></div>
+      `;
 
-      document.querySelector('[data-action]')?.addEventListener('click', async (e) => {
+      body.querySelector('[data-action]')?.addEventListener('click', async (e) => {
         const btn = e.currentTarget;
         const action = btn.dataset.action;
         const rid = btn.dataset.id;
-        const msg = action === 'cancel-resa'
+        if (!confirm(action === 'cancel-resa'
           ? 'Annuler cette réservation ? Le créneau sera libéré sur Getaround.'
-          : 'Supprimer ce blocage ? Le créneau sera libéré sur Getaround.';
-        if (!confirm(msg)) return;
+          : 'Supprimer ce blocage ? Le créneau sera libéré sur Getaround.')) return;
+
         btn.disabled = true;
-        btn.textContent = '⏳ En cours...';
+        btn.innerHTML = '<span class="spinner"></span> En cours...';
+        const msgEl = body.querySelector('.action-msg');
+
         try {
-          let res, data;
+          let res;
           if (action === 'cancel-resa') {
             res = await fetch('/api/reservations/cancel', {
-              method:'POST', headers:{'Content-Type':'application/json'},
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ reservation_id: rid }),
             });
           } else {
             res = await fetch('/api/admin/block-dates', {
-              method:'DELETE', headers:{'Content-Type':'application/json'},
+              method: 'DELETE', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ indisponibilite_id: rid }),
             });
           }
-          data = await res.json();
+          const data = await res.json();
           if (data.success) {
-            closeModal();
-            setTimeout(() => location.reload(), 400);
+            msgEl.style.display = 'block';
+            msgEl.className = 'action-msg ok';
+            msgEl.textContent = action === 'cancel-resa'
+              ? '✅ Réservation annulée, créneau libéré sur Getaround.'
+              : '✅ Blocage supprimé, créneau libéré sur Getaround.';
+            setTimeout(() => location.reload(), 1500);
           } else {
-            alert('Erreur : ' + (data.error || 'Inconnue'));
+            msgEl.style.display = 'block';
+            msgEl.className = 'action-msg err';
+            msgEl.textContent = '❌ ' + (data.error || 'Erreur inconnue');
             btn.disabled = false;
             btn.textContent = action === 'cancel-resa' ? 'Annuler la réservation' : 'Supprimer le blocage';
           }
         } catch {
-          alert('Erreur réseau');
+          msgEl.style.display = 'block';
+          msgEl.className = 'action-msg err';
+          msgEl.textContent = '❌ Erreur réseau';
           btn.disabled = false;
         }
       });
     }
 
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-    }
-
-    // Navigation
-    document.getElementById('btn-prev').addEventListener('click', () => {
-      month--; if (month < 0) { month = 11; year--; } render();
-    });
-    document.getElementById('btn-next').addEventListener('click', () => {
-      month++; if (month > 11) { month = 0; year++; } render();
-    });
-    document.getElementById('btn-today').addEventListener('click', () => {
-      year = new Date().getFullYear(); month = new Date().getMonth(); render();
-    });
-
-    // Vehicle filter + block form selects
-    const fSel = document.getElementById('filter-v');
-    const bSel = document.getElementById('sel-v');
+    // Populate vehicle selects
+    const filterSel = document.getElementById('filter-v');
+    const blockSel = document.getElementById('sel-v');
     (VEHS_DATA || []).forEach(v => {
       const label = v.nom + (v.getaround_id ? ' ✓' : '');
-      [fSel, bSel].forEach((s, i) => {
+      [filterSel, blockSel].forEach(sel => {
         const o = document.createElement('option');
         o.value = v.id; o.textContent = label;
-        s.appendChild(o);
+        sel.appendChild(o);
       });
     });
-    fSel.addEventListener('change', () => { filterVId = fSel.value; render(); });
+
+    // Init FullCalendar (loaded globally via CDN)
+    const FC = /** @type {any} */ (window).FullCalendar;
+    const calEl = document.getElementById('fullcal');
+    const calendar = new FC.Calendar(calEl, {
+      locale: 'fr',
+      initialView: 'dayGridMonth',
+      headerToolbar: false,
+      events: buildEvents(),
+      eventClick: openModal,
+      dayMaxEvents: 4,
+      moreLinkText: n => `+${n} autres`,
+      moreLinkClick: 'popover',
+      nowIndicator: true,
+      height: 'auto',
+      eventDisplay: 'block',
+      eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+      dayHeaderFormat: { weekday: 'short' },
+      firstDay: 1,
+      buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine', day: 'Jour', list: 'Liste' },
+    });
+    calendar.render();
+
+    // Custom toolbar wiring
+    document.getElementById('btn-prev').addEventListener('click', () => calendar.prev());
+    document.getElementById('btn-next').addEventListener('click', () => calendar.next());
+    document.getElementById('btn-today').addEventListener('click', () => calendar.today());
+    document.getElementById('view-month').addEventListener('click', () => {
+      calendar.changeView('dayGridMonth');
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-month').classList.add('active');
+    });
+    document.getElementById('view-week').addEventListener('click', () => {
+      calendar.changeView('timeGridWeek');
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-week').classList.add('active');
+    });
+    document.getElementById('view-list').addEventListener('click', () => {
+      calendar.changeView('listMonth');
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-list').classList.add('active');
+    });
+
+    // Update title on nav
+    function updateTitle() {
+      const d = calendar.getDate();
+      const title = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      document.getElementById('cal-title').textContent = title.charAt(0).toUpperCase() + title.slice(1);
+    }
+    calendar.on('datesSet', updateTitle);
+    updateTitle();
+
+    // Filter by vehicle
+    filterSel.addEventListener('change', () => {
+      filterVId = filterSel.value;
+      calendar.removeAllEvents();
+      calendar.addEventSource(buildEvents());
+    });
 
     // Modal close
-    document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
     document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    function closeModal() {
+      document.getElementById('modal-overlay').style.display = 'none';
+    }
 
     // Sync button
     document.getElementById('btn-sync').addEventListener('click', async () => {
       const btn = document.getElementById('btn-sync');
-      const msg = document.getElementById('sync-msg');
-      btn.disabled = true; btn.textContent = '⏳ Sync...';
-      msg.className = 'sync-msg'; msg.style.display = 'none';
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Sync...';
       try {
         const res = await fetch('/api/sync-calendar');
         const data = await res.json();
-        msg.style.display = 'block';
-        if (data.success) {
-          msg.classList.add('ok');
-          msg.textContent = '✅ ' + data.synced + ' créneau(x) importé(s) depuis Getaround.';
-          setTimeout(() => location.reload(), 2000);
-        } else {
-          msg.classList.add('err');
-          msg.textContent = '❌ ' + data.error;
-        }
+        showToast(data.success
+          ? `✅ ${data.synced} créneau(x) importé(s) depuis Getaround.`
+          : `❌ ${data.error}`, data.success ? 'ok' : 'err');
+        if (data.success) setTimeout(() => location.reload(), 2500);
       } catch {
-        msg.style.display = 'block'; msg.classList.add('err');
-        msg.textContent = '❌ Erreur réseau';
+        showToast('❌ Erreur réseau', 'err');
       }
-      btn.disabled = false; btn.textContent = '↻ Sync Getaround';
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg> Sync Getaround';
     });
 
     // Block form
     document.getElementById('form-block').addEventListener('submit', async e => {
       e.preventDefault();
-      const msg = document.getElementById('block-msg');
-      msg.style.display = 'none';
+      const btn = e.target.querySelector('button[type=submit]');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> En cours...';
       const vehicule_id = document.getElementById('sel-v').value;
       const date_debut  = new Date(document.getElementById('inp-debut').value).toISOString();
       const date_fin    = new Date(document.getElementById('inp-fin').value).toISOString();
       const note        = document.getElementById('inp-note').value;
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true; btn.textContent = '⏳...';
       try {
         const res = await fetch('/api/admin/block-dates', {
-          method:'POST', headers:{'Content-Type':'application/json'},
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ vehicule_id, date_debut, date_fin, note }),
         });
         const data = await res.json();
-        msg.style.display = 'block';
-        msg.className = 'block-msg ' + (data.success ? 'ok' : 'err');
         if (data.success) {
-          msg.textContent = '✅ Créneau bloqué' + (data.getaround_blocked ? ' — synchronisé sur Getaround' : ' — non synchronisé Getaround (vérifiez l\'ID)') + '.';
-          setTimeout(() => location.reload(), 2500);
+          showToast('✅ Créneau bloqué' + (data.getaround_blocked ? ' — synchronisé sur Getaround' : '') + '.', 'ok');
+          setTimeout(() => location.reload(), 2000);
         } else {
-          msg.textContent = data.error || 'Erreur inconnue';
+          showToast('❌ ' + (data.error || 'Erreur inconnue'), 'err');
+          btn.disabled = false;
+          btn.textContent = 'Bloquer ce créneau';
         }
       } catch {
-        msg.style.display = 'block'; msg.className = 'block-msg err';
-        msg.textContent = 'Erreur réseau';
+        showToast('❌ Erreur réseau', 'err');
+        btn.disabled = false;
+        btn.textContent = 'Bloquer ce créneau';
       }
-      btn.disabled = false; btn.textContent = 'Bloquer';
     });
 
-    render();
-  })();
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 4000);
+    }
+  });
   </script>
 
   <div class="page">
+
+    <!-- Topbar -->
     <div class="topbar">
-      <a href="/admin" class="back">← Tableau de bord</a>
+      <a href="/admin" class="back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Tableau de bord
+      </a>
       <div class="topbar-right">
         <select id="filter-v" class="sel-filter">
           <option value="">Tous les véhicules</option>
         </select>
-        <button id="btn-sync" class="btn-sync">↻ Sync Getaround</button>
+        <button id="btn-sync" class="btn-sync">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Sync Getaround
+        </button>
         <a href="/api/admin/webhook-events" target="_blank" class="btn-logs">Logs webhook</a>
       </div>
     </div>
 
-    <div id="sync-msg" class="sync-msg" style="display:none"></div>
-
-    <div class="cal-nav">
-      <button id="btn-prev" class="nav-btn">‹</button>
-      <h1 id="cal-title">—</h1>
-      <button id="btn-next" class="nav-btn">›</button>
-      <button id="btn-today" class="btn-today">Aujourd'hui</button>
-    </div>
-
-    <div class="legend">
-      <span class="leg"><span class="dot" style="background:#16a34a"></span>Payée</span>
-      <span class="leg"><span class="dot" style="background:#3b82f6"></span>Confirmée</span>
-      <span class="leg"><span class="dot" style="background:#f97316"></span>En attente paiement</span>
-      <span class="leg"><span class="dot" style="background:#a855f7"></span>Getaround (bloqué)</span>
-      <span class="leg"><span class="dot" style="background:#eab308"></span>Blocage manuel</span>
-    </div>
-
-    <div class="cal-wrap">
-      <div class="dow-header">
-        <div>Lun</div><div>Mar</div><div>Mer</div>
-        <div>Jeu</div><div>Ven</div>
-        <div class="weekend-hdr">Sam</div>
-        <div class="weekend-hdr">Dim</div>
+    <!-- Calendar toolbar -->
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button id="btn-prev" class="nav-btn" title="Mois précédent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <h1 id="cal-title" class="cal-month-title">—</h1>
+        <button id="btn-next" class="nav-btn" title="Mois suivant">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button id="btn-today" class="btn-today">Aujourd'hui</button>
       </div>
-      <div id="cal-body"></div>
+
+      <div class="cal-views">
+        <button id="view-month" class="view-btn active">Mois</button>
+        <button id="view-week" class="view-btn">Semaine</button>
+        <button id="view-list" class="view-btn">Liste</button>
+      </div>
     </div>
 
+    <!-- Legend -->
+    <div class="legend">
+      <div class="leg"><span class="leg-dot" style="background:#15803d"></span>Payée</div>
+      <div class="leg"><span class="leg-dot" style="background:#1d4ed8"></span>Confirmée</div>
+      <div class="leg"><span class="leg-dot" style="background:#b45309"></span>En attente</div>
+      <div class="leg"><span class="leg-dot" style="background:#7e22ce"></span>Getaround</div>
+      <div class="leg"><span class="leg-dot" style="background:#a16207"></span>Blocage manuel</div>
+    </div>
+
+    <!-- FullCalendar -->
+    <div class="cal-card">
+      <div id="fullcal"></div>
+    </div>
+
+    <!-- Block form -->
     <details class="block-panel">
-      <summary>+ Bloquer un créneau manuellement</summary>
+      <summary>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Bloquer un créneau manuellement
+      </summary>
       <div class="block-inner">
-        <p class="block-sub">Ce créneau sera bloqué sur ce site ET sur Getaround simultanément.</p>
+        <p class="block-note">Ce créneau sera bloqué sur ce site ET synchronisé sur Getaround.</p>
         <form id="form-block" class="block-form">
           <div class="form-g">
             <label>Véhicule</label>
-            <select id="sel-v" required>
-              <option value="">Choisir...</option>
-            </select>
+            <select id="sel-v" required><option value="">Choisir...</option></select>
           </div>
           <div class="form-g">
             <label>Début</label>
@@ -391,47 +410,155 @@ const { data: indisponibilites } = await supabaseAdmin
             <input type="datetime-local" id="inp-fin" required />
           </div>
           <div class="form-g">
-            <label>Motif (optionnel)</label>
+            <label>Motif <small>(optionnel)</small></label>
             <input type="text" id="inp-note" placeholder="Révision, Privatisation..." />
           </div>
           <div class="form-g form-g-btn">
             <button type="submit" class="btn-block">Bloquer ce créneau</button>
           </div>
         </form>
-        <div id="block-msg" class="block-msg" style="display:none"></div>
       </div>
     </details>
   </div>
 
   <!-- Modal -->
-  <div id="modal" class="modal-overlay" style="display:none">
+  <div id="modal-overlay" class="modal-overlay" style="display:none">
     <div class="modal-box">
-      <button id="modal-close" class="modal-close">✕</button>
+      <button id="modal-close" class="modal-close" title="Fermer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
       <div id="modal-body"></div>
     </div>
   </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 </MainLayout>
+
+<style is:global>
+  /* FullCalendar dark theme overrides */
+  :root {
+    --fc-border-color: #1e2d3d;
+    --fc-button-bg-color: #1a2b3c;
+    --fc-button-border-color: #2a3d50;
+    --fc-button-hover-bg-color: #243448;
+    --fc-button-hover-border-color: #344d63;
+    --fc-button-active-bg-color: #4dd4c8;
+    --fc-button-active-border-color: #4dd4c8;
+    --fc-event-border-color: transparent;
+    --fc-today-bg-color: rgba(77,212,200,0.06);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #0f1e33;
+    --fc-list-event-hover-bg-color: rgba(77,212,200,0.06);
+    --fc-highlight-color: rgba(77,212,200,0.12);
+  }
+
+  .fc {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #cbd5e1;
+    font-size: 0.84rem;
+  }
+  .fc-theme-standard td, .fc-theme-standard th { border-color: #1e2d3d; }
+  .fc-col-header-cell { background: #07111f; }
+  .fc-col-header-cell-cushion {
+    color: #4b6073 !important;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    text-decoration: none !important;
+    padding: 10px 0;
+  }
+  .fc-daygrid-day-number {
+    color: #4b6073;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none !important;
+    padding: 6px 8px;
+  }
+  .fc-day-today .fc-daygrid-day-number {
+    background: #4dd4c8;
+    color: #0b1929;
+    font-weight: 800;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 5px;
+  }
+  .fc-day-other .fc-daygrid-day-number { color: #2a3d50; }
+  .fc-daygrid-day.fc-day-other { background: #06101c; }
+  .fc-daygrid-day-frame { min-height: 80px; }
+  .fc-event {
+    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    border: none !important;
+    border-left: 3px solid var(--fc-event-border-color, transparent) !important;
+  }
+  .fc-event:hover { filter: brightness(1.2); }
+  .fc-daygrid-more-link {
+    color: #4dd4c8 !important;
+    font-weight: 600;
+    font-size: 0.72rem;
+  }
+  .fc-timegrid-slot { height: 3rem; }
+  .fc-timegrid-slot-label { color: #3d5166; font-size: 0.72rem; }
+  .fc-timegrid-now-indicator-line { border-color: #f87171; }
+  .fc-timegrid-now-indicator-arrow { border-color: #f87171; }
+  .fc-list-table tr { border-color: #1e2d3d; }
+  .fc-list-day-cushion { background: #0f1e33 !important; }
+  .fc-list-day-text, .fc-list-day-side-text {
+    color: #4dd4c8 !important;
+    text-decoration: none !important;
+    font-size: 0.8rem;
+  }
+  .fc-list-event-title a { color: #cbd5e1 !important; text-decoration: none !important; }
+  .fc-list-event:hover td { background: rgba(77,212,200,0.06) !important; }
+  .fc-popover {
+    background: #162130 !important;
+    border: 1px solid #253647 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
+  }
+  .fc-popover-header { background: #0f1e33 !important; color: #cbd5e1 !important; border-radius: 10px 10px 0 0 !important; }
+  .fc-popover-close { color: #6b7280 !important; }
+  .fc-scrollgrid-section-header th { border-color: #1e2d3d; }
+</style>
 
 <style>
   *, *::before, *::after { box-sizing: border-box; }
 
   .page {
-    max-width: 1260px;
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 1.5rem 1rem 5rem;
+    padding: 1.5rem 1.25rem 5rem;
     font-family: system-ui, -apple-system, sans-serif;
   }
 
-  /* ── Topbar ──────────────────────────────────────────────────────── */
+  /* Topbar */
   .topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
-  .back { font-size: 0.82rem; color: #6b7280; text-decoration: none; }
+  .back {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    color: #6b7280;
+    text-decoration: none;
+    transition: color .12s;
+  }
   .back:hover { color: #4dd4c8; }
   .topbar-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 
@@ -439,14 +566,20 @@ const { data: indisponibilites } = await supabaseAdmin
     background: #1a2b3c;
     border: 1px solid #2a3d50;
     color: #cbd5e1;
-    padding: 7px 11px;
+    padding: 0 12px;
     border-radius: 8px;
     font-size: 0.83rem;
     cursor: pointer;
     color-scheme: dark;
     height: 36px;
+    transition: border-color .12s;
   }
+  .sel-filter:focus { outline: none; border-color: #4dd4c8; }
+
   .btn-sync {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     background: #4dd4c8;
     color: #0f1e33;
     border: none;
@@ -457,9 +590,11 @@ const { data: indisponibilites } = await supabaseAdmin
     cursor: pointer;
     height: 36px;
     transition: opacity .15s;
+    white-space: nowrap;
   }
   .btn-sync:hover { opacity: .85; }
   .btn-sync:disabled { opacity: .5; cursor: not-allowed; }
+
   .btn-logs {
     background: transparent;
     color: #94a3b8;
@@ -471,54 +606,52 @@ const { data: indisponibilites } = await supabaseAdmin
     height: 36px;
     display: flex;
     align-items: center;
+    transition: border-color .12s, color .12s;
   }
-  .btn-logs:hover { border-color: #94a3b8; }
+  .btn-logs:hover { border-color: #94a3b8; color: #cbd5e1; }
 
-  .sync-msg {
+  /* Calendar toolbar */
+  .cal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     margin-bottom: 1rem;
-    padding: 0.65rem 1rem;
-    border-radius: 8px;
-    font-size: 0.84rem;
   }
-  .sync-msg.ok  { background: rgba(34,197,94,.1);  color:#4ade80; border:1px solid rgba(34,197,94,.25); }
-  .sync-msg.err { background: rgba(239,68,68,.1); color:#f87171; border:1px solid rgba(239,68,68,.25); }
-
-  /* ── Calendar nav ────────────────────────────────────────────────── */
   .cal-nav {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.9rem;
+    gap: 0.5rem;
   }
-  h1#cal-title {
-    flex: 1;
+  .cal-month-title {
     font-size: 1.45rem;
     font-weight: 800;
     color: #f0f4f8;
     margin: 0;
+    min-width: 200px;
     letter-spacing: -0.01em;
   }
   .nav-btn {
     background: #1a2b3c;
     border: 1px solid #2a3d50;
-    color: #cbd5e1;
-    width: 34px;
-    height: 34px;
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
-    font-size: 1.15rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background .12s;
+    transition: background .12s, color .12s;
   }
-  .nav-btn:hover { background: #243448; }
+  .nav-btn:hover { background: #243448; color: #cbd5e1; }
   .btn-today {
     background: transparent;
     border: 1px solid #2a3d50;
     color: #94a3b8;
-    padding: 0 13px;
-    height: 34px;
+    padding: 0 14px;
+    height: 32px;
     border-radius: 8px;
     font-size: 0.8rem;
     cursor: pointer;
@@ -526,114 +659,70 @@ const { data: indisponibilites } = await supabaseAdmin
   }
   .btn-today:hover { border-color: #4dd4c8; color: #4dd4c8; }
 
-  /* ── Legend ──────────────────────────────────────────────────────── */
+  .cal-views {
+    display: flex;
+    background: #0f1e33;
+    border: 1px solid #1e2d3d;
+    border-radius: 9px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .view-btn {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    padding: 5px 14px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .view-btn:hover { color: #94a3b8; }
+  .view-btn.active { background: #1a2b3c; color: #4dd4c8; }
+
+  /* Legend */
   .legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    margin-bottom: 0.9rem;
-    font-size: 0.77rem;
+    gap: 0.4rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
     color: #6b7280;
   }
-  .leg { display: flex; align-items: center; gap: 5px; }
-  .dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .leg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
 
-  /* ── Calendar grid ───────────────────────────────────────────────── */
-  .cal-wrap {
+  /* Calendar card */
+  .cal-card {
     background: #0b1929;
     border: 1px solid #1e2d3d;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
     margin-bottom: 1.5rem;
+    padding: 0 0 1px;
   }
 
-  .dow-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: #07111f;
-    border-bottom: 1px solid #1e2d3d;
-  }
-  .dow-header div {
-    padding: 11px 0;
-    text-align: center;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #3d5166;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-  .weekend-hdr { color: #4d5e6e !important; }
-
-  .week-row { border-bottom: 1px solid #131f2e; }
-  .week-row:last-child { border-bottom: none; }
-
-  .week-cells {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    height: 50px;
-    border-bottom: 1px solid #0f1e2f;
-  }
-  .cal-cell {
-    border-right: 1px solid #131f2e;
-    padding: 7px 8px 4px;
-  }
-  .cal-cell:last-child { border-right: none; }
-  .cal-cell.other-month { background: #06101c; }
-  .cal-cell.is-today { background: rgba(77,212,200,.07); }
-  .cal-cell.weekend { background: rgba(255,255,255,.012); }
-
-  .day-n {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #4b5a68;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    line-height: 1;
-  }
-  .today-n {
-    background: #4dd4c8;
-    color: #0b1929;
-    font-weight: 800;
-  }
-
-  /* ── Event bars ──────────────────────────────────────────────────── */
-  .week-evs { position: relative; }
-
-  .ev-bar {
-    position: absolute;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    padding: 0 6px;
-    font-size: 10.5px;
-    font-weight: 600;
-    cursor: pointer;
-    overflow: hidden;
-    white-space: nowrap;
-    transition: filter .12s, transform .08s;
-    user-select: none;
-  }
-  .ev-bar:hover { filter: brightness(1.25); transform: scaleY(1.05); z-index: 2; }
-  .ev-lbl {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    pointer-events: none;
-    width: 100%;
-  }
-
-  /* ── Block panel ─────────────────────────────────────────────────── */
+  /* Block panel */
   .block-panel {
     background: #1a2b3c;
     border: 1px solid #2a3d50;
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
   }
   .block-panel > summary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
     padding: 1rem 1.25rem;
     font-size: 0.87rem;
     font-weight: 600;
@@ -643,32 +732,37 @@ const { data: indisponibilites } = await supabaseAdmin
     user-select: none;
     transition: color .12s;
   }
+  .block-panel > summary::-webkit-details-marker { display: none; }
   .block-panel > summary:hover { color: #cbd5e1; }
-  .block-panel[open] > summary { border-bottom: 1px solid #243040; }
+  .block-panel[open] > summary { border-bottom: 1px solid #243040; color: #4dd4c8; }
   .block-inner { padding: 1.25rem; }
-  .block-sub { font-size: 0.78rem; color: #4b5563; margin: 0 0 1rem; }
-
+  .block-note {
+    font-size: 0.78rem;
+    color: #4b5a68;
+    margin: 0 0 1.1rem;
+  }
   .block-form {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 0.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 0.85rem;
     align-items: end;
   }
-  .form-g { display: flex; flex-direction: column; gap: 4px; }
+  .form-g { display: flex; flex-direction: column; gap: 5px; }
   .form-g label {
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #4b5a68;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .07em;
   }
+  .form-g small { font-weight: 400; text-transform: none; letter-spacing: 0; color: #364554; }
   .form-g select,
   .form-g input {
     background: #0b1929;
     border: 1px solid #2a3d50;
     color: #e2e8f0;
-    padding: 8px 11px;
-    border-radius: 7px;
+    padding: 0 11px;
+    border-radius: 8px;
     font-size: 0.84rem;
     height: 38px;
     color-scheme: dark;
@@ -682,110 +776,179 @@ const { data: indisponibilites } = await supabaseAdmin
     color: #000;
     border: none;
     padding: 0 18px;
-    border-radius: 7px;
+    border-radius: 8px;
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
     height: 38px;
     white-space: nowrap;
     transition: opacity .15s;
+    width: 100%;
   }
   .btn-block:hover { opacity: .85; }
   .btn-block:disabled { opacity: .5; cursor: not-allowed; }
 
-  .block-msg {
-    margin-top: 0.85rem;
-    padding: 0.6rem 0.9rem;
-    border-radius: 7px;
-    font-size: 0.82rem;
-  }
-  .block-msg.ok  { background: rgba(34,197,94,.1);  color: #4ade80; }
-  .block-msg.err { background: rgba(239,68,68,.1); color: #f87171; }
-
-  /* ── Modal ───────────────────────────────────────────────────────── */
+  /* Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.72);
+    background: rgba(0,0,0,.75);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999;
     padding: 1rem;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
   }
   .modal-box {
-    background: #162130;
+    background: #111f2e;
     border: 1px solid #253647;
-    border-radius: 16px;
-    padding: 1.75rem 2rem 2rem;
-    max-width: 420px;
+    border-radius: 18px;
+    padding: 2rem;
+    max-width: 440px;
     width: 100%;
     position: relative;
-    animation: pop .15s ease-out;
+    animation: pop .18s cubic-bezier(.16,1,.3,1);
+    box-shadow: 0 25px 80px rgba(0,0,0,.6);
   }
   @keyframes pop {
-    from { transform: scale(.94); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
+    from { transform: scale(.92) translateY(8px); opacity: 0; }
+    to   { transform: scale(1)   translateY(0);   opacity: 1; }
   }
   .modal-close {
     position: absolute;
-    top: 1rem; right: 1rem;
+    top: 1.1rem; right: 1.1rem;
     background: transparent;
     border: 1px solid transparent;
-    color: #4b5563;
-    font-size: 0.9rem;
+    color: #3d5166;
     cursor: pointer;
-    width: 28px; height: 28px;
-    border-radius: 6px;
+    width: 30px; height: 30px;
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    transition: background .12s, color .12s;
+    transition: background .12s, color .12s, border-color .12s;
   }
-  .modal-close:hover { background: rgba(255,255,255,.08); color: #94a3b8; }
-  .modal-tag {
+  .modal-close:hover { background: rgba(255,255,255,.07); color: #94a3b8; border-color: #2a3d50; }
+
+  .modal-head { margin-bottom: 1.1rem; }
+  .modal-badge {
     display: inline-block;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    padding: 3px 10px;
+    letter-spacing: .09em;
+    padding: 4px 12px;
     border-radius: 99px;
-    border: 1px solid;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.7rem;
   }
   .modal-title {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: #f0f4f8;
-    margin: 0 0 1rem;
+    margin: 0;
+    line-height: 1.2;
   }
-  .modal-rows { display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 1.4rem; }
-  .mr { display: flex; align-items: baseline; gap: 0.75rem; font-size: 0.84rem; }
-  .mr span { color: #3d5166; width: 70px; flex-shrink: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .04em; }
-  .mr strong { color: #c8d9ec; font-weight: 500; }
-  .modal-actions { display: flex; flex-direction: column; gap: 0.6rem; }
+  .modal-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #0b1929;
+    border: 1px solid #1e2d3d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .modal-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid #131f2e;
+    font-size: 0.84rem;
+  }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-label {
+    color: #3d5166;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    width: 70px;
+    flex-shrink: 0;
+  }
+  .modal-value {
+    color: #c8d9ec;
+    font-weight: 500;
+  }
+  .modal-footer { display: flex; flex-direction: column; gap: 0.6rem; }
 
-  .btn-danger {
+  .btn-cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     width: 100%;
-    padding: 0.72rem 1rem;
-    border-radius: 9px;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
     font-size: 0.86rem;
     font-weight: 700;
     cursor: pointer;
-    border: 1px solid rgba(239,68,68,.35);
-    background: rgba(239,68,68,.12);
+    border: 1px solid rgba(239,68,68,.3);
+    background: rgba(239,68,68,.1);
     color: #f87171;
-    transition: background .12s;
+    transition: background .12s, border-color .12s;
   }
-  .btn-danger:hover { background: rgba(239,68,68,.22); }
-  .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-cancel:hover { background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.5); }
+  .btn-cancel:disabled { opacity: .5; cursor: not-allowed; }
 
-  /* ── Responsive ─────────────────────────────────────────────────── */
-  @media (max-width: 700px) {
-    .dow-header div { font-size: 0.65rem; padding: 8px 0; }
-    .day-n { font-size: 11px; width: 22px; height: 22px; }
-    .week-cells { height: 42px; }
-    .ev-bar { font-size: 9.5px; height: 20px; padding: 0 4px; }
+  .action-msg {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+  }
+  .action-msg.ok  { background: rgba(34,197,94,.1);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+  .action-msg.err { background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #162130;
+    border: 1px solid #253647;
+    color: #cbd5e1;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    z-index: 99999;
+    transition: transform .3s cubic-bezier(.16,1,.3,1), opacity .3s;
+    opacity: 0;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.ok  { border-color: rgba(34,197,94,.4); color: #4ade80; }
+  .toast.err { border-color: rgba(239,68,68,.4); color: #f87171; }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,.2);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .cal-toolbar { flex-direction: column; align-items: flex-start; }
+    .cal-month-title { font-size: 1.2rem; min-width: 0; }
     .block-form { grid-template-columns: 1fr; }
+    .modal-box { padding: 1.5rem 1.25rem; }
   }
 </style>

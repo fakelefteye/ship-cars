@@ -7,7 +7,10 @@
       "WebFetch(domain:api-eu.getaround.com)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\" -Recurse -Depth 2)",
+      "Bash(Select-Object -First 50 FullName)",
+      "Bash(grep -E \"\\\\.astro$\")"
     ]
   }
 }
