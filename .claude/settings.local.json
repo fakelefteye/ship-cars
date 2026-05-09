@@ -4,7 +4,10 @@
       "Bash(npm audit *)",
       "Bash(git add *)",
       "mcp__claude_ai_Supabase__list_projects",
-      "WebFetch(domain:api-eu.getaround.com)"
+      "WebFetch(domain:api-eu.getaround.com)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)"
     ]
   }
 }
