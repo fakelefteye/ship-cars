@@ -14,17 +14,13 @@ function headers(): Record<string, string> {
   };
 }
 
-// RFC3339 sans millisecondes : "2026-05-08T17:30:00Z" — pour POST/DELETE body
-// Gère les formats ISO, PostgreSQL ("2026-05-10 10:00:00+00"), etc.
+// Formate une date en ISO8601 avec offset explicite +00:00 (sans millisecondes).
+// La doc Getaround utilise ce format : "2018-08-14T07:30:00.000+02:00"
+// URLSearchParams encode + en %2B → correspond à l'exemple du quick start.
 function toGA(input: string): string {
   const d = new Date(input);
   if (isNaN(d.getTime())) return input;
-  return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
-}
-
-// YYYY-MM-DD — pour les paramètres GET (unavailabilities)
-function toDateParam(iso: string): string {
-  return iso.slice(0, 10);
+  return d.toISOString().slice(0, 19) + '+00:00';
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -144,8 +140,8 @@ export async function getUnavailablePeriods(
     const now = new Date();
     const inOneYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
     const params = new URLSearchParams({
-      start_date: toDateParam(startDate ?? now.toISOString()),
-      end_date:   toDateParam(endDate   ?? inOneYear.toISOString()),
+      start_date: toGA(startDate ?? now.toISOString()),
+      end_date:   toGA(endDate   ?? inOneYear.toISOString()),
     });
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json?${params}`, {
       headers: headers(),
