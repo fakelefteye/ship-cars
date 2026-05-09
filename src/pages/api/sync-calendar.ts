@@ -32,11 +32,11 @@ export const GET: APIRoute = async ({ request }) => {
       );
     }
 
-    // Fenêtre de sync : aujourd'hui → +6 mois
+    // Fenêtre de sync : aujourd'hui → +30 jours (limite max de l'API Getaround)
     const now = new Date();
-    const inSixMonths = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const startDate = now.toISOString();
-    const endDate = inSixMonths.toISOString();
+    const endDate = in30Days.toISOString();
 
     let synced = 0;
     let deleted = 0;
