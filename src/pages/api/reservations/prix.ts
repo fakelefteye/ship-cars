@@ -1,28 +1,28 @@
 // src/pages/api/reservations/prix.ts
 // Calcule le prix total d'une période en tenant compte des tarifs dynamiques
-// et des prix de saison (basse / moyenne / haute).
+// et des prix de saison (faible / moyenne / forte / très forte).
 // GET ?vehicule_id=xxx&date_debut=ISO&date_fin=ISO&zone=A|B|C
 export const prerender = false;
 
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
 
 // ── Données vacances scolaires ────────────────────────────────────────────────
-const VACANCES: Record<string, { d: string; f: string }[]> = {
-  A:[{d:'2025-10-18',f:'2025-11-03'},{d:'2025-12-20',f:'2026-01-05'},
-     {d:'2026-02-21',f:'2026-03-09'},{d:'2026-04-18',f:'2026-05-04'},
-     {d:'2026-07-04',f:'2026-08-31'},{d:'2026-10-17',f:'2026-11-02'},
-     {d:'2026-12-19',f:'2027-01-04'},{d:'2027-02-20',f:'2027-03-08'},
-     {d:'2027-04-10',f:'2027-04-26'},{d:'2027-07-03',f:'2027-08-31'}],
-  B:[{d:'2025-10-18',f:'2025-11-03'},{d:'2025-12-20',f:'2026-01-05'},
-     {d:'2026-02-07',f:'2026-02-23'},{d:'2026-04-25',f:'2026-05-11'},
-     {d:'2026-07-04',f:'2026-08-31'},{d:'2026-10-17',f:'2026-11-02'},
-     {d:'2026-12-19',f:'2027-01-04'},{d:'2027-02-06',f:'2027-02-22'},
-     {d:'2027-04-17',f:'2027-05-03'},{d:'2027-07-03',f:'2027-08-31'}],
-  C:[{d:'2025-10-18',f:'2025-11-03'},{d:'2025-12-20',f:'2026-01-05'},
-     {d:'2026-02-14',f:'2026-03-02'},{d:'2026-04-11',f:'2026-04-27'},
-     {d:'2026-07-04',f:'2026-08-31'},{d:'2026-10-17',f:'2026-11-02'},
-     {d:'2026-12-19',f:'2027-01-04'},{d:'2027-02-13',f:'2027-03-01'},
-     {d:'2027-04-03',f:'2027-04-19'},{d:'2027-07-03',f:'2027-08-31'}],
+const VACANCES: Record<string, { l: string; d: string; f: string }[]> = {
+  A:[{l:'Toussaint',d:'2025-10-18',f:'2025-11-03'},{l:'Noël',d:'2025-12-20',f:'2026-01-05'},
+     {l:'Hiver',d:'2026-02-21',f:'2026-03-09'},{l:'Printemps',d:'2026-04-18',f:'2026-05-04'},
+     {l:'Été',d:'2026-07-04',f:'2026-08-31'},{l:'Toussaint',d:'2026-10-17',f:'2026-11-02'},
+     {l:'Noël',d:'2026-12-19',f:'2027-01-04'},{l:'Hiver',d:'2027-02-20',f:'2027-03-08'},
+     {l:'Printemps',d:'2027-04-10',f:'2027-04-26'},{l:'Été',d:'2027-07-03',f:'2027-08-31'}],
+  B:[{l:'Toussaint',d:'2025-10-18',f:'2025-11-03'},{l:'Noël',d:'2025-12-20',f:'2026-01-05'},
+     {l:'Hiver',d:'2026-02-07',f:'2026-02-23'},{l:'Printemps',d:'2026-04-25',f:'2026-05-11'},
+     {l:'Été',d:'2026-07-04',f:'2026-08-31'},{l:'Toussaint',d:'2026-10-17',f:'2026-11-02'},
+     {l:'Noël',d:'2026-12-19',f:'2027-01-04'},{l:'Hiver',d:'2027-02-06',f:'2027-02-22'},
+     {l:'Printemps',d:'2027-04-17',f:'2027-05-03'},{l:'Été',d:'2027-07-03',f:'2027-08-31'}],
+  C:[{l:'Toussaint',d:'2025-10-18',f:'2025-11-03'},{l:'Noël',d:'2025-12-20',f:'2026-01-05'},
+     {l:'Hiver',d:'2026-02-14',f:'2026-03-02'},{l:'Printemps',d:'2026-04-11',f:'2026-04-27'},
+     {l:'Été',d:'2026-07-04',f:'2026-08-31'},{l:'Toussaint',d:'2026-10-17',f:'2026-11-02'},
+     {l:'Noël',d:'2026-12-19',f:'2027-01-04'},{l:'Hiver',d:'2027-02-13',f:'2027-03-01'},
+     {l:'Printemps',d:'2027-04-03',f:'2027-04-19'},{l:'Été',d:'2027-07-03',f:'2027-08-31'}],
 };
 
 const FERIES = new Set([
@@ -32,12 +32,14 @@ const FERIES = new Set([
   '2027-07-14','2027-08-15','2027-11-01','2027-11-11','2027-12-25',
 ]);
 
-function isVacance(ds: string, zone: string): boolean {
-  return (VACANCES[zone] ?? VACANCES.B).some(v => ds >= v.d && ds <= v.f);
+function getVacance(ds: string, zone: string) {
+  return (VACANCES[zone] ?? VACANCES.B).find(v => ds >= v.d && ds <= v.f) ?? null;
 }
 
-function getDayTier(ds: string, zone: string): 'haute' | 'moyenne' | 'basse' {
-  if (isVacance(ds, zone) || FERIES.has(ds)) return 'haute';
+function getDayTier(ds: string, zone: string): 'tres_haute' | 'haute' | 'moyenne' | 'basse' {
+  const vac = getVacance(ds, zone);
+  if (vac?.l === 'Été') return 'tres_haute';
+  if (vac || FERIES.has(ds)) return 'haute';
   const dow = new Date(ds + 'T12:00:00').getDay();
   if (dow === 0 || dow === 6) return 'moyenne';
   return 'basse';
@@ -65,14 +67,15 @@ export const GET = async ({ url }: { url: URL }) => {
 
   const { data: vehicule } = await supabase
     .from('vehicules')
-    .select('prix_journalier_base, prix_basse, prix_moyenne, prix_haute')
+    .select('prix_journalier_base, prix_basse, prix_moyenne, prix_haute, prix_tres_haute')
     .eq('id', vehiculeId)
     .single();
 
-  const prixBase    = vehicule?.prix_journalier_base ?? 0;
-  const prixBasse   = vehicule?.prix_basse   ?? prixBase;
-  const prixMoyenne = vehicule?.prix_moyenne  ?? prixBase;
-  const prixHaute   = vehicule?.prix_haute   ?? prixBase;
+  const prixBase      = vehicule?.prix_journalier_base ?? 0;
+  const prixBasse     = vehicule?.prix_basse      ?? prixBase;
+  const prixMoyenne   = vehicule?.prix_moyenne    ?? prixBase;
+  const prixHaute     = vehicule?.prix_haute      ?? prixBase;
+  const prixTresHaute = vehicule?.prix_tres_haute ?? prixHaute;
 
   const startDate = start.toISOString().split('T')[0];
   const endDate   = end.toISOString().split('T')[0];
@@ -92,7 +95,6 @@ export const GET = async ({ url }: { url: URL }) => {
     d.setDate(d.getDate() + i);
     const ds = d.toISOString().split('T')[0];
 
-    // Tarif override le plus spécifique (plage la plus courte gagne)
     const matching = (tarifs ?? []).filter(t => t.date_debut <= ds && t.date_fin >= ds);
     matching.sort((a, b) => {
       const la = new Date(a.date_fin).getTime() - new Date(a.date_debut).getTime();
@@ -108,7 +110,10 @@ export const GET = async ({ url }: { url: URL }) => {
       tier = 'custom';
     } else {
       tier = getDayTier(ds, zone);
-      prix = tier === 'haute' ? prixHaute : tier === 'moyenne' ? prixMoyenne : prixBasse;
+      if (tier === 'tres_haute')  prix = prixTresHaute;
+      else if (tier === 'haute')  prix = prixHaute;
+      else if (tier === 'moyenne') prix = prixMoyenne;
+      else                        prix = prixBasse;
     }
 
     breakdown.push({ date: ds, prix, tier, label: tarif?.label ?? undefined });

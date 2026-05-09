@@ -8,8 +8,11 @@ if (!cookies.includes('admin_auth=true')) return Astro.redirect('/admin');
 
 const { data: vehicules } = await supabaseAdmin
   .from('vehicules')
-  .select('id, nom, prix_journalier_base, prix_basse, prix_moyenne, prix_haute, getaround_id')
+  .select('id, nom, prix_journalier_base, prix_basse, prix_moyenne, prix_haute, prix_tres_haute, getaround_id')
   .order('nom');
+
+// Pré-sélection via URL param ?vehicule=UUID
+const urlParam = Astro.url.searchParams.get('vehicule') ?? '';
 ---
 
 <MainLayout title="Tarifs — Admin Ship Cars">
@@ -17,7 +20,7 @@ const { data: vehicules } = await supabaseAdmin
 
   <header class="page-header">
     <a href="/admin" class="back-link">← Tableau de bord</a>
-    <h1>💰 Tarifs par saison</h1>
+    <h1>💰 Tarifs &amp; calendrier</h1>
   </header>
 
   <!-- Barre sélection véhicule + zone + sync -->
@@ -33,7 +36,9 @@ const { data: vehicules } = await supabaseAdmin
             data-basse={v.prix_basse ?? v.prix_journalier_base ?? 0}
             data-moyenne={v.prix_moyenne ?? 0}
             data-haute={v.prix_haute ?? 0}
+            data-tres-haute={v.prix_tres_haute ?? 0}
             data-ga={v.getaround_id ?? ''}
+            selected={v.id === urlParam}
           >
             {v.nom}{v.getaround_id ? ' 🔗' : ''}
           </option>
@@ -62,45 +67,56 @@ const { data: vehicules } = await supabaseAdmin
 
     <!-- ── PRIX PAR SAISON ── -->
     <section class="season-section">
-      <h2>Prix par saison</h2>
-      <p class="season-sub">Ces prix s'appliquent automatiquement selon le type de jour. Les tarifs personnalisés ont priorité.</p>
+      <h2>Vos prix par jour</h2>
+      <p class="season-sub">Fixez votre prix pour les 4 niveaux de demande. Ces prix s'appliquent automatiquement. Les tarifs personnalisés ont priorité.</p>
       <div class="season-cards">
-        <div class="season-card basse">
+        <div class="season-card faible">
+          <div class="s-dot-bar faible"></div>
           <div class="s-head">
-            <span class="s-dot basse"></span>
-            <strong>Basse saison</strong>
+            <strong>Faible</strong>
           </div>
-          <small>Jours de semaine hors vacances</small>
           <div class="s-price-row">
             <input type="number" id="inp-basse" min="0" step="1" placeholder="—" />
             <span>€ / jour</span>
           </div>
+          <small>Jours de semaine en période scolaire</small>
         </div>
         <div class="season-card moyenne">
+          <div class="s-dot-bar moyenne"></div>
           <div class="s-head">
-            <span class="s-dot moyenne"></span>
-            <strong>Moyenne saison</strong>
+            <strong>Moyenne</strong>
           </div>
-          <small>Week-ends hors vacances scolaires</small>
           <div class="s-price-row">
             <input type="number" id="inp-moyenne" min="0" step="1" placeholder="—" />
             <span>€ / jour</span>
           </div>
+          <small>Week-ends en période scolaire</small>
         </div>
-        <div class="season-card haute">
+        <div class="season-card forte">
+          <div class="s-dot-bar forte"></div>
           <div class="s-head">
-            <span class="s-dot haute"></span>
-            <strong>Haute saison</strong>
+            <strong>Forte</strong>
           </div>
-          <small>Vacances scolaires &amp; jours fériés</small>
           <div class="s-price-row">
             <input type="number" id="inp-haute" min="0" step="1" placeholder="—" />
             <span>€ / jour</span>
           </div>
+          <small>Vacances scolaires &amp; jours fériés</small>
+        </div>
+        <div class="season-card tres-forte">
+          <div class="s-dot-bar tres-forte"></div>
+          <div class="s-head">
+            <strong>Très forte</strong>
+          </div>
+          <div class="s-price-row">
+            <input type="number" id="inp-tres-haute" min="0" step="1" placeholder="—" />
+            <span>€ / jour</span>
+          </div>
+          <small>Vacances d'été (juillet – août)</small>
         </div>
       </div>
       <div id="prix-msg" class="form-msg" style="display:none;"></div>
-      <button id="btn-save-prix" class="btn-primary">💾 Enregistrer les prix de saison</button>
+      <button id="btn-save-prix" class="btn-save-season">💾 Enregistrer les prix de saison</button>
     </section>
 
     <!-- ── LAYOUT : CALENDRIER + SIDEBAR ── -->
@@ -109,17 +125,18 @@ const { data: vehicules } = await supabaseAdmin
       <!-- Calendrier -->
       <div class="cal-zone">
         <div class="cal-toolbar">
-          <button id="btn-prev" class="btn-nav">◀</button>
+          <button id="btn-prev" class="btn-nav">&#8249;</button>
           <span id="cal-title" class="cal-title"></span>
-          <button id="btn-next" class="btn-nav">▶</button>
+          <button id="btn-next" class="btn-nav">&#8250;</button>
           <span id="hint-sel" class="hint-sel"></span>
         </div>
         <div id="calendar" class="calendar"></div>
         <div class="legend">
-          <span class="leg"><span class="ldot basse"></span> Basse</span>
-          <span class="leg"><span class="ldot moyenne"></span> Moyenne (WE)</span>
-          <span class="leg"><span class="ldot haute"></span> Haute (vacances/fériés)</span>
-          <span class="leg"><span class="ldot custom"></span> Tarif personnalisé</span>
+          <span class="leg"><span class="ldot faible"></span> Faible</span>
+          <span class="leg"><span class="ldot moyenne"></span> Moyenne</span>
+          <span class="leg"><span class="ldot forte"></span> Forte</span>
+          <span class="leg"><span class="ldot tres-forte"></span> Très forte (été)</span>
+          <span class="leg"><span class="ldot custom"></span> Personnalisé</span>
           <span class="leg"><span class="ldot ga"></span> Getaround</span>
           <span class="leg"><span class="ldot blocked"></span> Bloqué</span>
         </div>
@@ -242,32 +259,32 @@ const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin',
 // ─────────────────────────────────────────────────────────────────────────────
 // État global
 // ─────────────────────────────────────────────────────────────────────────────
-let vehiculeId = '';
-let zone       = 'B';
-let year       = new Date().getFullYear();
-let month      = new Date().getMonth();
-let prixBasse  = 0, prixMoyenne = 0, prixHaute = 0;
-let tarifs     = [];  // tarifs_dynamiques (overrides)
-let blocages   = [];  // indisponibilites
-let rangeStart = null, rangeHover = null;
+let vehiculeId   = '';
+let zone         = 'B';
+let year         = new Date().getFullYear();
+let month        = new Date().getMonth();
+let prixBasse    = 0, prixMoyenne = 0, prixHaute = 0, prixTresHaute = 0;
+let tarifs       = [];
+let blocages     = [];
+let rangeStart   = null, rangeHover = null;
+const TODAY      = new Date().toISOString().slice(0,10);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 const pad = n => String(n).padStart(2,'0');
-const ds  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-function isVacance(d) { return VACANCES[zone].some(v => d >= v.d && d <= v.f); }
-function vacLabel(d)  { return (VACANCES[zone].find(v => d >= v.d && d <= v.f) ?? {}).l ?? ''; }
+function getVacance(d) { return VACANCES[zone].find(v => d >= v.d && d <= v.f) ?? null; }
 
 function getDayTier(d) {
-  if (isVacance(d) || FERIES.has(d)) return 'haute';
+  const vac = getVacance(d);
+  if (vac?.l === 'Été') return 'tres_haute';
+  if (vac || FERIES.has(d)) return 'haute';
   const dow = new Date(d + 'T12:00:00').getDay();
   return (dow === 0 || dow === 6) ? 'moyenne' : 'basse';
 }
 
 function getTarifOverride(d) {
-  // La plage la plus courte (la plus spécifique) gagne
   const matches = tarifs.filter(t => t.date_debut <= d && t.date_fin >= d);
   matches.sort((a,b) => {
     const la = new Date(a.date_fin) - new Date(a.date_debut);
@@ -289,7 +306,11 @@ function getPrix(d) {
   const override = getTarifOverride(d);
   if (override) return { prix: Number(override.prix_journalier), type: 'custom', tarif: override };
   const tier = getDayTier(d);
-  const prix = tier === 'haute' ? prixHaute : tier === 'moyenne' ? prixMoyenne : prixBasse;
+  let prix;
+  if (tier === 'tres_haute') prix = prixTresHaute || prixHaute;
+  else if (tier === 'haute')  prix = prixHaute;
+  else if (tier === 'moyenne') prix = prixMoyenne;
+  else                         prix = prixBasse;
   return { prix, type: tier, tarif: null };
 }
 
@@ -302,15 +323,17 @@ function fmtDate(s) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Chargement véhicule
 // ─────────────────────────────────────────────────────────────────────────────
-async function loadVehicule(id, basse, moyenne, haute, gaId) {
-  vehiculeId = id;
-  prixBasse   = parseFloat(basse)   || 0;
-  prixMoyenne = parseFloat(moyenne) || 0;
-  prixHaute   = parseFloat(haute)   || 0;
+async function loadVehicule(id, basse, moyenne, haute, tresHaute, gaId) {
+  vehiculeId   = id;
+  prixBasse    = parseFloat(basse)     || 0;
+  prixMoyenne  = parseFloat(moyenne)   || 0;
+  prixHaute    = parseFloat(haute)     || 0;
+  prixTresHaute = parseFloat(tresHaute) || 0;
 
-  document.getElementById('inp-basse').value   = prixBasse   || '';
-  document.getElementById('inp-moyenne').value = prixMoyenne || '';
-  document.getElementById('inp-haute').value   = prixHaute   || '';
+  document.getElementById('inp-basse').value      = prixBasse     || '';
+  document.getElementById('inp-moyenne').value    = prixMoyenne   || '';
+  document.getElementById('inp-haute').value      = prixHaute     || '';
+  document.getElementById('inp-tres-haute').value = prixTresHaute || '';
 
   document.getElementById('sync-zone').style.display = gaId ? 'flex' : 'none';
 
@@ -345,17 +368,16 @@ function applyRegles(r) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Rendu calendrier
+// Rendu calendrier — style Getaround
 // ─────────────────────────────────────────────────────────────────────────────
 function renderCalendar() {
   const cal = document.getElementById('calendar');
   cal.innerHTML = '';
   document.getElementById('cal-title').textContent = MONTH_NAMES[month] + ' ' + year;
 
-  // En-têtes
   const header = document.createElement('div');
   header.className = 'cal-header';
-  ['Lu','Ma','Me','Je','Ve','Sa','Di'].forEach(j => {
+  ['LUN','MAR','MER','JEU','VEN','SAM','DIM'].forEach(j => {
     const h = document.createElement('div');
     h.className = 'cal-wday';
     h.textContent = j;
@@ -363,12 +385,12 @@ function renderCalendar() {
   });
   cal.appendChild(header);
 
-  const grid     = document.createElement('div');
+  const grid = document.createElement('div');
   grid.className = 'cal-grid';
 
   const firstDay  = new Date(year, month, 1);
   const totalDays = new Date(year, month + 1, 0).getDate();
-  const startDow  = (firstDay.getDay() + 6) % 7; // lundi = 0
+  const startDow  = (firstDay.getDay() + 6) % 7;
 
   for (let i = 0; i < startDow; i++) {
     const e = document.createElement('div');
@@ -379,9 +401,10 @@ function renderCalendar() {
   for (let day = 1; day <= totalDays; day++) {
     const d      = `${year}-${pad(month+1)}-${pad(day)}`;
     const blocage = getBlocage(d);
-    const vac    = isVacance(d);
+    const vac    = getVacance(d);
     const ferie  = FERIES.has(d);
     const { prix, type, tarif } = getPrix(d);
+    const isToday = d === TODAY;
 
     const inSel = rangeStart && rangeHover &&
       d >= Math.min(rangeStart, rangeHover) && d <= Math.max(rangeStart, rangeHover);
@@ -389,43 +412,42 @@ function renderCalendar() {
     const cell = document.createElement('div');
     cell.className = 'cal-day';
     cell.dataset.d = d;
+    if (isToday) cell.classList.add('day-today');
 
     if (blocage) {
       cell.classList.add(blocage.source === 'getaround' ? 'day-ga' : 'day-blocked');
     } else {
-      cell.classList.add('day-' + (tarif ? 'custom' : type));
+      const tierClass = type === 'tres_haute' ? 'day-tres-haute'
+                      : type === 'custom'     ? 'day-custom'
+                      : 'day-' + type;
+      cell.classList.add(tierClass);
       if (tarif) cell.style.setProperty('--cc', tarif.couleur || '#c9a84c');
     }
-    if (inSel) cell.classList.add('day-in-range');
+    if (inSel)           cell.classList.add('day-in-range');
     if (rangeStart === d) cell.classList.add('day-sel-start');
 
-    // Numéro du jour — gras si vacance ou férié
+    // Numéro du jour
     const num = document.createElement('span');
-    num.className = 'day-num' + (vac || ferie ? ' special' : '');
+    num.className = 'day-num';
     num.textContent = day;
-    if (ferie) num.title = 'Jour férié';
-    else if (vac) num.title = 'Vac. ' + vacLabel(d);
+    if (ferie) num.title = 'Jour férié ★';
+    else if (vac) num.title = 'Vac. ' + vac.l;
     cell.appendChild(num);
 
-    // Indicateur vacances / férié
-    if (ferie) {
+    // Indicateur vacances/férié
+    if ((ferie || vac) && !blocage) {
       const dot = document.createElement('span');
-      dot.className = 'day-vac-dot';
-      dot.textContent = '★';
-      cell.appendChild(dot);
-    } else if (vac && !blocage) {
-      const dot = document.createElement('span');
-      dot.className = 'day-vac-dot';
-      dot.textContent = '▪';
+      dot.className = 'day-vac-label';
+      dot.textContent = ferie ? '★' : vac.l === 'Été' ? '☀' : '▪';
       cell.appendChild(dot);
     }
 
-    // Prix
+    // Badge prix
     if (!blocage && prix > 0) {
-      const p = document.createElement('span');
-      p.className = 'day-price';
-      p.textContent = prix + '€';
-      cell.appendChild(p);
+      const badge = document.createElement('span');
+      badge.className = 'day-price-badge';
+      badge.textContent = prix + '€';
+      cell.appendChild(badge);
     }
 
     // Label blocage
@@ -436,7 +458,6 @@ function renderCalendar() {
       cell.appendChild(lbl);
     }
 
-    // Interaction
     if (!blocage) {
       cell.style.cursor = 'pointer';
       cell.addEventListener('click', () => onDayClick(d));
@@ -456,18 +477,14 @@ function renderCalendar() {
 // ─────────────────────────────────────────────────────────────────────────────
 function onDayClick(d) {
   if (!rangeStart) {
-    // Premier clic : ouvre directement le panel pour ce jour seul
-    rangeStart = d;
-    rangeHover = d;
+    rangeStart = d; rangeHover = d;
     document.getElementById('hint-sel').textContent = 'Cliquez une 2ᵉ date pour une plage';
     renderCalendar();
     openEditPanel(d, d);
   } else if (d === rangeStart) {
-    // Clic sur le même jour : confirme la sélection d'un seul jour
     clearEdit();
     openEditPanel(d, d);
   } else {
-    // 2ème clic : plage
     const a = rangeStart < d ? rangeStart : d;
     const b = rangeStart < d ? d : rangeStart;
     rangeStart = null; rangeHover = null;
@@ -481,10 +498,9 @@ function openEditPanel(debut, fin) {
   const panel = document.getElementById('panel-edit');
   const isSingle = debut === fin;
   document.getElementById('panel-title').textContent = isSingle
-    ? '✏️ Modifier le tarif du ' + fmtDate(debut)
+    ? '✏️ Tarif du ' + fmtDate(debut)
     : '✏️ Tarif du ' + fmtDate(debut) + ' au ' + fmtDate(fin);
   document.getElementById('panel-range').textContent = '';
-  // Pré-remplir avec le prix actuel du premier jour
   const { prix, tarif } = getPrix(debut);
   document.getElementById('t-prix').value  = prix || '';
   document.getElementById('t-label').value = tarif?.label || '';
@@ -521,14 +537,15 @@ document.getElementById('btn-save-tarif').addEventListener('click', async () => 
   const btn = document.getElementById('btn-save-tarif');
   btn.disabled = true; btn.textContent = '⏳…';
 
-  // Détermine la couleur selon le tier du premier jour
   const tier    = getDayTier(debut);
-  const couleur = tier === 'haute' ? '#16a34a' : tier === 'moyenne' ? '#4ade80' : '#86efac';
+  const couleur = tier === 'tres_haute' ? '#166534'
+                : tier === 'haute'      ? '#16a34a'
+                : tier === 'moyenne'    ? '#4ade80'
+                :                        '#86efac';
 
   try {
     const res = await fetch('/api/admin/tarifs', {
-      method: 'POST',
-      credentials: 'include',
+      method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vehicule_id: vehiculeId, date_debut: debut, date_fin: fin, prix_journalier: prix, label, couleur }),
     });
@@ -537,9 +554,7 @@ document.getElementById('btn-save-tarif').addEventListener('click', async () => 
       const tRes = await fetch('/api/admin/tarifs?vehicule_id=' + vehiculeId, { credentials: 'include' });
       tarifs = await tRes.json().catch(() => []);
       if (!Array.isArray(tarifs)) tarifs = [];
-      clearEdit();
-      renderCalendar();
-      renderTarifsList();
+      clearEdit(); renderCalendar(); renderTarifsList();
     } else {
       errEl.textContent = data.error || 'Erreur';
       errEl.style.display = 'block';
@@ -560,24 +575,25 @@ document.getElementById('btn-cancel-edit').addEventListener('click', clearEdit);
 document.getElementById('btn-save-prix').addEventListener('click', async () => {
   const msg = document.getElementById('prix-msg');
   const btn = document.getElementById('btn-save-prix');
-  const b = parseFloat(document.getElementById('inp-basse').value)   || null;
-  const m = parseFloat(document.getElementById('inp-moyenne').value) || null;
-  const h = parseFloat(document.getElementById('inp-haute').value)   || null;
+  const b  = parseFloat(document.getElementById('inp-basse').value)      || null;
+  const m  = parseFloat(document.getElementById('inp-moyenne').value)    || null;
+  const h  = parseFloat(document.getElementById('inp-haute').value)      || null;
+  const th = parseFloat(document.getElementById('inp-tres-haute').value) || null;
 
   btn.disabled = true; btn.textContent = '⏳…';
 
   try {
     const res = await fetch('/api/admin/vehicule-prix', {
-      method: 'PUT',
-      credentials: 'include',
+      method: 'PUT', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vehicule_id: vehiculeId, prix_basse: b, prix_moyenne: m, prix_haute: h }),
+      body: JSON.stringify({ vehicule_id: vehiculeId, prix_basse: b, prix_moyenne: m, prix_haute: h, prix_tres_haute: th }),
     });
     const data = await res.json();
     if (data.success) {
-      if (b !== null) prixBasse   = b;
-      if (m !== null) prixMoyenne = m;
-      if (h !== null) prixHaute   = h;
+      if (b  !== null) prixBasse     = b;
+      if (m  !== null) prixMoyenne   = m;
+      if (h  !== null) prixHaute     = h;
+      if (th !== null) prixTresHaute = th;
       msg.className = 'form-msg ok'; msg.textContent = '✅ Prix de saison enregistrés';
       msg.style.display = 'block';
       renderCalendar();
@@ -710,7 +726,7 @@ document.getElementById('sel-vehicule').addEventListener('change', function() {
     document.getElementById('sync-zone').style.display    = 'none';
     return;
   }
-  loadVehicule(this.value, opt.dataset.basse, opt.dataset.moyenne, opt.dataset.haute, opt.dataset.ga);
+  loadVehicule(this.value, opt.dataset.basse, opt.dataset.moyenne, opt.dataset.haute, opt.dataset.tresHaute, opt.dataset.ga);
 });
 
 document.getElementById('sel-zone').addEventListener('change', function() {
@@ -718,6 +734,20 @@ document.getElementById('sel-zone').addEventListener('change', function() {
 });
 
 document.getElementById('btn-sync').addEventListener('click', () => syncGetaround(true));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auto-sélection via URL param ?vehicule=UUID
+// ─────────────────────────────────────────────────────────────────────────────
+(function() {
+  const params = new URLSearchParams(location.search);
+  const preselId = params.get('vehicule');
+  if (!preselId) return;
+  const sel = document.getElementById('sel-vehicule');
+  const opt = [...sel.options].find(o => o.value === preselId);
+  if (!opt) return;
+  sel.value = preselId;
+  loadVehicule(opt.value, opt.dataset.basse, opt.dataset.moyenne, opt.dataset.haute, opt.dataset.tresHaute, opt.dataset.ga);
+})();
 </script>
 
 <style>
@@ -751,101 +781,146 @@ h1 { font-size:1.6rem; font-weight:800; color:#f0f4f8; margin:0; }
 
 .no-vehicle { text-align:center; padding:4rem; color:#4b5563; font-style:italic; }
 
-/* ── Section saison ── */
+/* ── Section saison — style Getaround ── */
 .season-section {
   background:#1a2b3c; border:1px solid #2a3d50; border-radius:12px;
   padding:1.4rem 1.6rem; margin-bottom:1.5rem;
 }
-.season-section h2 { font-size:1rem; font-weight:700; color:#e2e8f0; margin:0 0 .3rem; }
-.season-sub { font-size:.78rem; color:#6b7280; margin:0 0 1.1rem; }
-.season-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1rem; }
-@media(max-width:700px){ .season-cards { grid-template-columns:1fr; } }
+.season-section h2 { font-size:1.1rem; font-weight:800; color:#f0f4f8; margin:0 0 .25rem; }
+.season-sub { font-size:.78rem; color:#6b7280; margin:0 0 1.2rem; }
+.season-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1rem; }
+@media(max-width:900px){ .season-cards { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:500px){ .season-cards { grid-template-columns:1fr; } }
 
 .season-card {
   border-radius:10px; padding:1rem 1.1rem;
-  display:flex; flex-direction:column; gap:.45rem;
+  display:flex; flex-direction:column; gap:.5rem;
+  position:relative; overflow:hidden;
 }
-.season-card.basse   { background:rgba(134,239,172,.1); border:1px solid rgba(134,239,172,.25); }
-.season-card.moyenne { background:rgba(74,222,128,.12); border:1px solid rgba(74,222,128,.3); }
-.season-card.haute   { background:rgba(22,163,74,.15);  border:1px solid rgba(22,163,74,.35); }
+.season-card.faible    { background:rgba(187,247,208,.08); border:1px solid rgba(187,247,208,.2); }
+.season-card.moyenne   { background:rgba(134,239,172,.12); border:1px solid rgba(134,239,172,.28); }
+.season-card.forte     { background:rgba(74,222,128,.14);  border:1px solid rgba(74,222,128,.32); }
+.season-card.tres-forte { background:rgba(22,163,74,.18); border:1px solid rgba(22,163,74,.4); }
 
-.s-head { display:flex; align-items:center; gap:.5rem; }
-.s-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
-.s-dot.basse   { background:#86efac; }
-.s-dot.moyenne { background:#4ade80; }
-.s-dot.haute   { background:#16a34a; }
-.s-head strong { font-size:.88rem; font-weight:700; color:#e2e8f0; }
-.season-card small { font-size:.75rem; color:#9ca3af; }
-.s-price-row { display:flex; align-items:center; gap:.5rem; margin-top:.2rem; }
+.s-dot-bar {
+  position:absolute; top:0; left:0; right:0; height:3px; border-radius:10px 10px 0 0;
+}
+.s-dot-bar.faible    { background:#bbf7d0; }
+.s-dot-bar.moyenne   { background:#86efac; }
+.s-dot-bar.forte     { background:#4ade80; }
+.s-dot-bar.tres-forte { background:#16a34a; }
+
+.s-head strong { font-size:.9rem; font-weight:800; color:#e2e8f0; }
+.season-card small { font-size:.72rem; color:#6b7280; line-height:1.4; }
+.s-price-row { display:flex; align-items:center; gap:.5rem; }
 .s-price-row input {
-  width:80px; background:#0f1e33; border:1px solid #2a3d50; color:#e2e8f0;
-  padding:7px 10px; border-radius:7px; font-size:1rem; font-weight:700; color-scheme:dark;
+  width:85px; background:#0f1e33; border:1px solid #2a3d50; color:#e2e8f0;
+  padding:7px 10px; border-radius:7px; font-size:1.15rem; font-weight:800; color-scheme:dark;
 }
 .s-price-row input:focus { outline:none; border-color:#4dd4c8; }
 .s-price-row span { font-size:.82rem; color:#9ca3af; }
+
+.btn-save-season {
+  background:#c9a84c; color:#000; border:none; padding:.65rem 1.5rem;
+  border-radius:8px; font-weight:700; font-size:.88rem; cursor:pointer; transition:opacity .15s;
+}
+.btn-save-season:disabled { opacity:.6; cursor:not-allowed; }
 
 /* ── Layout 2 colonnes ── */
 .layout { display:grid; grid-template-columns:1fr 300px; gap:1.5rem; align-items:start; }
 @media(max-width:900px){ .layout { grid-template-columns:1fr; } }
 
-/* ── Calendrier ── */
+/* ── Calendrier — style Getaround ── */
 .cal-zone { display:flex; flex-direction:column; gap:.8rem; }
-.cal-toolbar { display:flex; align-items:center; gap:.8rem; background:#1a2b3c; border:1px solid #2a3d50; border-radius:10px; padding:.6rem 1rem; }
-.cal-title { flex:1; text-align:center; font-size:1.1rem; font-weight:800; color:#e2e8f0; }
-.btn-nav { background:#0f1e33; border:1px solid #2a3d50; color:#9ca3af; width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:.85rem; transition:color .15s, border-color .15s; }
+.cal-toolbar {
+  display:flex; align-items:center; gap:.8rem;
+  background:#1a2b3c; border:1px solid #2a3d50; border-radius:10px; padding:.6rem 1rem;
+}
+.cal-title { flex:1; text-align:center; font-size:1.2rem; font-weight:900; color:#e2e8f0; }
+.btn-nav {
+  background:#0f1e33; border:1px solid #2a3d50; color:#9ca3af;
+  width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1.2rem;
+  display:flex; align-items:center; justify-content:center;
+  transition:color .15s, border-color .15s;
+}
 .btn-nav:hover { color:#4dd4c8; border-color:#4dd4c8; }
 .hint-sel { font-size:.75rem; color:#c9a84c; white-space:nowrap; }
 
 .calendar { background:#1a2b3c; border:1px solid #2a3d50; border-radius:12px; overflow:hidden; }
-.cal-header { display:grid; grid-template-columns:repeat(7,1fr); background:#0f1e33; padding:.35rem 0; }
-.cal-wday { text-align:center; font-size:.68rem; color:#4b5563; font-weight:700; text-transform:uppercase; }
-.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#2a3d50; }
+.cal-header { display:grid; grid-template-columns:repeat(7,1fr); background:#0f1e33; padding:.5rem 0; }
+.cal-wday { text-align:center; font-size:.65rem; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; background:#0f1e33; padding:2px; }
 
+/* Cellule de base */
 .cal-day {
-  background:#1a2b3c; min-height:76px; padding:6px 5px 4px;
-  display:flex; flex-direction:column; align-items:center;
-  position:relative; user-select:none; transition:filter .1s;
+  background:#1a2b3c; min-height:80px; padding:7px 7px 6px;
+  display:flex; flex-direction:column;
+  position:relative; user-select:none; transition:filter .12s; border-radius:6px;
 }
-.cal-day.empty { background:#111d2b; }
-.cal-day:not(.empty):not(.day-ga):not(.day-blocked):hover { filter:brightness(1.18); cursor:pointer; }
+.cal-day.empty { background:#111d2b; min-height:80px; border-radius:6px; }
 
-/* Types de jours — schéma vert façon Getaround */
-.cal-day.day-basse   { background:rgba(134,239,172,.18); }
-.cal-day.day-moyenne { background:rgba(74,222,128,.28); }
-.cal-day.day-haute   { background:rgba(22,163,74,.38); }
-.cal-day.day-custom  { background:color-mix(in srgb, var(--cc,#c9a84c) 25%, #1a2b3c); }
-.cal-day.day-ga      { background:rgba(59,130,246,.18); background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(59,130,246,.12) 5px,rgba(59,130,246,.12) 10px); }
-.cal-day.day-blocked { background:rgba(239,68,68,.18); }
-.cal-day.day-in-range  { outline:2px solid rgba(201,168,76,.6); outline-offset:-2px; }
-.cal-day.day-sel-start { outline:2px solid #c9a84c; outline-offset:-2px; }
+/* Couleurs des tiers — saturées comme Getaround */
+.cal-day.day-basse      { background:#d1fae5; }
+.cal-day.day-moyenne    { background:#86efac; }
+.cal-day.day-forte,
+.cal-day.day-haute      { background:#4ade80; }
+.cal-day.day-tres-haute { background:#22c55e; }
+.cal-day.day-custom     { background:color-mix(in srgb, var(--cc,#c9a84c) 60%, #d1fae5); }
+.cal-day.day-ga         { background:#bfdbfe; }
+.cal-day.day-blocked    { background:#fee2e2; }
 
-.day-num { font-size:.85rem; font-weight:600; color:#e2e8f0; line-height:1; }
-.day-num.special { font-weight:900; color:#fff; }
+.cal-day.day-today { outline:2px solid #c9a84c; outline-offset:-2px; }
+.cal-day.day-in-range   { outline:2px solid rgba(201,168,76,.7); outline-offset:-2px; }
+.cal-day.day-sel-start  { outline:2px solid #c9a84c; outline-offset:-2px; }
 
-.day-vac-dot { font-size:.55rem; color:rgba(255,255,255,.5); line-height:1; }
-.cal-day.day-haute .day-vac-dot { color:rgba(255,255,255,.7); }
+.cal-day:not(.empty):not(.day-ga):not(.day-blocked):hover { filter:brightness(.9); cursor:pointer; }
 
-.day-price { font-size:.72rem; font-weight:700; color:#bbf7d0; margin-top:auto; }
-.cal-day.day-basse   .day-price { color:#86efac; }
-.cal-day.day-moyenne .day-price { color:#4ade80; }
-.cal-day.day-haute   .day-price { color:#fff; }
-.cal-day.day-custom  .day-price { color:#fef08a; }
-.cal-day.day-ga      .day-price,
-.cal-day.day-blocked .day-price { display:none; }
+/* Numéro du jour */
+.day-num {
+  font-size:.92rem; font-weight:700; color:#1a2b3c; line-height:1;
+  align-self:flex-start;
+}
+.cal-day.day-ga .day-num,
+.cal-day.day-blocked .day-num { color:#1e3a5f; }
 
-.day-lbl { font-size:.62rem; font-weight:700; color:#60a5fa; text-transform:uppercase; letter-spacing:.04em; }
-.cal-day.day-blocked .day-lbl { color:#f87171; }
+/* Indicateur vacances/férié */
+.day-vac-label {
+  font-size:.6rem; color:rgba(0,0,0,.4); line-height:1; margin-top:1px;
+  align-self:flex-start;
+}
+
+/* Badge prix — bottom-right, fond sombre */
+.day-price-badge {
+  margin-top:auto; align-self:flex-end;
+  background:rgba(0,0,0,.55); color:#fff;
+  font-size:.78rem; font-weight:800;
+  padding:2px 6px; border-radius:4px;
+  line-height:1.4; white-space:nowrap;
+}
+.cal-day.day-basse .day-price-badge   { background:rgba(0,0,0,.35); }
+.cal-day.day-tres-haute .day-price-badge { background:rgba(0,0,0,.6); }
+.cal-day.day-ga .day-price-badge,
+.cal-day.day-blocked .day-price-badge { display:none; }
+
+/* Label blocage */
+.day-lbl {
+  margin-top:auto; align-self:flex-end;
+  font-size:.65rem; font-weight:700; color:#1e3a5f;
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.cal-day.day-blocked .day-lbl { color:#991b1b; }
 
 /* ── Légende ── */
-.legend { display:flex; gap:.8rem; flex-wrap:wrap; padding:.3rem .1rem; }
-.leg { display:flex; align-items:center; gap:4px; font-size:.72rem; color:#6b7280; }
-.ldot { width:10px; height:10px; border-radius:2px; display:inline-block; }
-.ldot.basse   { background:#86efac; }
-.ldot.moyenne { background:#4ade80; }
-.ldot.haute   { background:#16a34a; }
-.ldot.custom  { background:#c9a84c; }
-.ldot.ga      { background:#3b82f6; }
-.ldot.blocked { background:#ef4444; }
+.legend { display:flex; gap:.8rem; flex-wrap:wrap; padding:.4rem .2rem; }
+.leg { display:flex; align-items:center; gap:5px; font-size:.72rem; color:#6b7280; }
+.ldot { width:12px; height:12px; border-radius:3px; display:inline-block; }
+.ldot.faible    { background:#d1fae5; border:1px solid #86efac; }
+.ldot.moyenne   { background:#86efac; }
+.ldot.forte     { background:#4ade80; }
+.ldot.tres-forte { background:#22c55e; }
+.ldot.custom    { background:#c9a84c; }
+.ldot.ga        { background:#bfdbfe; }
+.ldot.blocked   { background:#fee2e2; }
 
 /* ── Sidebar ── */
 .sidebar { display:flex; flex-direction:column; gap:1rem; }
