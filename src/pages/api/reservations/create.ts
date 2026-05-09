@@ -49,14 +49,17 @@ export const POST: APIRoute = async ({ request }) => {
           String(vehicule.getaround_id),
           date_debut,
           date_fin,
+          'booked',
         );
 
-        if (period?.id) {
-          // Stocke l'id pour pouvoir débloquer en cas d'annulation
-          await supabase
-            .from('reservations')
-            .update({ getaround_unavailable_period_id: period.id })
-            .eq('id', reservation.id);
+        if (period) {
+          if (period.id) {
+            await supabase
+              .from('reservations')
+              .update({ getaround_unavailable_period_id: String(period.id) })
+              .eq('id', reservation.id);
+          }
+          console.log('[create] Getaround blocage OK pour voiture', vehicule.getaround_id, period.id ?? '(no id)');
         } else {
           console.error('[create] Getaround a refusé le blocage pour la voiture', vehicule.getaround_id);
         }

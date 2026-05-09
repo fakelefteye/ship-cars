@@ -15,8 +15,11 @@ function headers(): Record<string, string> {
 }
 
 // RFC3339 sans millisecondes : "2026-05-08T17:30:00Z" — pour POST/DELETE body
-function toGA(iso: string): string {
-  return iso.replace(/\.\d{3}Z$/, 'Z');
+// Gère les formats ISO, PostgreSQL ("2026-05-10 10:00:00+00"), etc.
+function toGA(input: string): string {
+  const d = new Date(input);
+  if (isNaN(d.getTime())) return input;
+  return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
 // YYYY-MM-DD — pour les paramètres GET (unavailabilities)
@@ -35,6 +38,7 @@ export interface GetaroundRental {
 }
 
 export interface GetaroundUnavailablePeriod {
+  id?: string | number;
   starts_at: string;
   ends_at: string;
   reason?: string | null;
@@ -69,28 +73,36 @@ export async function getRental(rentalId: string | number): Promise<GetaroundRen
 /**
  * Bloque un créneau sur Getaround pour une voiture.
  * POST /cars/{car_id}/unavailabilities.json
- * Renvoie 204 No Content — on retourne un booléen.
+ * Retourne l'objet créé (avec id si disponible) ou null en cas d'erreur.
  */
 export async function blockDates(
   carId: string,
   startsAt: string,
   endsAt: string,
-): Promise<boolean> {
+  reason: string = 'other',
+): Promise<GetaroundUnavailablePeriod | null> {
+  const start = toGA(startsAt);
+  const end   = toGA(endsAt);
   try {
     const res = await fetch(`${API_BASE}/cars/${carId}/unavailabilities.json`, {
       method: 'POST',
       headers: headers(),
-      body: JSON.stringify({ starts_at: toGA(startsAt), ends_at: toGA(endsAt) }),
+      body: JSON.stringify({ starts_at: start, ends_at: end, reason }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      console.error('[Getaround] blockDates error', res.status, JSON.stringify(err));
-      return false;
+      console.error('[Getaround] blockDates error', res.status, JSON.stringify(err), { carId, start, end });
+      return null;
     }
-    return true;
+    // 201 → parse le body pour récupérer l'id ; 204 → pas de body
+    if (res.status === 204 || res.headers.get('content-length') === '0') {
+      return { starts_at: start, ends_at: end };
+    }
+    const data = await res.json().catch(() => null);
+    return data ?? { starts_at: start, ends_at: end };
   } catch (e) {
     console.error('[Getaround] blockDates network error', e);
-    return false;
+    return null;
   }
 }
 
