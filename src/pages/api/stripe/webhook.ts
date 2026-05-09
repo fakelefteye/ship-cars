@@ -74,6 +74,7 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       ${veh?.carburant ? row('Carburant', veh.carburant) : ''}
       ${row('Nom du locataire', res.locataire_nom)}
       ${row('Date de naissance', fmtDate(res.locataire_date_naissance))}
+      ${res.locataire_lieu_naissance ? row('Lieu de naissance', res.locataire_lieu_naissance) : ''}
       ${row('Numéro de permis', res.locataire_permis_numero)}
       ${row('Date d\'obtention du permis', fmtDate(res.locataire_permis_date))}
       ${row('Adresse', res.locataire_adresse)}

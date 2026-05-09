@@ -11,7 +11,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const {
     vehicule_id, vehicule_nom, date_debut, date_fin, montant, siege_auto, promo_code, reduction,
-    email_client, locataire_nom, locataire_date_naissance, locataire_permis_numero, locataire_permis_date, locataire_adresse,
+    email_client, locataire_nom, locataire_date_naissance, locataire_lieu_naissance, locataire_permis_numero, locataire_permis_date, locataire_adresse,
     permis_recto_url, permis_verso_url, permis_selfie_url,
   } = await request.json();
 
@@ -59,6 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
         email_client:             email_client             || null,
         locataire_nom:            locataire_nom            || null,
         locataire_date_naissance: locataire_date_naissance || null,
+        locataire_lieu_naissance: locataire_lieu_naissance || null,
         locataire_permis_numero:  locataire_permis_numero  || null,
         locataire_permis_date:    locataire_permis_date    || null,
         locataire_adresse:        locataire_adresse        || null,

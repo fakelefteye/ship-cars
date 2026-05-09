@@ -209,16 +209,22 @@ const photos = [
             <input type="date" id="loc-naissance" required />
           </div>
           <div class="form-field">
-            <label class="field-label" for="loc-permis">N° de permis *</label>
-            <input type="text" id="loc-permis" placeholder="14AB12345" autocomplete="off" required />
+            <label class="field-label" for="loc-lieu-naissance">Lieu de naissance *</label>
+            <input type="text" id="loc-lieu-naissance" placeholder="Paris, France" autocomplete="off" required />
           </div>
         </div>
         <div class="form-row-2">
           <div class="form-field">
+            <label class="field-label" for="loc-permis">N° de permis *</label>
+            <input type="text" id="loc-permis" placeholder="14AB12345" autocomplete="off" required />
+          </div>
+          <div class="form-field">
             <label class="field-label" for="loc-permis-date">Date d'obtention du permis *</label>
             <input type="date" id="loc-permis-date" required />
           </div>
-          <div class="form-field">
+        </div>
+        <div class="form-row-2">
+          <div class="form-field" style="grid-column: 1 / -1;">
             <label class="field-label" for="loc-adresse">Adresse complète *</label>
             <input type="text" id="loc-adresse" placeholder="4 rue des Fleurs, 38000, Grenoble" autocomplete="street-address" required />
           </div>
@@ -777,14 +783,15 @@ const photos = [
     const submit = document.getElementById('btn-modal-submit');
     const errEl  = document.getElementById('modal-error');
 
-    const nom       = document.getElementById('loc-nom').value.trim();
-    const email     = document.getElementById('loc-email').value.trim();
-    const naiss     = document.getElementById('loc-naissance').value;
-    const adresse   = document.getElementById('loc-adresse').value.trim();
-    const permis    = document.getElementById('loc-permis').value.trim().toUpperCase();
-    const permisDate = document.getElementById('loc-permis-date').value;
+    const nom           = document.getElementById('loc-nom').value.trim();
+    const email         = document.getElementById('loc-email').value.trim();
+    const naiss         = document.getElementById('loc-naissance').value;
+    const lieuNaissance = document.getElementById('loc-lieu-naissance').value.trim();
+    const adresse       = document.getElementById('loc-adresse').value.trim();
+    const permis        = document.getElementById('loc-permis').value.trim().toUpperCase();
+    const permisDate    = document.getElementById('loc-permis-date').value;
 
-    if (!nom || !email || !naiss || !adresse || !permis || !permisDate) {
+    if (!nom || !email || !naiss || !lieuNaissance || !adresse || !permis || !permisDate) {
       errEl.textContent = 'Veuillez remplir tous les champs obligatoires.';
       errEl.style.display = 'block';
       return;
@@ -843,9 +850,10 @@ const photos = [
           promo_code:               btn.dataset.promo || null,
           reduction:                parseFloat(btn.dataset.reduction || '0'),
           email_client:             email,
-          locataire_nom:            nom,
-          locataire_date_naissance: naiss,
-          locataire_permis_numero:  permis,
+          locataire_nom:              nom,
+          locataire_date_naissance:   naiss,
+          locataire_lieu_naissance:   lieuNaissance,
+          locataire_permis_numero:    permis,
           locataire_permis_date:    permisDate,
           locataire_adresse:        adresse,
           ...permisUrls,

@@ -106,6 +106,7 @@ const contractNum = reservation?.id
               {vehicule?.carburant && <tr><td>Type de carburant</td><td>{vehicule.carburant}</td></tr>}
               {reservation.locataire_nom && <tr><td>Nom du locataire</td><td>{reservation.locataire_nom}</td></tr>}
               {reservation.locataire_date_naissance && <tr><td>Date de naissance</td><td>{fmtDate(reservation.locataire_date_naissance)}</td></tr>}
+              {reservation.locataire_lieu_naissance && <tr><td>Lieu de naissance</td><td>{reservation.locataire_lieu_naissance}</td></tr>}
               {reservation.locataire_permis_numero && <tr><td>Numéro de permis de conduire</td><td>{reservation.locataire_permis_numero}</td></tr>}
               {reservation.locataire_permis_date && <tr><td>Date d'obtention du permis</td><td>{fmtDate(reservation.locataire_permis_date)}</td></tr>}
               {reservation.locataire_adresse && <tr><td>Adresse du locataire</td><td>{reservation.locataire_adresse}</td></tr>}

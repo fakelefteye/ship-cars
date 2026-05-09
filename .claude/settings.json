@@ -12,7 +12,11 @@
       "mcp__claude_ai_Vercel__list_deployments",
       "mcp__claude_ai_Supabase__execute_sql",
       "Bash(git commit *)",
-      "WebFetch(domain:api.getaround.com)"
+      "WebFetch(domain:api.getaround.com)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\" -Recurse -Include \"*.ts\", \"*.js\", \"*.sql\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(xargs ls -la)",
+      "Bash(Get-Content \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\\\\supabase\\\\enable_rls.sql\")"
     ],
     "defaultMode": "dontAsk",
     "additionalDirectories": [
