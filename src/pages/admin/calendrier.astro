@@ -6,949 +6,536 @@ import { supabaseAdmin } from '../../lib/supabase';
 const cookies = Astro.request.headers.get('cookie') || '';
 if (!cookies.includes('admin_auth=true')) return Astro.redirect('/admin');
 
-const { data: vehicules } = await supabaseAdmin
-  .from('vehicules').select('id, nom, getaround_id').order('nom');
-
-const { data: reservations } = await supabaseAdmin
-  .from('reservations')
-  .select('id, vehicule_id, date_debut, date_fin, statut, email_client, locataire_nom, vehicules(nom)')
-  .in('statut', ['paye', 'confirmee', 'en_attente_paiement'])
-  .order('date_debut');
-
-const { data: indisponibilites } = await supabaseAdmin
-  .from('indisponibilites')
-  .select('id, vehicule_id, date_debut, date_fin, source, note, getaround_rental_id, vehicules(nom)')
-  .order('date_debut');
+const [
+  { data: vehicules },
+  { data: reservations },
+  { data: indisponibilites },
+  { data: tarifs },
+] = await Promise.all([
+  supabaseAdmin.from('vehicules')
+    .select('id, nom, getaround_id, prix_journalier_base')
+    .order('nom'),
+  supabaseAdmin.from('reservations')
+    .select('id, vehicule_id, date_debut, date_fin, statut, email_client, locataire_nom, vehicules(nom)')
+    .in('statut', ['paye', 'confirmee', 'en_attente_paiement'])
+    .order('date_debut'),
+  supabaseAdmin.from('indisponibilites')
+    .select('id, vehicule_id, date_debut, date_fin, source, note, getaround_rental_id, vehicules(nom)')
+    .order('date_debut'),
+  supabaseAdmin.from('tarifs_dynamiques')
+    .select('vehicule_id, date_debut, date_fin, prix_journalier, label, couleur')
+    .order('date_debut'),
+]);
 ---
 
 <MainLayout title="Calendrier — Admin Ship Cars">
-  <!-- FullCalendar CSS + JS via CDN -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/fr.global.min.js"></script>
+<script is:inline define:vars={{
+  VEHS:   vehicules        ?? [],
+  RESAS:  reservations     ?? [],
+  INDIS:  indisponibilites ?? [],
+  TARIFS: tarifs           ?? [],
+}}>
+(() => {
+  const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
-  <script is:inline define:vars={{
-    RESA_DATA: reservations ?? [],
-    INDIS_DATA: indisponibilites ?? [],
-    VEHS_DATA: vehicules ?? []
-  }}>
-  document.addEventListener('DOMContentLoaded', () => {
+  let year      = new Date().getFullYear();
+  let month     = new Date().getMonth();
+  let filterVId = '';
 
-    const COLORS = {
-      paye:                { bg:'#15803d', border:'#166534', text:'#bbf7d0' },
-      confirmee:           { bg:'#1d4ed8', border:'#1e3a8a', text:'#bfdbfe' },
-      en_attente_paiement: { bg:'#b45309', border:'#92400e', text:'#fed7aa' },
-      getaround:           { bg:'#7e22ce', border:'#581c87', text:'#e9d5ff' },
-      manual:              { bg:'#a16207', border:'#713f12', text:'#fef08a' },
-    };
+  /* ── utilitaires ──────────────────────────────────────────────────── */
+  function toKey(d) {
+    return d.getFullYear() + '-'
+      + String(d.getMonth() + 1).padStart(2, '0') + '-'
+      + String(d.getDate()).padStart(2, '0');
+  }
+  function ds(s) { const d = new Date(s); d.setHours(0,0,0,0); return d; }
+  function fmt(s) {
+    return new Date(s).toLocaleString('fr-FR', {
+      day:'2-digit', month:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    });
+  }
 
-    const STATUS_LABELS = {
-      paye: 'Payée ✓',
-      confirmee: 'Confirmée',
-      en_attente_paiement: 'En attente de paiement',
-    };
+  /* ── construction de la map de jours ─────────────────────────────── */
+  function buildMap() {
+    const map    = {};   // 'YYYY-MM-DD' -> { type, raw }
+    const prices = {};   // 'YYYY-MM-DD' -> prix_journalier
 
-    let filterVId = '';
+    // 1 — tarifs dynamiques
+    TARIFS.forEach(t => {
+      if (filterVId && t.vehicule_id !== filterVId) return;
+      const d = ds(t.date_debut), e = ds(t.date_fin);
+      while (d <= e) {
+        const k = toKey(d);
+        if (!prices[k]) prices[k] = t.prix_journalier;
+        d.setDate(d.getDate() + 1);
+      }
+    });
 
-    function buildEvents() {
-      const evs = [];
-      (RESA_DATA || []).forEach(r => {
-        if (filterVId && r.vehicule_id !== filterVId) return;
-        const c = COLORS[r.statut] || COLORS.confirmee;
-        const nom = r.vehicules?.nom ?? '?';
-        evs.push({
-          id: 'resa-' + r.id,
-          title: nom + ' — ' + (r.locataire_nom || r.email_client || '?'),
-          start: r.date_debut,
-          end: r.date_fin,
-          backgroundColor: c.bg,
-          borderColor: c.border,
-          textColor: c.text,
-          extendedProps: { type: 'resa', raw: r, vehicule: nom },
-        });
-      });
-      (INDIS_DATA || []).forEach(i => {
-        if (filterVId && i.vehicule_id !== filterVId) return;
-        const c = COLORS[i.source] || COLORS.manual;
-        const nom = i.vehicules?.nom ?? '?';
-        const label = i.source === 'getaround' ? '(Getaround)' : i.note || '(Bloqué)';
-        evs.push({
-          id: 'indis-' + i.id,
-          title: nom + ' ' + label,
-          start: i.date_debut,
-          end: i.date_fin,
-          backgroundColor: c.bg,
-          borderColor: c.border,
-          textColor: c.text,
-          extendedProps: { type: 'indispo', raw: i, vehicule: nom },
-        });
-      });
-      return evs;
+    // 2 — réservations
+    RESAS.forEach(r => {
+      if (filterVId && r.vehicule_id !== filterVId) return;
+      const d = ds(r.date_debut), e = ds(r.date_fin);
+      while (d <= e) {
+        map[toKey(d)] = { type:'resa', raw:r };
+        d.setDate(d.getDate() + 1);
+      }
+    });
+
+    // 3 — indisponibilités (sans écraser une résa)
+    INDIS.forEach(i => {
+      if (filterVId && i.vehicule_id !== filterVId) return;
+      const d = ds(i.date_debut), e = ds(i.date_fin);
+      while (d <= e) {
+        const k = toKey(d);
+        if (!map[k]) map[k] = { type:'indispo', raw:i };
+        d.setDate(d.getDate() + 1);
+      }
+    });
+
+    return { map, prices };
+  }
+
+  /* ── prix de base du véhicule sélectionné ────────────────────────── */
+  function getBasePrice() {
+    if (!filterVId) return null;
+    const v = VEHS.find(v => v.id === filterVId);
+    return v ? v.prix_journalier_base : null;
+  }
+
+  /* ── rendu du calendrier ─────────────────────────────────────────── */
+  function render() {
+    const todayKey       = toKey(new Date());
+    const { map, prices} = buildMap();
+    const basePrice      = getBasePrice();
+
+    document.getElementById('cal-title').textContent = MONTHS[month] + ' ' + year;
+
+    let startDow = new Date(year, month, 1).getDay();
+    startDow = startDow === 0 ? 6 : startDow - 1;          // Lun = 0
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+
+    // cases vides avant le 1er
+    for (let i = 0; i < startDow; i++) {
+      const el = document.createElement('div');
+      el.className = 'dc dc-empty';
+      grid.appendChild(el);
     }
 
-    function fmtDate(str) {
-      return new Date(str).toLocaleString('fr-FR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      });
-    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date    = new Date(year, month, d);
+      const key     = toKey(date);
+      const dow     = date.getDay();           // 0=Dim, 6=Sam
+      const isWknd  = dow === 0 || dow === 6;
+      const isToday = key === todayKey;
+      const ev      = map[key];
+      const price   = prices[key] ?? basePrice;
 
-    function openModal(info) {
-      const ev = info.event;
-      const props = ev.extendedProps;
-      const raw = props.raw;
-      const type = props.type;
+      const el = document.createElement('div');
 
-      document.getElementById('modal-overlay').style.display = 'flex';
-      const body = document.getElementById('modal-body');
+      if (!ev) {
+        // ── jour disponible ──────────────────────────────────────────
+        el.className = 'dc dc-free' + (isWknd ? ' dc-weekend' : '') + (isToday ? ' dc-today' : '');
+        el.innerHTML =
+          `<span class="dc-num${isToday ? ' dc-num-today' : ''}">${d}</span>` +
+          (price != null ? `<span class="dc-price">${Math.round(price)} €</span>` : '');
 
-      let statusBadge = '';
-      let actionBtn = '';
-      let rows = '';
+      } else if (ev.type === 'resa') {
+        // ── réservé ──────────────────────────────────────────────────
+        const r   = ev.raw;
+        const bgC = { paye:'#16a34a', confirmee:'#1d4ed8', en_attente_paiement:'#b45309' };
+        const bg  = bgC[r.statut] || '#374151';
+        el.className = 'dc dc-resa' + (isToday ? ' dc-today' : '');
+        el.style.background = bg;
+        el.style.cursor = 'pointer';
+        const client = r.locataire_nom || r.email_client || '?';
+        el.innerHTML =
+          `<span class="dc-num dc-num-inv">${d}</span>` +
+          `<span class="dc-tag">Réservé</span>` +
+          `<span class="dc-client">${client.length > 11 ? client.slice(0,11) + '…' : client}</span>`;
+        el.addEventListener('click', () => openModal('resa', r));
 
-      if (type === 'resa') {
-        const statut = raw.statut;
-        const badgeColor = { paye:'#15803d', confirmee:'#1d4ed8', en_attente_paiement:'#b45309' }[statut] || '#555';
-        statusBadge = `<span class="modal-badge" style="background:${badgeColor}20;color:${badgeColor};border:1px solid ${badgeColor}40">${STATUS_LABELS[statut] || statut}</span>`;
-        rows = `
-          <div class="modal-row"><span class="modal-label">Véhicule</span><span class="modal-value">${props.vehicule}</span></div>
-          <div class="modal-row"><span class="modal-label">Client</span><span class="modal-value">${raw.locataire_nom || '—'}</span></div>
-          <div class="modal-row"><span class="modal-label">Email</span><span class="modal-value">${raw.email_client || '—'}</span></div>
-          <div class="modal-row"><span class="modal-label">Début</span><span class="modal-value">${fmtDate(raw.date_debut)}</span></div>
-          <div class="modal-row"><span class="modal-label">Fin</span><span class="modal-value">${fmtDate(raw.date_fin)}</span></div>
-        `;
-        actionBtn = `<button class="btn-cancel" data-action="cancel-resa" data-id="${raw.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-          Annuler la réservation + libérer sur Getaround
-        </button>`;
       } else {
-        const isGA = raw.source === 'getaround';
-        statusBadge = `<span class="modal-badge" style="background:${isGA ? '#7e22ce' : '#a16207'}20;color:${isGA ? '#a855f7' : '#d97706'};border:1px solid ${isGA ? '#7e22ce' : '#a16207'}40">${isGA ? 'Blocage Getaround' : 'Blocage manuel'}</span>`;
-        rows = `
-          <div class="modal-row"><span class="modal-label">Véhicule</span><span class="modal-value">${props.vehicule}</span></div>
-          <div class="modal-row"><span class="modal-label">Début</span><span class="modal-value">${fmtDate(raw.date_debut)}</span></div>
-          <div class="modal-row"><span class="modal-label">Fin</span><span class="modal-value">${fmtDate(raw.date_fin)}</span></div>
-          ${raw.note ? `<div class="modal-row"><span class="modal-label">Motif</span><span class="modal-value">${raw.note}</span></div>` : ''}
-        `;
-        actionBtn = `<button class="btn-cancel" data-action="unblock" data-id="${raw.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-          Supprimer ce blocage + libérer sur Getaround
-        </button>`;
+        // ── bloqué ───────────────────────────────────────────────────
+        const i  = ev.raw;
+        const bg = i.source === 'getaround' ? '#4c1d95' : '#374151';
+        el.className = 'dc dc-blocked' + (isToday ? ' dc-today' : '');
+        el.style.background = bg;
+        el.style.cursor = 'pointer';
+        el.innerHTML =
+          `<span class="dc-num dc-num-inv">${d}</span>` +
+          `<span class="dc-tag">${i.source === 'getaround' ? 'Getaround' : 'Bloqué'}</span>`;
+        el.addEventListener('click', () => openModal('indispo', i));
       }
 
-      body.innerHTML = `
-        <div class="modal-head">
-          ${statusBadge}
-          <h2 class="modal-title">${type === 'resa' ? 'Réservation' : 'Indisponibilité'}</h2>
+      grid.appendChild(el);
+    }
+  }
+
+  /* ── modal ───────────────────────────────────────────────────────── */
+  function openModal(type, raw) {
+    const overlay = document.getElementById('modal-overlay');
+    const body    = document.getElementById('modal-body');
+    let html = '';
+
+    if (type === 'resa') {
+      const bgC   = { paye:'#16a34a', confirmee:'#1d4ed8', en_attente_paiement:'#b45309' };
+      const lblC  = { paye:'Payée ✓', confirmee:'Confirmée', en_attente_paiement:'En attente de paiement' };
+      const color = bgC[raw.statut] || '#374151';
+      html = `
+        <span class="mbadge" style="background:${color}22;color:${color};border:1px solid ${color}44">${lblC[raw.statut] || raw.statut}</span>
+        <h2 class="mtitle">Réservation</h2>
+        <div class="mrows">
+          <div class="mrow"><span>Véhicule</span><strong>${raw.vehicules?.nom || '—'}</strong></div>
+          <div class="mrow"><span>Client</span><strong>${raw.locataire_nom || '—'}</strong></div>
+          <div class="mrow"><span>Email</span><strong>${raw.email_client || '—'}</strong></div>
+          <div class="mrow"><span>Début</span><strong>${fmt(raw.date_debut)}</strong></div>
+          <div class="mrow"><span>Fin</span><strong>${fmt(raw.date_fin)}</strong></div>
         </div>
-        <div class="modal-rows">${rows}</div>
-        <div class="modal-footer">${actionBtn}</div>
-        <div class="action-msg" style="display:none"></div>
-      `;
-
-      body.querySelector('[data-action]')?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget;
-        const action = btn.dataset.action;
-        const rid = btn.dataset.id;
-        if (!confirm(action === 'cancel-resa'
-          ? 'Annuler cette réservation ? Le créneau sera libéré sur Getaround.'
-          : 'Supprimer ce blocage ? Le créneau sera libéré sur Getaround.')) return;
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> En cours...';
-        const msgEl = body.querySelector('.action-msg');
-
-        try {
-          let res;
-          if (action === 'cancel-resa') {
-            res = await fetch('/api/reservations/cancel', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ reservation_id: rid }),
-            });
-          } else {
-            res = await fetch('/api/admin/block-dates', {
-              method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ indisponibilite_id: rid }),
-            });
-          }
-          const data = await res.json();
-          if (data.success) {
-            msgEl.style.display = 'block';
-            msgEl.className = 'action-msg ok';
-            msgEl.textContent = action === 'cancel-resa'
-              ? '✅ Réservation annulée, créneau libéré sur Getaround.'
-              : '✅ Blocage supprimé, créneau libéré sur Getaround.';
-            setTimeout(() => location.reload(), 1500);
-          } else {
-            msgEl.style.display = 'block';
-            msgEl.className = 'action-msg err';
-            msgEl.textContent = '❌ ' + (data.error || 'Erreur inconnue');
-            btn.disabled = false;
-            btn.textContent = action === 'cancel-resa' ? 'Annuler la réservation' : 'Supprimer le blocage';
-          }
-        } catch {
-          msgEl.style.display = 'block';
-          msgEl.className = 'action-msg err';
-          msgEl.textContent = '❌ Erreur réseau';
-          btn.disabled = false;
-        }
-      });
+        <button class="mbtn" data-action="cancel-resa" data-id="${raw.id}">
+          Annuler la réservation + libérer sur Getaround
+        </button>
+        <div class="mmsg" style="display:none"></div>`;
+    } else {
+      const isGA  = raw.source === 'getaround';
+      const color = isGA ? '#7c3aed' : '#6b7280';
+      html = `
+        <span class="mbadge" style="background:${color}22;color:${color};border:1px solid ${color}44">${isGA ? 'Blocage Getaround' : 'Blocage manuel'}</span>
+        <h2 class="mtitle">Indisponibilité</h2>
+        <div class="mrows">
+          <div class="mrow"><span>Véhicule</span><strong>${raw.vehicules?.nom || '—'}</strong></div>
+          <div class="mrow"><span>Début</span><strong>${fmt(raw.date_debut)}</strong></div>
+          <div class="mrow"><span>Fin</span><strong>${fmt(raw.date_fin)}</strong></div>
+          ${raw.note ? `<div class="mrow"><span>Motif</span><strong>${raw.note}</strong></div>` : ''}
+        </div>
+        <button class="mbtn" data-action="unblock" data-id="${raw.id}">
+          Supprimer le blocage + libérer sur Getaround
+        </button>
+        <div class="mmsg" style="display:none"></div>`;
     }
 
-    // Populate vehicle selects
-    const filterSel = document.getElementById('filter-v');
-    const blockSel = document.getElementById('sel-v');
-    (VEHS_DATA || []).forEach(v => {
-      const label = v.nom + (v.getaround_id ? ' ✓' : '');
-      [filterSel, blockSel].forEach(sel => {
-        const o = document.createElement('option');
-        o.value = v.id; o.textContent = label;
-        sel.appendChild(o);
-      });
-    });
+    body.innerHTML = html;
+    overlay.style.display = 'flex';
 
-    // Init FullCalendar (loaded globally via CDN)
-    const FC = /** @type {any} */ (window).FullCalendar;
-    const calEl = document.getElementById('fullcal');
-    const calendar = new FC.Calendar(calEl, {
-      locale: 'fr',
-      initialView: 'dayGridMonth',
-      headerToolbar: false,
-      events: buildEvents(),
-      eventClick: openModal,
-      dayMaxEvents: 4,
-      moreLinkText: n => `+${n} autres`,
-      moreLinkClick: 'popover',
-      nowIndicator: true,
-      height: 'auto',
-      eventDisplay: 'block',
-      eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-      dayHeaderFormat: { weekday: 'short' },
-      firstDay: 1,
-      buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine', day: 'Jour', list: 'Liste' },
-    });
-    calendar.render();
-
-    // Custom toolbar wiring
-    document.getElementById('btn-prev').addEventListener('click', () => calendar.prev());
-    document.getElementById('btn-next').addEventListener('click', () => calendar.next());
-    document.getElementById('btn-today').addEventListener('click', () => calendar.today());
-    document.getElementById('view-month').addEventListener('click', () => {
-      calendar.changeView('dayGridMonth');
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('view-month').classList.add('active');
-    });
-    document.getElementById('view-week').addEventListener('click', () => {
-      calendar.changeView('timeGridWeek');
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('view-week').classList.add('active');
-    });
-    document.getElementById('view-list').addEventListener('click', () => {
-      calendar.changeView('listMonth');
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('view-list').classList.add('active');
-    });
-
-    // Update title on nav
-    function updateTitle() {
-      const d = calendar.getDate();
-      const title = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-      document.getElementById('cal-title').textContent = title.charAt(0).toUpperCase() + title.slice(1);
-    }
-    calendar.on('datesSet', updateTitle);
-    updateTitle();
-
-    // Filter by vehicle
-    filterSel.addEventListener('change', () => {
-      filterVId = filterSel.value;
-      calendar.removeAllEvents();
-      calendar.addEventSource(buildEvents());
-    });
-
-    // Modal close
-    document.getElementById('modal-overlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) closeModal();
-    });
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-    function closeModal() {
-      document.getElementById('modal-overlay').style.display = 'none';
-    }
-
-    // Sync button
-    document.getElementById('btn-sync').addEventListener('click', async () => {
-      const btn = document.getElementById('btn-sync');
+    body.querySelector('[data-action]').addEventListener('click', async e => {
+      const btn    = e.currentTarget;
+      const action = btn.dataset.action;
+      const id     = btn.dataset.id;
+      if (!confirm(action === 'cancel-resa'
+        ? 'Annuler cette réservation ? Le créneau sera libéré sur Getaround.'
+        : 'Supprimer ce blocage ? Le créneau sera libéré sur Getaround.')) return;
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Sync...';
+      btn.innerHTML = '<span class="spin"></span> En cours…';
+      const msg = body.querySelector('.mmsg');
       try {
-        const res = await fetch('/api/sync-calendar');
-        const data = await res.json();
-        showToast(data.success
-          ? `✅ ${data.synced} créneau(x) importé(s) depuis Getaround.`
-          : `❌ ${data.error}`, data.success ? 'ok' : 'err');
-        if (data.success) setTimeout(() => location.reload(), 2500);
-      } catch {
-        showToast('❌ Erreur réseau', 'err');
-      }
-      btn.disabled = false;
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg> Sync Getaround';
-    });
-
-    // Block form
-    document.getElementById('form-block').addEventListener('submit', async e => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> En cours...';
-      const vehicule_id = document.getElementById('sel-v').value;
-      const date_debut  = new Date(document.getElementById('inp-debut').value).toISOString();
-      const date_fin    = new Date(document.getElementById('inp-fin').value).toISOString();
-      const note        = document.getElementById('inp-note').value;
-      try {
-        const res = await fetch('/api/admin/block-dates', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ vehicule_id, date_debut, date_fin, note }),
-        });
+        const res = await fetch(
+          action === 'cancel-resa' ? '/api/reservations/cancel' : '/api/admin/block-dates',
+          { method: action === 'cancel-resa' ? 'POST' : 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(action === 'cancel-resa'
+              ? { reservation_id: id } : { indisponibilite_id: id }) }
+        );
         const data = await res.json();
         if (data.success) {
-          showToast('✅ Créneau bloqué' + (data.getaround_blocked ? ' — synchronisé sur Getaround' : '') + '.', 'ok');
-          setTimeout(() => location.reload(), 2000);
+          msg.style.display = 'block'; msg.className = 'mmsg ok';
+          msg.textContent = action === 'cancel-resa'
+            ? '✅ Réservation annulée, créneau libéré sur Getaround.'
+            : '✅ Blocage supprimé, créneau libéré sur Getaround.';
+          setTimeout(() => location.reload(), 1400);
         } else {
-          showToast('❌ ' + (data.error || 'Erreur inconnue'), 'err');
-          btn.disabled = false;
-          btn.textContent = 'Bloquer ce créneau';
+          msg.style.display = 'block'; msg.className = 'mmsg err';
+          msg.textContent = '❌ ' + (data.error || 'Erreur inconnue');
+          btn.disabled = false; btn.textContent = 'Réessayer';
         }
       } catch {
-        showToast('❌ Erreur réseau', 'err');
-        btn.disabled = false;
-        btn.textContent = 'Bloquer ce créneau';
+        msg.style.display = 'block'; msg.className = 'mmsg err';
+        msg.textContent = '❌ Erreur réseau'; btn.disabled = false;
       }
     });
+  }
 
-    function showToast(msg, type) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'toast ' + type + ' show';
-      setTimeout(() => t.classList.remove('show'), 4000);
+  function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+  /* ── init selects ────────────────────────────────────────────────── */
+  const fSel = document.getElementById('filter-v');
+  const bSel = document.getElementById('sel-v');
+  VEHS.forEach(v => {
+    const lbl = v.nom + (v.getaround_id ? ' ✓' : '');
+    [fSel, bSel].forEach(s => {
+      const o = document.createElement('option');
+      o.value = v.id; o.textContent = lbl; s.appendChild(o);
+    });
+  });
+  fSel.addEventListener('change', () => { filterVId = fSel.value; render(); });
+
+  /* ── navigation ──────────────────────────────────────────────────── */
+  document.getElementById('btn-prev').addEventListener('click', () => {
+    if (--month < 0) { month = 11; year--; } render();
+  });
+  document.getElementById('btn-next').addEventListener('click', () => {
+    if (++month > 11) { month = 0; year++; } render();
+  });
+  document.getElementById('btn-today').addEventListener('click', () => {
+    year = new Date().getFullYear(); month = new Date().getMonth(); render();
+  });
+
+  /* ── fermeture modal ─────────────────────────────────────────────── */
+  const ov = document.getElementById('modal-overlay');
+  ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  /* ── sync ────────────────────────────────────────────────────────── */
+  document.getElementById('btn-sync').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-sync');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Sync…';
+    try {
+      const res  = await fetch('/api/sync-calendar');
+      const data = await res.json();
+      toast(data.success ? `✅ ${data.synced} créneau(x) importé(s).` : `❌ ${data.error}`,
+            data.success ? 'ok' : 'err');
+      if (data.success) setTimeout(() => location.reload(), 2500);
+    } catch { toast('❌ Erreur réseau', 'err'); }
+    btn.disabled = false; btn.textContent = '↻ Sync Getaround';
+  });
+
+  /* ── formulaire de blocage ───────────────────────────────────────── */
+  document.getElementById('form-block').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> En cours…';
+    try {
+      const res = await fetch('/api/admin/block-dates', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          vehicule_id: document.getElementById('sel-v').value,
+          date_debut:  new Date(document.getElementById('inp-debut').value).toISOString(),
+          date_fin:    new Date(document.getElementById('inp-fin').value).toISOString(),
+          note:        document.getElementById('inp-note').value,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast('✅ Créneau bloqué' + (data.getaround_blocked ? ' — sync Getaround OK' : '') + '.', 'ok');
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        toast('❌ ' + (data.error || 'Erreur'), 'err');
+        btn.disabled = false; btn.textContent = 'Bloquer ce créneau';
+      }
+    } catch {
+      toast('❌ Erreur réseau', 'err');
+      btn.disabled = false; btn.textContent = 'Bloquer ce créneau';
     }
   });
-  </script>
 
-  <div class="page">
+  function toast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 4000);
+  }
 
-    <!-- Topbar -->
-    <div class="topbar">
-      <a href="/admin" class="back">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Tableau de bord
-      </a>
-      <div class="topbar-right">
-        <select id="filter-v" class="sel-filter">
-          <option value="">Tous les véhicules</option>
-        </select>
-        <button id="btn-sync" class="btn-sync">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-          Sync Getaround
-        </button>
-        <a href="/api/admin/webhook-events" target="_blank" class="btn-logs">Logs webhook</a>
-      </div>
-    </div>
+  render();
+})();
+</script>
 
-    <!-- Calendar toolbar -->
-    <div class="cal-toolbar">
-      <div class="cal-nav">
-        <button id="btn-prev" class="nav-btn" title="Mois précédent">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <h1 id="cal-title" class="cal-month-title">—</h1>
-        <button id="btn-next" class="nav-btn" title="Mois suivant">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-        <button id="btn-today" class="btn-today">Aujourd'hui</button>
-      </div>
+<div class="page">
 
-      <div class="cal-views">
-        <button id="view-month" class="view-btn active">Mois</button>
-        <button id="view-week" class="view-btn">Semaine</button>
-        <button id="view-list" class="view-btn">Liste</button>
-      </div>
-    </div>
-
-    <!-- Legend -->
-    <div class="legend">
-      <div class="leg"><span class="leg-dot" style="background:#15803d"></span>Payée</div>
-      <div class="leg"><span class="leg-dot" style="background:#1d4ed8"></span>Confirmée</div>
-      <div class="leg"><span class="leg-dot" style="background:#b45309"></span>En attente</div>
-      <div class="leg"><span class="leg-dot" style="background:#7e22ce"></span>Getaround</div>
-      <div class="leg"><span class="leg-dot" style="background:#a16207"></span>Blocage manuel</div>
-    </div>
-
-    <!-- FullCalendar -->
-    <div class="cal-card">
-      <div id="fullcal"></div>
-    </div>
-
-    <!-- Block form -->
-    <details class="block-panel">
-      <summary>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Bloquer un créneau manuellement
-      </summary>
-      <div class="block-inner">
-        <p class="block-note">Ce créneau sera bloqué sur ce site ET synchronisé sur Getaround.</p>
-        <form id="form-block" class="block-form">
-          <div class="form-g">
-            <label>Véhicule</label>
-            <select id="sel-v" required><option value="">Choisir...</option></select>
-          </div>
-          <div class="form-g">
-            <label>Début</label>
-            <input type="datetime-local" id="inp-debut" required />
-          </div>
-          <div class="form-g">
-            <label>Fin</label>
-            <input type="datetime-local" id="inp-fin" required />
-          </div>
-          <div class="form-g">
-            <label>Motif <small>(optionnel)</small></label>
-            <input type="text" id="inp-note" placeholder="Révision, Privatisation..." />
-          </div>
-          <div class="form-g form-g-btn">
-            <button type="submit" class="btn-block">Bloquer ce créneau</button>
-          </div>
-        </form>
-      </div>
-    </details>
-  </div>
-
-  <!-- Modal -->
-  <div id="modal-overlay" class="modal-overlay" style="display:none">
-    <div class="modal-box">
-      <button id="modal-close" class="modal-close" title="Fermer">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-      <div id="modal-body"></div>
+  <!-- Topbar -->
+  <div class="topbar">
+    <a href="/admin" class="back">← Tableau de bord</a>
+    <div class="topbar-r">
+      <select id="filter-v" class="sel"><option value="">Tous les véhicules</option></select>
+      <button id="btn-sync" class="btn-teal">↻ Sync Getaround</button>
+      <a href="/api/admin/webhook-events" target="_blank" class="btn-ghost">Logs</a>
     </div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast" class="toast"></div>
+  <!-- Calendrier -->
+  <div class="cal-card">
+
+    <!-- Nav -->
+    <div class="cal-nav">
+      <button id="btn-prev" class="nav-btn">&#8249;</button>
+      <h2 id="cal-title" class="cal-month">—</h2>
+      <button id="btn-next" class="nav-btn">&#8250;</button>
+      <button id="btn-today" class="btn-today-sm">Aujourd'hui</button>
+      <div class="cal-legend">
+        <span class="leg"><i style="background:#16a34a"></i>Payée</span>
+        <span class="leg"><i style="background:#1d4ed8"></i>Confirmée</span>
+        <span class="leg"><i style="background:#b45309"></i>En attente</span>
+        <span class="leg"><i style="background:#4c1d95"></i>Getaround</span>
+        <span class="leg"><i style="background:#374151"></i>Bloqué</span>
+      </div>
+    </div>
+
+    <!-- En-têtes jours -->
+    <div class="cal-dow">
+      <div>Lun</div><div>Mar</div><div>Mer</div>
+      <div>Jeu</div><div>Ven</div>
+      <div class="wk">Sam</div><div class="wk">Dim</div>
+    </div>
+
+    <!-- Grille -->
+    <div class="cal-grid" id="cal-grid"></div>
+
+  </div>
+
+  <!-- Formulaire blocage -->
+  <details class="block-panel">
+    <summary>+ Bloquer un créneau manuellement</summary>
+    <div class="block-inner">
+      <p class="block-note">Ce créneau sera bloqué ici ET synchronisé sur Getaround.</p>
+      <form id="form-block" class="block-form">
+        <div class="fg"><label>Véhicule</label>
+          <select id="sel-v" required><option value="">Choisir…</option></select></div>
+        <div class="fg"><label>Début</label>
+          <input type="datetime-local" id="inp-debut" required /></div>
+        <div class="fg"><label>Fin</label>
+          <input type="datetime-local" id="inp-fin" required /></div>
+        <div class="fg"><label>Motif <small>(opt.)</small></label>
+          <input type="text" id="inp-note" placeholder="Révision…" /></div>
+        <div class="fg fg-btn">
+          <button type="submit" class="btn-gold">Bloquer ce créneau</button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <button id="modal-close" class="modal-close">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
 </MainLayout>
 
-<style is:global>
-  /* FullCalendar dark theme overrides */
-  :root {
-    --fc-border-color: #1e2d3d;
-    --fc-button-bg-color: #1a2b3c;
-    --fc-button-border-color: #2a3d50;
-    --fc-button-hover-bg-color: #243448;
-    --fc-button-hover-border-color: #344d63;
-    --fc-button-active-bg-color: #4dd4c8;
-    --fc-button-active-border-color: #4dd4c8;
-    --fc-event-border-color: transparent;
-    --fc-today-bg-color: rgba(77,212,200,0.06);
-    --fc-page-bg-color: transparent;
-    --fc-neutral-bg-color: #0f1e33;
-    --fc-list-event-hover-bg-color: rgba(77,212,200,0.06);
-    --fc-highlight-color: rgba(77,212,200,0.12);
-  }
-
-  .fc {
-    font-family: system-ui, -apple-system, sans-serif;
-    color: #cbd5e1;
-    font-size: 0.84rem;
-  }
-  .fc-theme-standard td, .fc-theme-standard th { border-color: #1e2d3d; }
-  .fc-col-header-cell { background: #07111f; }
-  .fc-col-header-cell-cushion {
-    color: #4b6073 !important;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    text-decoration: none !important;
-    padding: 10px 0;
-  }
-  .fc-daygrid-day-number {
-    color: #4b6073;
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: none !important;
-    padding: 6px 8px;
-  }
-  .fc-day-today .fc-daygrid-day-number {
-    background: #4dd4c8;
-    color: #0b1929;
-    font-weight: 800;
-    border-radius: 50%;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    margin: 5px;
-  }
-  .fc-day-other .fc-daygrid-day-number { color: #2a3d50; }
-  .fc-daygrid-day.fc-day-other { background: #06101c; }
-  .fc-daygrid-day-frame { min-height: 80px; }
-  .fc-event {
-    border-radius: 4px !important;
-    padding: 1px 5px !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    cursor: pointer;
-    border: none !important;
-    border-left: 3px solid var(--fc-event-border-color, transparent) !important;
-  }
-  .fc-event:hover { filter: brightness(1.2); }
-  .fc-daygrid-more-link {
-    color: #4dd4c8 !important;
-    font-weight: 600;
-    font-size: 0.72rem;
-  }
-  .fc-timegrid-slot { height: 3rem; }
-  .fc-timegrid-slot-label { color: #3d5166; font-size: 0.72rem; }
-  .fc-timegrid-now-indicator-line { border-color: #f87171; }
-  .fc-timegrid-now-indicator-arrow { border-color: #f87171; }
-  .fc-list-table tr { border-color: #1e2d3d; }
-  .fc-list-day-cushion { background: #0f1e33 !important; }
-  .fc-list-day-text, .fc-list-day-side-text {
-    color: #4dd4c8 !important;
-    text-decoration: none !important;
-    font-size: 0.8rem;
-  }
-  .fc-list-event-title a { color: #cbd5e1 !important; text-decoration: none !important; }
-  .fc-list-event:hover td { background: rgba(77,212,200,0.06) !important; }
-  .fc-popover {
-    background: #162130 !important;
-    border: 1px solid #253647 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
-  }
-  .fc-popover-header { background: #0f1e33 !important; color: #cbd5e1 !important; border-radius: 10px 10px 0 0 !important; }
-  .fc-popover-close { color: #6b7280 !important; }
-  .fc-scrollgrid-section-header th { border-color: #1e2d3d; }
-</style>
-
 <style>
-  *, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 
-  .page {
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 1.5rem 1.25rem 5rem;
-    font-family: system-ui, -apple-system, sans-serif;
-  }
+.page {
+  max-width: 1100px; margin: 0 auto;
+  padding: 1.5rem 1.25rem 5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+}
 
-  /* Topbar */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-  .back {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.82rem;
-    color: #6b7280;
-    text-decoration: none;
-    transition: color .12s;
-  }
-  .back:hover { color: #4dd4c8; }
-  .topbar-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+/* Topbar */
+.topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1.5rem; }
+.back   { font-size:.82rem; color:#6b7280; text-decoration:none; transition:color .12s; }
+.back:hover { color:#4dd4c8; }
+.topbar-r { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.sel { background:#1a2b3c; border:1px solid #2a3d50; color:#cbd5e1; padding:0 12px; border-radius:8px; font-size:.83rem; cursor:pointer; color-scheme:dark; height:36px; }
+.btn-teal { background:#4dd4c8; color:#0f1e33; border:none; padding:0 14px; border-radius:8px; font-weight:700; font-size:.83rem; cursor:pointer; height:36px; transition:opacity .15s; }
+.btn-teal:hover { opacity:.85; } .btn-teal:disabled { opacity:.5; cursor:not-allowed; }
+.btn-ghost { background:transparent; color:#94a3b8; border:1px solid #2a3d50; padding:0 12px; border-radius:8px; font-size:.8rem; cursor:pointer; height:36px; text-decoration:none; display:inline-flex; align-items:center; transition:border-color .12s, color .12s; }
+.btn-ghost:hover { border-color:#4dd4c8; color:#4dd4c8; }
 
-  .sel-filter {
-    background: #1a2b3c;
-    border: 1px solid #2a3d50;
-    color: #cbd5e1;
-    padding: 0 12px;
-    border-radius: 8px;
-    font-size: 0.83rem;
-    cursor: pointer;
-    color-scheme: dark;
-    height: 36px;
-    transition: border-color .12s;
-  }
-  .sel-filter:focus { outline: none; border-color: #4dd4c8; }
+/* Calendrier */
+.cal-card { background:#fff; border-radius:16px; overflow:hidden; margin-bottom:1.5rem; box-shadow:0 4px 24px rgba(0,0,0,.22); }
 
-  .btn-sync {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #4dd4c8;
-    color: #0f1e33;
-    border: none;
-    padding: 0 14px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.83rem;
-    cursor: pointer;
-    height: 36px;
-    transition: opacity .15s;
-    white-space: nowrap;
-  }
-  .btn-sync:hover { opacity: .85; }
-  .btn-sync:disabled { opacity: .5; cursor: not-allowed; }
+.cal-nav { display:flex; align-items:center; gap:.5rem; padding:.9rem 1.25rem .7rem; border-bottom:1px solid #f0f0f0; flex-wrap:wrap; }
+.cal-month { font-size:1.2rem; font-weight:800; color:#111827; margin:0 .4rem; min-width:170px; }
+.nav-btn { background:#f3f4f6; border:none; color:#374151; width:32px; height:32px; border-radius:8px; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .12s; }
+.nav-btn:hover { background:#e5e7eb; }
+.btn-today-sm { background:transparent; border:1px solid #d1d5db; color:#374151; padding:0 12px; height:30px; border-radius:7px; font-size:.78rem; cursor:pointer; }
+.btn-today-sm:hover { border-color:#374151; }
 
-  .btn-logs {
-    background: transparent;
-    color: #94a3b8;
-    border: 1px solid #2a3d50;
-    padding: 0 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    text-decoration: none;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    transition: border-color .12s, color .12s;
-  }
-  .btn-logs:hover { border-color: #94a3b8; color: #cbd5e1; }
+.cal-legend { display:flex; flex-wrap:wrap; gap:.25rem .9rem; margin-left:auto; }
+.leg { display:flex; align-items:center; gap:5px; font-size:.7rem; color:#6b7280; }
+.leg i { display:inline-block; width:10px; height:10px; border-radius:3px; flex-shrink:0; }
 
-  /* Calendar toolbar */
-  .cal-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-  .cal-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .cal-month-title {
-    font-size: 1.45rem;
-    font-weight: 800;
-    color: #f0f4f8;
-    margin: 0;
-    min-width: 200px;
-    letter-spacing: -0.01em;
-  }
-  .nav-btn {
-    background: #1a2b3c;
-    border: 1px solid #2a3d50;
-    color: #94a3b8;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background .12s, color .12s;
-  }
-  .nav-btn:hover { background: #243448; color: #cbd5e1; }
-  .btn-today {
-    background: transparent;
-    border: 1px solid #2a3d50;
-    color: #94a3b8;
-    padding: 0 14px;
-    height: 32px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: border-color .12s, color .12s;
-  }
-  .btn-today:hover { border-color: #4dd4c8; color: #4dd4c8; }
+.cal-dow { display:grid; grid-template-columns:repeat(7,1fr); background:#f9fafb; border-bottom:1px solid #f0f0f0; }
+.cal-dow div { padding:8px 0; text-align:center; font-size:.68rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.06em; }
+.cal-dow .wk { color:#6b7280; }
 
-  .cal-views {
-    display: flex;
-    background: #0f1e33;
-    border: 1px solid #1e2d3d;
-    border-radius: 9px;
-    padding: 3px;
-    gap: 2px;
-  }
-  .view-btn {
-    background: transparent;
-    border: none;
-    color: #6b7280;
-    padding: 5px 14px;
-    border-radius: 7px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .12s, color .12s;
-  }
-  .view-btn:hover { color: #94a3b8; }
-  .view-btn.active { background: #1a2b3c; color: #4dd4c8; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); background:#fff; }
 
-  /* Legend */
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 1.2rem;
-    margin-bottom: 1rem;
-  }
-  .leg {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
-    color: #6b7280;
-  }
-  .leg-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
+/* Cases */
+.dc { min-height:76px; border-right:1px solid #f0f0f0; border-bottom:1px solid #f0f0f0; padding:6px 7px 5px; display:flex; flex-direction:column; gap:2px; }
+.dc:nth-child(7n) { border-right:none; }
+.dc-empty { background:#fafafa !important; }
+.dc-today { box-shadow:inset 0 0 0 2px #4dd4c8; }
+.dc-free { background:#f8fafd; }
+.dc-weekend { background:#fff8ed; }
+.dc-free:hover, .dc-weekend:hover { filter:brightness(.97); }
+.dc-resa:hover, .dc-blocked:hover { filter:brightness(1.08); }
 
-  /* Calendar card */
-  .cal-card {
-    background: #0b1929;
-    border: 1px solid #1e2d3d;
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-    padding: 0 0 1px;
-  }
+.dc-num { font-size:12px; font-weight:700; color:#374151; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%; flex-shrink:0; }
+.dc-num-today { background:#4dd4c8; color:#fff; font-weight:800; }
+.dc-num-inv { color:rgba(255,255,255,.9); }
 
-  /* Block panel */
-  .block-panel {
-    background: #1a2b3c;
-    border: 1px solid #2a3d50;
-    border-radius: 14px;
-    overflow: hidden;
-  }
-  .block-panel > summary {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 1rem 1.25rem;
-    font-size: 0.87rem;
-    font-weight: 600;
-    color: #94a3b8;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-    transition: color .12s;
-  }
-  .block-panel > summary::-webkit-details-marker { display: none; }
-  .block-panel > summary:hover { color: #cbd5e1; }
-  .block-panel[open] > summary { border-bottom: 1px solid #243040; color: #4dd4c8; }
-  .block-inner { padding: 1.25rem; }
-  .block-note {
-    font-size: 0.78rem;
-    color: #4b5a68;
-    margin: 0 0 1.1rem;
-  }
-  .block-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-    gap: 0.85rem;
-    align-items: end;
-  }
-  .form-g { display: flex; flex-direction: column; gap: 5px; }
-  .form-g label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #4b5a68;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-  }
-  .form-g small { font-weight: 400; text-transform: none; letter-spacing: 0; color: #364554; }
-  .form-g select,
-  .form-g input {
-    background: #0b1929;
-    border: 1px solid #2a3d50;
-    color: #e2e8f0;
-    padding: 0 11px;
-    border-radius: 8px;
-    font-size: 0.84rem;
-    height: 38px;
-    color-scheme: dark;
-    transition: border-color .12s;
-  }
-  .form-g select:focus,
-  .form-g input:focus { outline: none; border-color: #4dd4c8; }
-  .form-g-btn { justify-content: flex-end; }
-  .btn-block {
-    background: #c9a84c;
-    color: #000;
-    border: none;
-    padding: 0 18px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    height: 38px;
-    white-space: nowrap;
-    transition: opacity .15s;
-    width: 100%;
-  }
-  .btn-block:hover { opacity: .85; }
-  .btn-block:disabled { opacity: .5; cursor: not-allowed; }
+.dc-price { font-size:13px; font-weight:800; color:#111827; margin-top:auto; text-align:center; width:100%; }
+.dc-weekend .dc-price { color:#92400e; }
 
-  /* Modal */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 1rem;
-    backdrop-filter: blur(4px);
-  }
-  .modal-box {
-    background: #111f2e;
-    border: 1px solid #253647;
-    border-radius: 18px;
-    padding: 2rem;
-    max-width: 440px;
-    width: 100%;
-    position: relative;
-    animation: pop .18s cubic-bezier(.16,1,.3,1);
-    box-shadow: 0 25px 80px rgba(0,0,0,.6);
-  }
-  @keyframes pop {
-    from { transform: scale(.92) translateY(8px); opacity: 0; }
-    to   { transform: scale(1)   translateY(0);   opacity: 1; }
-  }
-  .modal-close {
-    position: absolute;
-    top: 1.1rem; right: 1.1rem;
-    background: transparent;
-    border: 1px solid transparent;
-    color: #3d5166;
-    cursor: pointer;
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .12s, color .12s, border-color .12s;
-  }
-  .modal-close:hover { background: rgba(255,255,255,.07); color: #94a3b8; border-color: #2a3d50; }
+.dc-tag { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:rgba(255,255,255,.85); background:rgba(0,0,0,.18); border-radius:4px; padding:2px 5px; align-self:flex-start; }
+.dc-client { font-size:10px; font-weight:600; color:rgba(255,255,255,.9); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:auto; width:100%; }
 
-  .modal-head { margin-bottom: 1.1rem; }
-  .modal-badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .09em;
-    padding: 4px 12px;
-    border-radius: 99px;
-    margin-bottom: 0.7rem;
-  }
-  .modal-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #f0f4f8;
-    margin: 0;
-    line-height: 1.2;
-  }
-  .modal-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    background: #0b1929;
-    border: 1px solid #1e2d3d;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 1.25rem;
-  }
-  .modal-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.65rem 1rem;
-    border-bottom: 1px solid #131f2e;
-    font-size: 0.84rem;
-  }
-  .modal-row:last-child { border-bottom: none; }
-  .modal-label {
-    color: #3d5166;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    width: 70px;
-    flex-shrink: 0;
-  }
-  .modal-value {
-    color: #c8d9ec;
-    font-weight: 500;
-  }
-  .modal-footer { display: flex; flex-direction: column; gap: 0.6rem; }
+/* Formulaire de blocage */
+.block-panel { background:#1a2b3c; border:1px solid #2a3d50; border-radius:14px; overflow:hidden; }
+.block-panel > summary { padding:.9rem 1.25rem; font-size:.87rem; font-weight:600; color:#94a3b8; cursor:pointer; list-style:none; user-select:none; transition:color .12s; }
+.block-panel > summary::-webkit-details-marker { display:none; }
+.block-panel > summary:hover { color:#cbd5e1; }
+.block-panel[open] > summary { border-bottom:1px solid #243040; color:#4dd4c8; }
+.block-inner { padding:1.25rem; }
+.block-note { font-size:.78rem; color:#4b5a68; margin:0 0 1rem; }
+.block-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.85rem; align-items:end; }
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fg label { font-size:.7rem; font-weight:700; color:#4b5a68; text-transform:uppercase; letter-spacing:.07em; }
+.fg small { font-weight:400; text-transform:none; letter-spacing:0; color:#364554; }
+.fg select, .fg input { background:#0b1929; border:1px solid #2a3d50; color:#e2e8f0; padding:0 11px; border-radius:8px; font-size:.84rem; height:38px; color-scheme:dark; transition:border-color .12s; }
+.fg select:focus, .fg input:focus { outline:none; border-color:#4dd4c8; }
+.fg-btn { justify-content:flex-end; }
+.btn-gold { background:#c9a84c; color:#000; border:none; padding:0 18px; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; height:38px; width:100%; transition:opacity .15s; }
+.btn-gold:hover { opacity:.85; } .btn-gold:disabled { opacity:.5; cursor:not-allowed; }
 
-  .btn-cancel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    font-size: 0.86rem;
-    font-weight: 700;
-    cursor: pointer;
-    border: 1px solid rgba(239,68,68,.3);
-    background: rgba(239,68,68,.1);
-    color: #f87171;
-    transition: background .12s, border-color .12s;
-  }
-  .btn-cancel:hover { background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.5); }
-  .btn-cancel:disabled { opacity: .5; cursor: not-allowed; }
+/* Modal */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:9999; padding:1rem; backdrop-filter:blur(3px); }
+.modal-box { background:#fff; border-radius:16px; padding:2rem; max-width:420px; width:100%; position:relative; animation:pop .18s cubic-bezier(.16,1,.3,1); box-shadow:0 20px 60px rgba(0,0,0,.3); color:#111827; }
+@keyframes pop { from { transform:scale(.93) translateY(8px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
+.modal-close { position:absolute; top:1rem; right:1rem; background:#f3f4f6; border:none; color:#6b7280; cursor:pointer; width:28px; height:28px; border-radius:7px; font-size:.85rem; display:flex; align-items:center; justify-content:center; transition:background .12s; }
+.modal-close:hover { background:#e5e7eb; }
 
-  .action-msg {
-    margin-top: 0.75rem;
-    padding: 0.6rem 0.9rem;
-    border-radius: 8px;
-    font-size: 0.82rem;
-  }
-  .action-msg.ok  { background: rgba(34,197,94,.1);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
-  .action-msg.err { background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+.mbadge { display:inline-block; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; padding:4px 12px; border-radius:99px; margin-bottom:.75rem; }
+.mtitle { font-size:1.2rem; font-weight:800; color:#111827; margin:0 0 1rem; }
+.mrows { display:flex; flex-direction:column; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:1.2rem; }
+.mrow { display:flex; align-items:center; gap:1rem; padding:.6rem 1rem; border-bottom:1px solid #f3f4f6; font-size:.84rem; }
+.mrow:last-child { border-bottom:none; }
+.mrow span { color:#9ca3af; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; width:65px; flex-shrink:0; }
+.mrow strong { color:#111827; font-weight:600; }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #162130;
-    border: 1px solid #253647;
-    color: #cbd5e1;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    box-shadow: 0 10px 40px rgba(0,0,0,.5);
-    z-index: 99999;
-    transition: transform .3s cubic-bezier(.16,1,.3,1), opacity .3s;
-    opacity: 0;
-    white-space: nowrap;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-  .toast.ok  { border-color: rgba(34,197,94,.4); color: #4ade80; }
-  .toast.err { border-color: rgba(239,68,68,.4); color: #f87171; }
+.mbtn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; padding:.75rem 1rem; border-radius:10px; font-size:.86rem; font-weight:700; cursor:pointer; border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.07); color:#dc2626; transition:background .12s; }
+.mbtn:hover { background:rgba(239,68,68,.14); } .mbtn:disabled { opacity:.5; cursor:not-allowed; }
+.mmsg { margin-top:.75rem; padding:.6rem .9rem; border-radius:8px; font-size:.82rem; }
+.mmsg.ok  { background:rgba(34,197,94,.1); color:#16a34a; border:1px solid rgba(34,197,94,.2); }
+.mmsg.err { background:rgba(239,68,68,.08); color:#dc2626; border:1px solid rgba(239,68,68,.2); }
 
-  /* Spinner */
-  .spinner {
-    display: inline-block;
-    width: 13px; height: 13px;
-    border: 2px solid rgba(255,255,255,.2);
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Toast */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(80px); background:#111827; border:1px solid #374151; color:#f9fafb; padding:.75rem 1.5rem; border-radius:12px; font-size:.85rem; font-weight:500; box-shadow:0 10px 40px rgba(0,0,0,.4); z-index:99999; transition:transform .3s cubic-bezier(.16,1,.3,1), opacity .3s; opacity:0; white-space:nowrap; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+.toast.ok  { border-color:rgba(34,197,94,.5); color:#4ade80; }
+.toast.err { border-color:rgba(239,68,68,.5); color:#f87171; }
 
-  /* Responsive */
-  @media (max-width: 640px) {
-    .cal-toolbar { flex-direction: column; align-items: flex-start; }
-    .cal-month-title { font-size: 1.2rem; min-width: 0; }
-    .block-form { grid-template-columns: 1fr; }
-    .modal-box { padding: 1.5rem 1.25rem; }
-  }
+/* Spinner */
+.spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(0,0,0,.15); border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Responsive */
+@media (max-width:640px) {
+  .dc { min-height:54px; padding:4px; }
+  .dc-num { font-size:11px; width:20px; height:20px; }
+  .dc-price { font-size:11px; }
+  .cal-month { font-size:1rem; min-width:0; }
+  .block-form { grid-template-columns:1fr; }
+  .modal-box { padding:1.5rem 1.25rem; }
+  .cal-legend { margin-left:0; width:100%; }
+}
 </style>
