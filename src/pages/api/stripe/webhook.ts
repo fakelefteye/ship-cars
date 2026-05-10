@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
 import { blockDates } from '../../../lib/getaround';
+import { generateContractPdf } from '../../../lib/generate-contract-pdf';
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 const resend = new Resend(import.meta.env.RESEND_API_KEY);
@@ -259,6 +260,20 @@ export const POST = async ({ request }) => {
           : reservationId;
 
         const emailClient = res.email_client || customerEmail;
+        const pdfFilename  = `contrat-SC-${contractNum}.pdf`;
+
+        // Génération du PDF contrat
+        let pdfBuffer: Buffer | null = null;
+        try {
+          pdfBuffer = await generateContractPdf(res, veh);
+          console.log(`✅ PDF contrat généré (${pdfBuffer.length} bytes)`);
+        } catch (err) {
+          console.error('❌ Erreur génération PDF:', err);
+        }
+
+        const pdfAttachment = pdfBuffer
+          ? [{ filename: pdfFilename, content: pdfBuffer.toString('base64') }]
+          : [];
 
         // 4a. Email au locataire
         if (emailClient) {
@@ -268,8 +283,9 @@ export const POST = async ({ request }) => {
               to: emailClient,
               subject: `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
               html: tenantEmailHtml(contractHtml, CAUTION_URL),
+              attachments: pdfAttachment,
             });
-            console.log(`✅ Contrat envoyé au locataire : ${emailClient}`);
+            console.log(`✅ Contrat + PDF envoyés au locataire : ${emailClient}`);
           } catch (err) {
             console.error('❌ Erreur email locataire:', err);
           }
@@ -282,8 +298,9 @@ export const POST = async ({ request }) => {
             to: OWNER_EMAIL,
             subject: `[Nouvelle résa] ${res.locataire_nom || emailClient || 'Client'} — SC-${contractNum}`,
             html: ownerEmailHtml(contractHtml, res),
+            attachments: pdfAttachment,
           });
-          console.log(`✅ Contrat envoyé au propriétaire : ${OWNER_EMAIL}`);
+          console.log(`✅ Contrat + PDF envoyés au propriétaire : ${OWNER_EMAIL}`);
         } catch (err) {
           console.error('❌ Erreur email propriétaire:', err);
         }
