@@ -307,6 +307,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ── formulaire de blocage ───────────────────────────────────────── */
+
+  // Préserve le fuseau horaire local (évite décalage UTC +2h en France)
+  function localToISO(val) {
+    if (!val) return '';
+    const off = -(new Date().getTimezoneOffset()); // minutes (ex: +120 pour UTC+2)
+    const sgn = off >= 0 ? '+' : '-';
+    const hh  = String(Math.floor(Math.abs(off) / 60)).padStart(2, '0');
+    const mm  = String(Math.abs(off) % 60).padStart(2, '0');
+    return val + ':00' + sgn + hh + ':' + mm; // "2026-05-20T10:00:00+02:00"
+  }
+
   document.getElementById('form-block').addEventListener('submit', async e => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type=submit]');
@@ -316,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           vehicule_id: document.getElementById('sel-v').value,
-          date_debut:  new Date(document.getElementById('inp-debut').value).toISOString(),
-          date_fin:    new Date(document.getElementById('inp-fin').value).toISOString(),
+          date_debut:  localToISO(document.getElementById('inp-debut').value),
+          date_fin:    localToISO(document.getElementById('inp-fin').value),
           note:        document.getElementById('inp-note').value,
         }),
       });

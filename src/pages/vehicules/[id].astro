@@ -974,14 +974,53 @@ const photos = [
     submit.disabled = true;
     errEl.style.display = 'none';
 
-    // 1. Upload des photos de permis
+    // Compression canvas — réduit chaque photo à max 1 Mo avant envoi (limite Vercel 4.5 Mo)
+    async function compressImage(file, maxKB = 900) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            // Réduire si > 1800px
+            if (w > 1800) { h = Math.round(h * 1800 / w); w = 1800; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            // Compression JPEG itérative jusqu'au seuil
+            let quality = 0.82;
+            const tryCompress = () => {
+              canvas.toBlob((blob) => {
+                if (blob.size > maxKB * 1024 && quality > 0.25) {
+                  quality -= 0.12;
+                  tryCompress();
+                } else {
+                  resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+                }
+              }, 'image/jpeg', quality);
+            };
+            tryCompress();
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 1. Upload des photos de permis (compressées)
     let permisUrls = {};
     try {
+      submit.textContent = 'Compression des photos…';
+      const [r, v, s] = await Promise.all([
+        compressImage(rectoFile),
+        compressImage(versoFile),
+        compressImage(selfieFile),
+      ]);
       submit.textContent = 'Envoi des documents…';
       const fd = new FormData();
-      fd.append('recto',  rectoFile);
-      fd.append('verso',  versoFile);
-      fd.append('selfie', selfieFile);
+      fd.append('recto',  r);
+      fd.append('verso',  v);
+      fd.append('selfie', s);
       const uploadRes = await fetch('/api/reservations/upload-permis', { method: 'POST', body: fd });
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) throw new Error(uploadData.error || 'Erreur upload documents');
