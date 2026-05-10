@@ -40,8 +40,8 @@ export async function upsertBrevoContact(
 
   // Attributs Brevo (noms standards du template par défaut)
   const attributes: Record<string, string | number | null> = {
-    FIRSTNAME:    user.first_name ?? null,
-    LASTNAME:     user.last_name  ?? null,
+    PRENOM:       user.first_name ?? null,
+    NOM:          user.last_name  ?? null,
     SMS:          phone,
     ADDRESS:      [user.address_line1, user.address_line2].filter(Boolean).join(', ') || null,
     ZIPCODE:      user.postal_code ?? null,
