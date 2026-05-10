@@ -308,7 +308,7 @@ export const POST = async ({ request }) => {
         if (emailClient) {
           try {
             await resend.emails.send({
-              from: 'Ship Cars <onboarding@resend.dev>',
+              from: 'Ship Cars <noreply@shipcars.fr>',
               to: emailClient,
               subject: `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
               html: tenantEmailHtml(contractHtml, CAUTION_URL),
@@ -323,7 +323,7 @@ export const POST = async ({ request }) => {
         // 4b. Email au propriétaire (contrat PDF + photos du permis)
         try {
           await resend.emails.send({
-            from: 'Ship Cars <onboarding@resend.dev>',
+            from: 'Ship Cars <noreply@shipcars.fr>',
             to: OWNER_EMAIL,
             subject: `[Nouvelle résa] ${res.locataire_nom || emailClient || 'Client'} — SC-${contractNum}`,
             html: ownerEmailHtml(contractHtml, res),
