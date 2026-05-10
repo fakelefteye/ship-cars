@@ -48,8 +48,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         image_url_3: formData.get('image_url_3')?.toString() || null,
         image_url_4: formData.get('image_url_4')?.toString() || null,
         image_url_5: formData.get('image_url_5')?.toString() || null,
-        getaround_id: formData.get('getaround_id')?.toString() || null,
+        getaround_id:    formData.get('getaround_id')?.toString() || null,
         immatriculation: formData.get('immatriculation')?.toString().toUpperCase() || null,
+        description:     formData.get('description')?.toString() || null,
       });
 
       if (error) throw error;

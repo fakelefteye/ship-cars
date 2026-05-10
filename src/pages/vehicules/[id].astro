@@ -96,6 +96,12 @@ const photos = [
           </div>
         </header>
 
+        {vehicule.description && (
+          <div class="vehicle-description">
+            <p>{vehicule.description}</p>
+          </div>
+        )}
+
         <div class="panel-divider"></div>
 
         <div class="resa-section">
@@ -1162,6 +1168,21 @@ const photos = [
   }
   .panel-included strong { color: var(--teal); font-weight: 600; }
   .panel-included .included-icon { font-size: 1rem; }
+
+  .vehicle-description {
+    margin: 0.75rem 0;
+    padding: 1rem 1.1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .vehicle-description p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+    white-space: pre-line;
+  }
 
   .panel-divider {
     height: 1px;

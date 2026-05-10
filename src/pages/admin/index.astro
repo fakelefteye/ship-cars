@@ -294,6 +294,11 @@ const updated = url.searchParams.get('updated');
           </div>
 
           <div class="form-group">
+            <label for="description">Description du véhicule <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
+            <textarea id="description" name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville et sur l'autoroute. Climatisation, bluetooth, caméra de recul..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
             <label for="getaround_id">ID Getaround <span style="font-weight:400;color:#6b7280;">(optionnel — pour la synchronisation du calendrier)</span></label>
             <input type="text" id="getaround_id" name="getaround_id" placeholder="Ex: 123456" />
           </div>
@@ -809,6 +814,11 @@ const updated = url.searchParams.get('updated');
           <div class="form-group">
             <label>Immatriculation <span style="font-weight:400;color:#6b7280;">(visible uniquement au locataire après réservation)</span></label>
             <input type="text" name="immatriculation" value="${item.immatriculation || ''}" placeholder="Ex: AB-123-CD" style="text-transform:uppercase;">
+          </div>
+
+          <div class="form-group">
+            <label>Description <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
+            <textarea name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description || ''}</textarea>
           </div>
 
           <div class="form-group" style="margin-top:1rem;">

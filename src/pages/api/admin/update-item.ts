@@ -35,8 +35,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         image_url_3: formData.get('image_url_3'),
         image_url_4: formData.get('image_url_4'),
         image_url_5: formData.get('image_url_5'),
-        getaround_id: formData.get('getaround_id'),
+        getaround_id:    formData.get('getaround_id'),
         immatriculation: formData.get('immatriculation'),
+        description:     formData.get('description'),
         stock: formData.get('stock'),
         stock_total: formData.get('stock_total') // Pour les mises à jour JSON
       };
@@ -66,6 +67,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       }
       if ('immatriculation' in data) {
         updatePayload.immatriculation = data.immatriculation?.toString().toUpperCase() || null;
+      }
+      if ('description' in data) {
+        updatePayload.description = data.description?.toString() || null;
       }
       const { error } = await supabaseAdmin.from('vehicules').update(updatePayload).eq('id', id);
 
