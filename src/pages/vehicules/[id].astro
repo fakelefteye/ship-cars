@@ -240,8 +240,12 @@ const photos = [
             <input type="text" id="loc-permis" placeholder="14AB12345" autocomplete="off" required />
           </div>
           <div class="form-field">
-            <label class="field-label" for="loc-permis-date">Date d'obtention du permis *</label>
+            <label class="field-label" for="loc-permis-date">
+              Date d'obtention du permis *
+              <span class="permis-warning">⚠️ 2 ans minimum requis</span>
+            </label>
             <input type="date" id="loc-permis-date" required />
+            <p class="permis-hint">Le permis doit avoir été obtenu il y a au moins 2 ans.</p>
           </div>
         </div>
         <div class="form-row-2">
@@ -797,6 +801,24 @@ const photos = [
 
   initCalendar();
 
+  // Validation en temps réel : permis >= 2 ans
+  function checkPermisAge(inputEl, hintEl) {
+    if (!inputEl.value) { inputEl.style.borderColor = ''; inputEl.style.boxShadow = ''; if (hintEl) hintEl.classList.remove('hint-error'); return; }
+    const obtained   = new Date(inputEl.value);
+    const limit      = new Date(); limit.setFullYear(limit.getFullYear() - 2);
+    const tooRecent  = obtained > limit;
+    inputEl.style.borderColor = tooRecent ? '#dc2626' : '#16a34a';
+    inputEl.style.boxShadow   = tooRecent ? '0 0 0 3px rgba(220,38,38,.15)' : '0 0 0 3px rgba(22,163,74,.12)';
+    if (hintEl) hintEl.classList.toggle('hint-error', tooRecent);
+  }
+
+  const permisDateInput = document.getElementById('loc-permis-date');
+  const permisHint      = permisDateInput?.nextElementSibling;
+  permisDateInput?.addEventListener('change', () => checkPermisAge(permisDateInput, permisHint));
+
+  const cond2DateInput  = document.getElementById('cond2-permis-date');
+  cond2DateInput?.addEventListener('change', () => checkPermisAge(cond2DateInput, null));
+
   const modal = document.getElementById('modal-locataire');
 
   document.getElementById('btn-book').addEventListener('click', () => {
@@ -863,6 +885,33 @@ const photos = [
       errEl.textContent = 'Veuillez remplir tous les champs obligatoires.';
       errEl.style.display = 'block';
       return;
+    }
+
+    // Vérification : permis obtenu depuis au moins 2 ans
+    const permisObtenu = new Date(permisDate);
+    const deuxAnsAvant = new Date();
+    deuxAnsAvant.setFullYear(deuxAnsAvant.getFullYear() - 2);
+    if (permisObtenu > deuxAnsAvant) {
+      const input = document.getElementById('loc-permis-date');
+      input.style.borderColor = '#dc2626';
+      input.style.boxShadow   = '0 0 0 3px rgba(220,38,38,.15)';
+      errEl.innerHTML = '❌ <strong>Permis insuffisant :</strong> votre permis doit avoir été obtenu il y a au moins 2 ans. Ship Cars ne peut pas louer à un conducteur avec moins de 2 ans de permis.';
+      errEl.style.display = 'block';
+      errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+    // Vérification conducteur 2 si renseigné
+    if (cond2date) {
+      const cond2Obtenu = new Date(cond2date);
+      if (cond2Obtenu > deuxAnsAvant) {
+        const input2 = document.getElementById('cond2-permis-date');
+        input2.style.borderColor = '#dc2626';
+        input2.style.boxShadow   = '0 0 0 3px rgba(220,38,38,.15)';
+        errEl.innerHTML = '❌ <strong>Conducteur supplémentaire refusé :</strong> son permis doit avoir été obtenu il y a au moins 2 ans.';
+        errEl.style.display = 'block';
+        errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
     }
 
     const rectoFile  = document.getElementById('permis-recto').files[0];
@@ -1686,6 +1735,32 @@ const photos = [
     color: var(--text-dim);
     margin-top: 0.4rem;
   }
+
+  /* ── Permis 2 ans ── */
+  .permis-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: .72rem;
+    font-weight: 700;
+    color: #f59e0b;
+    background: rgba(245,158,11,.12);
+    border: 1px solid rgba(245,158,11,.3);
+    border-radius: 5px;
+    padding: 1px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .permis-hint {
+    font-size: .72rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+  .permis-hint.hint-error {
+    color: #dc2626;
+    font-weight: 600;
+  }
+  .permis-hint.hint-error::before { content: '❌ '; }
 
   /* ── Zone notice ── */
   .zone-notice {
