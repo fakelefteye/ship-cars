@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
 import { blockDates } from '../../../lib/getaround';
-import { generateContractPdf } from '../../../lib/generate-contract-pdf';
+// pdfkit en import dynamique — un crash pdf ne tue pas tout le webhook
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 const resend = new Resend(import.meta.env.RESEND_API_KEY);
@@ -228,8 +228,13 @@ export const POST = async ({ request }) => {
         const gaId = (resForBlock.vehicules as any)?.getaround_id;
         if (gaId) {
           try {
-            const toISO = (d: string) => d.includes('T') ? d : d + 'T00:00:00Z';
-            const period = await blockDates(String(gaId), toISO(resForBlock.date_debut), toISO(resForBlock.date_fin));
+            // Garantit un format ISO complet — si date sans heure (DATE col), force minuit Paris (UTC+2)
+            const ensureISO = (d: string) => {
+              if (!d) return d;
+              if (d.includes('T')) return d;          // déjà TIMESTAMPTZ → garder tel quel
+              return d + 'T00:00:00+02:00';            // DATE seule → minuit Paris
+            };
+            const period = await blockDates(String(gaId), ensureISO(resForBlock.date_debut), ensureISO(resForBlock.date_fin));
             if (period?.id) {
               await supabase
                 .from('reservations')
@@ -262,13 +267,14 @@ export const POST = async ({ request }) => {
         const emailClient = res.email_client || customerEmail;
         const pdfFilename  = `contrat-SC-${contractNum}.pdf`;
 
-        // Génération du PDF contrat
+        // Génération du PDF contrat (import dynamique — ne bloque pas le webhook si pdfkit échoue)
         let pdfBuffer: Buffer | null = null;
         try {
+          const { generateContractPdf } = await import('../../../lib/generate-contract-pdf');
           pdfBuffer = await generateContractPdf(res, veh);
-          console.log(`✅ PDF contrat généré (${pdfBuffer.length} bytes)`);
+          console.log(`✅ PDF contrat généré (${pdfBuffer!.length} bytes)`);
         } catch (err) {
-          console.error('❌ Erreur génération PDF:', err);
+          console.error('❌ Erreur génération PDF (non bloquant):', err);
         }
 
         const pdfAttachment = pdfBuffer
