@@ -9,6 +9,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Ship Cars — Location de véhicules à Grenoble, proche de la gare. Réservation en ligne, paiement sécurisé." />
     <title>{title}</title>
+    <slot name="head" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet" />
@@ -44,6 +45,40 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
         --radius:      12px;
         --radius-lg:   20px;
       }
+
+      /* ── Maintenance banner ── */
+      .maintenance-banner {
+        background: linear-gradient(135deg,#ea580c,#f97316);
+        color:#fff; position:sticky; top:64px; z-index:99;
+        box-shadow:0 2px 20px rgba(249,115,22,.4);
+      }
+      .maintenance-inner {
+        max-width:1200px; margin:0 auto; padding:.9rem 2rem;
+        display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+      }
+      .maintenance-icon { font-size:1.4rem; flex-shrink:0; }
+      .maintenance-inner > div { flex:1; min-width:0; }
+      .maintenance-inner strong { display:block; font-size:1.1rem; font-weight:800; margin-bottom:.1rem; }
+      .maintenance-inner span { font-size:.88rem; opacity:.95; }
+      .maintenance-inner span a { color:#fff; font-weight:700; text-decoration:underline; }
+      .maintenance-wa {
+        display:inline-flex; align-items:center; gap:6px;
+        background:#25d366; color:#fff !important; font-weight:700;
+        font-size:.85rem; padding:.55rem 1.1rem; border-radius:8px;
+        text-decoration:none !important; white-space:nowrap; flex-shrink:0;
+        box-shadow:0 2px 8px rgba(0,0,0,.2); transition:opacity .15s;
+      }
+      .maintenance-wa:hover { opacity:.9; }
+
+      /* ── Zone restriction notice ── */
+      .zone-notice {
+        display:flex; align-items:center; gap:.7rem;
+        background:rgba(77,212,200,.08); border:1px solid rgba(77,212,200,.25);
+        border-radius:10px; padding:.7rem 1rem; font-size:.83rem;
+        color:var(--text-muted,#8a95a8); line-height:1.5;
+      }
+      .zone-notice strong { color:var(--teal,#4dd4c8); }
+      .zone-notice a { color:var(--teal,#4dd4c8); font-weight:600; text-decoration:underline; white-space:nowrap; }
 
       html { scroll-behavior: smooth; }
 

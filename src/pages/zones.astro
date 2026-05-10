@@ -1,0 +1,178 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Zones de circulation autorisées — Ship Cars">
+  <div class="zones-page">
+    <div class="zones-header">
+      <a href="/" class="zones-back">← Retour à l'accueil</a>
+      <h1 class="zones-title">Zones de circulation autorisées</h1>
+      <p class="zones-intro">
+        Les véhicules Ship Cars sont autorisés à circuler dans les zones suivantes uniquement.
+        Toute circulation hors de cette zone doit faire l'objet d'un <strong>accord écrit préalable</strong> du Loueur —
+        à défaut, l'assurance ne couvre ni les dommages au véhicule ni les recours de tiers.
+      </p>
+    </div>
+
+    <div class="zones-grid">
+
+      <div class="zone-card">
+        <div class="zone-icon">🏔️</div>
+        <h2>Secteur Sud-Est &amp; Alpes</h2>
+        <ul>
+          <li><span class="dep">01</span> Ain</li>
+          <li><span class="dep">04</span> Alpes-de-Haute-Provence</li>
+          <li><span class="dep">05</span> Hautes-Alpes</li>
+          <li><span class="dep">07</span> Ardèche</li>
+          <li><span class="dep">26</span> Drôme</li>
+          <li><span class="dep">38</span> Isère</li>
+          <li><span class="dep">42</span> Loire</li>
+          <li><span class="dep">69</span> Rhône</li>
+          <li><span class="dep">73</span> Savoie</li>
+          <li><span class="dep">74</span> Haute-Savoie</li>
+          <li><span class="dep">84</span> Vaucluse</li>
+        </ul>
+      </div>
+
+      <div class="zone-card">
+        <div class="zone-icon">🌊</div>
+        <h2>Façade Méditerranéenne</h2>
+        <ul>
+          <li><span class="dep">06</span> Alpes-Maritimes</li>
+          <li><span class="dep">11</span> Aude</li>
+          <li><span class="dep">13</span> Bouches-du-Rhône</li>
+          <li><span class="dep">30</span> Gard</li>
+          <li><span class="dep">34</span> Hérault</li>
+          <li><span class="dep">66</span> Pyrénées-Orientales</li>
+          <li><span class="dep">83</span> Var</li>
+        </ul>
+      </div>
+
+      <div class="zone-card zone-card--intl">
+        <div class="zone-icon">🇨🇭</div>
+        <h2>Suisse — Cantons autorisés</h2>
+        <ul>
+          <li>Canton de <strong>Genève</strong> (Genève ville)</li>
+          <li>Canton de <strong>Vaud</strong> (Lausanne, Montreux)</li>
+          <li>Canton du <strong>Valais</strong> (Martigny, Sion)</li>
+          <li>Canton de <strong>Fribourg</strong> (sud du canton)</li>
+        </ul>
+      </div>
+
+      <div class="zone-card zone-card--intl">
+        <div class="zone-icon">🇮🇹</div>
+        <h2>Italie — Régions autorisées</h2>
+        <ul>
+          <li><strong>Piémont</strong> — Turin et environs (~200 km de Grenoble)</li>
+          <li><strong>Vallée d'Aoste</strong> — Intégralement (Aoste, Courmayeur)</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="zones-warning">
+      <div class="zones-warning-icon">⚠️</div>
+      <div>
+        <strong>Important :</strong> Toute circulation hors de cette zone, même temporaire,
+        doit faire l'objet d'un accord écrit préalable et exprès du Loueur.
+        À défaut, <strong>l'assurance ne couvrira ni les dommages au véhicule ni les recours de tiers</strong>,
+        et l'intégralité des frais sera à la charge du Locataire.
+      </div>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .zones-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+  .zones-back {
+    display: inline-block;
+    font-size: .82rem;
+    color: var(--text-muted, #8a95a8);
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color .15s;
+  }
+  .zones-back:hover { color: var(--teal, #4dd4c8); }
+  .zones-title {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 800;
+    color: var(--text, #f0f3f7);
+    margin-bottom: 1rem;
+    letter-spacing: -.02em;
+  }
+  .zones-intro {
+    font-size: 1rem;
+    color: var(--text-muted, #8a95a8);
+    line-height: 1.7;
+    max-width: 680px;
+    margin-bottom: 2.5rem;
+  }
+  .zones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .zone-card {
+    background: var(--navy, #0f1e33);
+    border: 1px solid rgba(212,216,222,.1);
+    border-radius: 14px;
+    padding: 1.5rem;
+  }
+  .zone-card--intl { border-color: rgba(77,212,200,.2); }
+  .zone-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+  .zone-card h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text, #f0f3f7);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid rgba(212,216,222,.08);
+  }
+  .zone-card ul {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+  }
+  .zone-card li {
+    font-size: .88rem;
+    color: var(--text-muted, #8a95a8);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .dep {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 20px;
+    background: rgba(77,212,200,.15);
+    color: var(--teal, #4dd4c8);
+    border-radius: 4px;
+    font-size: .72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .zone-card--intl li { padding-left: .25rem; }
+  .zones-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(249,115,22,.08);
+    border: 1px solid rgba(249,115,22,.3);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    font-size: .9rem;
+    color: #fed7aa;
+    line-height: 1.6;
+  }
+  .zones-warning-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: .1rem; }
+  .zones-warning strong { color: #fb923c; }
+</style>

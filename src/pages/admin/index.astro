@@ -2,6 +2,7 @@
 // src/pages/admin/index.astro
 import MainLayout from '../../layouts/MainLayout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
+import { isMaintenanceMode } from '../../lib/maintenance';
 
 // Vérification du mot de passe
 const url = new URL(Astro.request.url);
@@ -75,6 +76,8 @@ const { data: codesPromo } = await supabaseAdmin
   .select('*')
   .order('created_at', { ascending: false });
 
+const maintenance = await isMaintenanceMode();
+
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
 const deleted = url.searchParams.get('deleted');
@@ -95,6 +98,23 @@ const updated = url.searchParams.get('updated');
           </a>
         </div>
       </div>
+      <!-- MAINTENANCE TOGGLE -->
+      <div class={`maint-card ${maintenance ? 'maint-on' : ''}`} id="maint-card" style="margin-top:1rem;">
+        <div class="maint-left">
+          <div class="maint-dot" id="maint-dot"></div>
+          <div>
+            <strong id="maint-label">{maintenance ? '🔧 Site en maintenance' : '✅ Site en ligne'}</strong>
+            <p id="maint-desc">{maintenance
+              ? 'Paiements masqués — bannière maintenance affichée.'
+              : 'Fonctionnement normal. Activez pour bloquer les réservations.'
+            }</p>
+          </div>
+        </div>
+        <button id="btn-maint" class={maintenance ? 'maint-btn-off' : 'maint-btn-on'} data-current={String(maintenance)}>
+          {maintenance ? '✅ Remettre en ligne' : '🔧 Activer maintenance'}
+        </button>
+      </div>
+
       {success && <p class="success-msg">✅ L'élément a été ajouté avec succès !</p>}
       {deleted && <p class="success-msg">✅ L'élément a été supprimé avec succès !</p>}
       {updated && <p class="success-msg">✅ L'élément a été modifié avec succès !</p>}
@@ -378,6 +398,41 @@ const updated = url.searchParams.get('updated');
 
 <script>
   // @ts-nocheck
+
+  // ── Maintenance toggle ──────────────────────────────────────────────
+  document.getElementById('btn-maint')?.addEventListener('click', async function() {
+    const cur  = this.dataset.current === 'true';
+    const next = !cur;
+    this.disabled = true; this.textContent = '⏳ En cours…';
+    try {
+      const res  = await fetch('/api/admin/maintenance', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        credentials:'include', body: JSON.stringify({ maintenance: next }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const card  = document.getElementById('maint-card');
+        const label = document.getElementById('maint-label');
+        const desc  = document.getElementById('maint-desc');
+        if (next) {
+          card.classList.add('maint-on');
+          label.textContent = '🔧 Site en maintenance';
+          desc.textContent  = 'Paiements masqués — bannière maintenance affichée.';
+          this.textContent  = '✅ Remettre en ligne';
+          this.className    = 'maint-btn-off';
+        } else {
+          card.classList.remove('maint-on');
+          label.textContent = '✅ Site en ligne';
+          desc.textContent  = 'Fonctionnement normal. Activez pour bloquer les réservations.';
+          this.textContent  = '🔧 Activer maintenance';
+          this.className    = 'maint-btn-on';
+        }
+        this.dataset.current = String(next);
+        this.disabled = false;
+      } else { alert('Erreur : ' + (data.error || 'inconnue')); this.disabled = false; }
+    } catch { alert('Erreur réseau'); this.disabled = false; }
+  });
+
   // Script JavaScript pour l'administration
   document.addEventListener('DOMContentLoaded', function() {
     // Gestion du sélecteur de type
@@ -945,6 +1000,21 @@ const updated = url.searchParams.get('updated');
 </script>
 
 <style>
+  /* Maintenance card */
+  .maint-card { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; padding:1rem 1.25rem; border-radius:12px; border:2px solid #e9ecef; background:#f8f9fa; transition:border-color .2s, background .2s; }
+  .maint-card.maint-on { border-color:#f97316; background:#fff7ed; }
+  .maint-left { display:flex; align-items:center; gap:.9rem; flex:1; }
+  .maint-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; background:#22c55e; box-shadow:0 0 0 4px rgba(34,197,94,.2); animation:blink2 2s ease-in-out infinite; }
+  .maint-card.maint-on .maint-dot { background:#f97316; box-shadow:0 0 0 4px rgba(249,115,22,.2); }
+  .maint-left strong { display:block; font-size:.92rem; margin-bottom:.15rem; color:#333; }
+  .maint-left p { margin:0; font-size:.79rem; color:#666; }
+  @keyframes blink2 { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .maint-btn-on { background:#f97316; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .maint-btn-on:hover { opacity:.85; }
+  .maint-btn-off { background:#22c55e; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .maint-btn-off:hover { opacity:.85; }
+  .maint-btn-on:disabled, .maint-btn-off:disabled { opacity:.5; cursor:not-allowed; }
+
   .admin-container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
   .admin-header { margin-bottom: 2rem; }
   .success-msg { background: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; border: 1px solid #c3e6cb; margin-top: 1rem; }

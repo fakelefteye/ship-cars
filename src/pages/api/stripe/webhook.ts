@@ -81,6 +81,15 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       ${row('Adresse', res.locataire_adresse)}
       ${row('Email', res.email_client)}
     </table>
+    ${res.conducteur2_nom ? `
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Conducteur supplémentaire</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${row('Nom', res.conducteur2_nom)}
+      ${res.conducteur2_naissance ? row('Date de naissance', fmtDate(res.conducteur2_naissance)) : ''}
+      ${res.conducteur2_lieu_naissance ? row('Lieu de naissance', res.conducteur2_lieu_naissance) : ''}
+      ${res.conducteur2_permis_numero ? row('N° de permis', res.conducteur2_permis_numero) : ''}
+      ${res.conducteur2_permis_date ? row('Permis obtenu le', fmtDate(res.conducteur2_permis_date)) : ''}
+    </table>` : ''}
 
     <p style="font-size:11px;color:#9ca3af;line-height:1.6;border-top:1px solid #e8eaf0;padding-top:14px;margin-top:8px;">
       Les informations fournies par le locataire peuvent, le cas échéant, être corrigées en fonction d'éléments découverts ultérieurement.
