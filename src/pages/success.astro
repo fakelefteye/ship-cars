@@ -53,7 +53,7 @@ const contractNum = reservation?.id
   : '—';
 ---
 
-<MainLayout title="Contrat de location — Ship Cars">
+<MainLayout title="Récépissé de réservation — Ship Cars">
   <div class="page-wrapper">
 
     <!-- CONFIRMATION -->
@@ -61,11 +61,11 @@ const contractNum = reservation?.id
       <span class="confirm-icon">✅</span>
       <div>
         <h1 class="confirm-title">Paiement validé !</h1>
-        <p class="confirm-sub">Merci d'avoir choisi <strong>Ship Cars</strong>. Votre contrat de location est disponible ci-dessous.</p>
+        <p class="confirm-sub">Merci d'avoir choisi <strong>Ship Cars</strong>. Votre récépissé de réservation est disponible ci-dessous. Le contrat définitif sera signé lors de la remise des clés.</p>
       </div>
     </div>
 
-    <!-- CONTRAT -->
+    <!-- RECU -->
     {reservation ? (
       <div class="contract" id="contract">
         <div class="contract-header">
@@ -74,8 +74,9 @@ const contractNum = reservation?.id
             <span class="contract-brand-name">Ship<em>Cars</em></span>
           </div>
           <div class="contract-id-block">
-            <div class="contract-title-label">Contrat de location</div>
+            <div class="contract-title-label">Récépissé de réservation</div>
             <div class="contract-num">N° SC-{contractNum}</div>
+            <div class="contract-title-note">⚠️ Ce document n'est pas un contrat — le contrat est signé lors de la remise des clés</div>
           </div>
         </div>
 
@@ -116,18 +117,18 @@ const contractNum = reservation?.id
         </section>
 
         <p class="contract-disclaimer">
-          Les informations fournies par le locataire peuvent, le cas échéant, être corrigées en fonction d'éléments découverts ultérieurement.
-          Ce document fait office de contrat de location entre Ship Cars (propriétaire) et le locataire identifié ci-dessus.
+          Ce document est un récépissé de réservation confirmant votre paiement. Il ne constitue pas un contrat de location.
+          Le contrat définitif sera établi et signé contradictoirement lors de la remise des clés, après vérification de votre identité et de votre permis de conduire.
         </p>
       </div>
     ) : (
       <div class="contract-placeholder no-print">
-        <p>Récupération du contrat en cours…</p>
+        <p>Récupération du reçu en cours…</p>
       </div>
     )}
 
     <button onclick="window.print()" class="btn-print no-print">
-      Imprimer / Télécharger le contrat (PDF)
+      🖨️ Imprimer le reçu (PDF)
     </button>
 
     <!-- CAUTION -->
@@ -225,6 +226,14 @@ const contractNum = reservation?.id
     font-size: 1rem;
     font-weight: 700;
     color: #1a1a2e;
+  }
+
+  .contract-title-note {
+    font-size: 0.72rem;
+    color: #b45309;
+    font-weight: 600;
+    margin-top: 4px;
+    font-style: italic;
   }
 
   .contract-num {
