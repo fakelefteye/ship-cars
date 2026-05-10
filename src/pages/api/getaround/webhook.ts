@@ -14,7 +14,8 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
-import { getRental } from '../../../lib/getaround';
+import { getRental, getUserById } from '../../../lib/getaround';
+import { upsertBrevoContact } from '../../../lib/brevo';
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   const secret = import.meta.env.GETAROUND_WEBHOOK_SECRET;
@@ -113,6 +114,27 @@ export const POST: APIRoute = async ({ request }) => {
       }
 
       console.log('[webhook] rental récupéré:', rental.id, rental.starts_at, '→', rental.ends_at, 'car:', rental.car_id);
+
+      // ── Sync CRM Brevo (uniquement sur rental.booked) ─────────────────────
+      if ((eventType === 'rental.booked' || eventType === 'rental.created') && (rental as any).user_id) {
+        const userId = (rental as any).user_id;
+        try {
+          const gaUser = await getUserById(userId);
+          if (gaUser) {
+            await upsertBrevoContact(gaUser, {
+              rental_id: rental.id,
+              car_id:    rental.car_id,
+              starts_at: rental.starts_at,
+              ends_at:   rental.ends_at,
+            });
+          } else {
+            console.warn('[webhook] getUserById returned null pour user_id', userId);
+          }
+        } catch (brevoErr: any) {
+          // Ne bloque pas le reste du traitement
+          console.error('[webhook] Erreur sync Brevo:', brevoErr?.message ?? brevoErr);
+        }
+      }
 
       const { data: vehicule } = await supabase
         .from('vehicules')

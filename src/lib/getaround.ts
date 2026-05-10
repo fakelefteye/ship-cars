@@ -25,6 +25,23 @@ function toGA(input: string): string {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export interface GetaroundUser {
+  id: number | string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone_number?: string;
+  address_line1?: string;
+  address_line2?: string;
+  postal_code?: string;
+  city?: string;
+  country?: string;
+  birth_date?: string;
+  license_country?: string;
+  license_first_issue_date?: string;
+  license_number?: string;
+}
+
 export interface GetaroundRental {
   id: number | string;
   car_id: number | string;
@@ -60,6 +77,27 @@ export async function getRental(rentalId: string | number): Promise<GetaroundRen
     return data.rental ?? (data.id ? data : null);
   } catch (e) {
     console.error('[Getaround] getRental network error', e);
+    return null;
+  }
+}
+
+// ─── Utilisateurs ────────────────────────────────────────────────────────────
+
+/**
+ * Récupère les informations d'un locataire Getaround par son user_id.
+ * GET /users/{user_id}.json
+ */
+export async function getUserById(userId: string | number): Promise<GetaroundUser | null> {
+  try {
+    const res = await fetch(`${API_BASE}/users/${userId}.json`, { headers: headers() });
+    if (!res.ok) {
+      console.error('[Getaround] getUserById error', res.status, userId);
+      return null;
+    }
+    const data = await res.json();
+    return data.user ?? (data.id ? data : null);
+  } catch (e) {
+    console.error('[Getaround] getUserById network error', e);
     return null;
   }
 }
