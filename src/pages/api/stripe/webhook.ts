@@ -275,7 +275,36 @@ export const POST = async ({ request }) => {
           ? [{ filename: pdfFilename, content: pdfBuffer.toString('base64') }]
           : [];
 
-        // 4a. Email au locataire
+        // Téléchargement des photos de permis pour pièces jointes
+        const permisAttachments: { filename: string; content: string }[] = [];
+        const permisPhotoMap = [
+          { url: res.permis_recto_url,  filename: `permis-recto-SC-${contractNum}.jpg`  },
+          { url: res.permis_verso_url,  filename: `permis-verso-SC-${contractNum}.jpg`  },
+          { url: res.permis_selfie_url, filename: `permis-selfie-SC-${contractNum}.jpg` },
+        ];
+        for (const { url, filename } of permisPhotoMap) {
+          if (!url) continue;
+          try {
+            const imgRes = await fetch(url);
+            if (imgRes.ok) {
+              const buf = await imgRes.arrayBuffer();
+              // Détecter le type réel à partir du Content-Type ou de l'URL
+              const ct = imgRes.headers.get('content-type') || 'image/jpeg';
+              const ext = ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : 'jpg';
+              permisAttachments.push({
+                filename: filename.replace('.jpg', `.${ext}`),
+                content:  Buffer.from(buf).toString('base64'),
+              });
+            } else {
+              console.warn(`⚠️ Photo permis inaccessible (${imgRes.status}) : ${url}`);
+            }
+          } catch (imgErr) {
+            console.error(`❌ Erreur téléchargement photo permis : ${url}`, imgErr);
+          }
+        }
+        console.log(`📎 ${permisAttachments.length}/3 photo(s) de permis jointe(s)`);
+
+        // 4a. Email au locataire (contrat PDF uniquement — pas les photos de son propre permis)
         if (emailClient) {
           try {
             await resend.emails.send({
@@ -291,16 +320,16 @@ export const POST = async ({ request }) => {
           }
         }
 
-        // 4b. Email au propriétaire
+        // 4b. Email au propriétaire (contrat PDF + photos du permis)
         try {
           await resend.emails.send({
             from: 'Ship Cars <onboarding@resend.dev>',
             to: OWNER_EMAIL,
             subject: `[Nouvelle résa] ${res.locataire_nom || emailClient || 'Client'} — SC-${contractNum}`,
             html: ownerEmailHtml(contractHtml, res),
-            attachments: pdfAttachment,
+            attachments: [...pdfAttachment, ...permisAttachments],
           });
-          console.log(`✅ Contrat + PDF envoyés au propriétaire : ${OWNER_EMAIL}`);
+          console.log(`✅ Contrat PDF + ${permisAttachments.length} photo(s) permis envoyés au propriétaire : ${OWNER_EMAIL}`);
         } catch (err) {
           console.error('❌ Erreur email propriétaire:', err);
         }
