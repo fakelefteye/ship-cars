@@ -269,6 +269,11 @@ const updated = url.searchParams.get('updated');
           </div>
 
           <div class="form-group">
+            <label for="immatriculation">Immatriculation <span style="font-weight:400;color:#6b7280;">(visible uniquement au locataire après réservation)</span></label>
+            <input type="text" id="immatriculation" name="immatriculation" placeholder="Ex: AB-123-CD" style="text-transform:uppercase;" />
+          </div>
+
+          <div class="form-group">
             <label for="getaround_id">ID Getaround <span style="font-weight:400;color:#6b7280;">(optionnel — pour la synchronisation du calendrier)</span></label>
             <input type="text" id="getaround_id" name="getaround_id" placeholder="Ex: 123456" />
           </div>
@@ -744,6 +749,11 @@ const updated = url.searchParams.get('updated');
             <input type="text" name="image_url_3" placeholder="Photo 3" value="${item.image_url_3 || ''}">
             <input type="text" name="image_url_4" placeholder="Photo 4" value="${item.image_url_4 || ''}">
             <input type="text" name="image_url_5" placeholder="Photo 5" value="${item.image_url_5 || ''}">
+          </div>
+
+          <div class="form-group">
+            <label>Immatriculation <span style="font-weight:400;color:#6b7280;">(visible uniquement au locataire après réservation)</span></label>
+            <input type="text" name="immatriculation" value="${item.immatriculation || ''}" placeholder="Ex: AB-123-CD" style="text-transform:uppercase;">
           </div>
 
           <div class="form-group" style="margin-top:1rem;">
