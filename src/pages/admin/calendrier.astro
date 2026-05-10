@@ -13,7 +13,7 @@ const [
   { data: tarifs },
 ] = await Promise.all([
   supabaseAdmin.from('vehicules')
-    .select('id, nom, getaround_id, prix_journalier_base')
+    .select('id, nom, immatriculation, getaround_id, prix_journalier_base')
     .order('nom'),
   supabaseAdmin.from('reservations')
     .select('id, vehicule_id, date_debut, date_fin, statut, email_client, locataire_nom, vehicules(nom)')
@@ -35,6 +35,7 @@ const [
   INDIS:  indisponibilites ?? [],
   TARIFS: tarifs           ?? [],
 }}>
+document.addEventListener('DOMContentLoaded', () => {
 (() => {
   const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
                   'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -264,7 +265,9 @@ const [
   const fSel = document.getElementById('filter-v');
   const bSel = document.getElementById('sel-v');
   VEHS.forEach(v => {
-    const lbl = v.nom + (v.getaround_id ? ' ✓' : '');
+    const lbl = v.immatriculation
+      ? v.immatriculation + ' — ' + v.nom
+      : v.nom + (v.getaround_id ? ' ✓' : '');
     [fSel, bSel].forEach(s => {
       const o = document.createElement('option');
       o.value = v.id; o.textContent = lbl; s.appendChild(o);
@@ -340,6 +343,7 @@ const [
 
   render();
 })();
+});
 </script>
 
 <div class="page">
