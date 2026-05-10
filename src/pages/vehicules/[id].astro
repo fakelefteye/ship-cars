@@ -256,41 +256,64 @@ const photos = [
         </div>
 
         <!-- Conducteur supplémentaire -->
-        <details class="cond2-section">
-          <summary class="cond2-toggle">
-            <span>+ Ajouter un conducteur supplémentaire</span>
-            <span class="cond2-opt">(optionnel)</span>
-          </summary>
-          <div class="cond2-fields">
-            <p class="cond2-note">Le conducteur supplémentaire doit être présent lors de la prise en charge du véhicule avec son permis de conduire.</p>
+        <div class="cond2-section">
+          <div class="cond2-header">
+            <div class="cond2-header-left">
+              <span class="cond2-title">Conducteur supplémentaire</span>
+              <span class="cond2-opt">optionnel</span>
+            </div>
+            <label class="cond2-switch">
+              <input type="checkbox" id="cond2-toggle" />
+              <span class="cond2-slider"></span>
+              <span class="cond2-switch-label" id="cond2-switch-label">Non</span>
+            </label>
+          </div>
+
+          <div class="cond2-alert">
+            ⚠️ <strong>Important :</strong> tout conducteur non déclaré entraîne une <strong>pénalité de 500 €</strong> et la <strong>déchéance de l'assurance</strong>.
+            Si une autre personne doit conduire le véhicule, déclarez-la ici.
+          </div>
+
+          <div class="cond2-fields" id="cond2-fields" style="display:none;">
+            <p class="cond2-note">
+              Le conducteur supplémentaire doit être présent lors de la prise en charge avec son permis de conduire valide obtenu depuis <strong>au moins 2 ans</strong>.
+            </p>
             <div class="form-row-2">
               <div class="form-field">
-                <label class="field-label" for="cond2-nom">Nom et prénom</label>
+                <label class="field-label" for="cond2-nom">Nom et prénom *</label>
                 <input type="text" id="cond2-nom" placeholder="Marie Dupont" autocomplete="off" />
               </div>
               <div class="form-field">
-                <label class="field-label" for="cond2-naissance">Date de naissance</label>
+                <label class="field-label" for="cond2-naissance">Date de naissance *</label>
                 <input type="date" id="cond2-naissance" />
               </div>
             </div>
             <div class="form-row-2">
               <div class="form-field">
-                <label class="field-label" for="cond2-lieu">Lieu de naissance</label>
+                <label class="field-label" for="cond2-lieu">Lieu de naissance *</label>
                 <input type="text" id="cond2-lieu" placeholder="Lyon, France" autocomplete="off" />
               </div>
               <div class="form-field">
-                <label class="field-label" for="cond2-permis">N° de permis</label>
+                <label class="field-label" for="cond2-permis">N° de permis *</label>
                 <input type="text" id="cond2-permis" placeholder="14AB12345" autocomplete="off" />
               </div>
             </div>
             <div class="form-row-2">
               <div class="form-field">
-                <label class="field-label" for="cond2-permis-date">Date d'obtention du permis</label>
+                <label class="field-label" for="cond2-permis-date">
+                  Date d'obtention du permis *
+                  <span class="permis-warning">⚠️ 2 ans minimum</span>
+                </label>
                 <input type="date" id="cond2-permis-date" />
+                <p class="permis-hint" id="cond2-hint">Le permis doit avoir été obtenu il y a au moins 2 ans.</p>
+              </div>
+              <div class="form-field">
+                <label class="field-label" for="cond2-pays-permis">Pays de délivrance du permis</label>
+                <input type="text" id="cond2-pays-permis" placeholder="France" autocomplete="off" value="France" />
               </div>
             </div>
           </div>
-        </details>
+        </div>
 
         <!-- Upload permis -->
         <div class="upload-section">
@@ -816,8 +839,19 @@ const photos = [
   const permisHint      = permisDateInput?.nextElementSibling;
   permisDateInput?.addEventListener('change', () => checkPermisAge(permisDateInput, permisHint));
 
+  // Toggle conducteur supplémentaire
+  const cond2Toggle = document.getElementById('cond2-toggle');
+  const cond2Fields = document.getElementById('cond2-fields');
+  const cond2Label  = document.getElementById('cond2-switch-label');
+  cond2Toggle?.addEventListener('change', () => {
+    const on = cond2Toggle.checked;
+    cond2Fields.style.display = on ? 'block' : 'none';
+    cond2Label.textContent    = on ? 'Oui' : 'Non';
+  });
+
   const cond2DateInput  = document.getElementById('cond2-permis-date');
-  cond2DateInput?.addEventListener('change', () => checkPermisAge(cond2DateInput, null));
+  const cond2Hint       = document.getElementById('cond2-hint');
+  cond2DateInput?.addEventListener('change', () => checkPermisAge(cond2DateInput, cond2Hint));
 
   const modal = document.getElementById('modal-locataire');
 
@@ -875,11 +909,12 @@ const photos = [
     const permis        = document.getElementById('loc-permis').value.trim().toUpperCase();
     const permisDate    = document.getElementById('loc-permis-date').value;
     // Conducteur supplémentaire (optionnel)
-    const cond2nom      = document.getElementById('cond2-nom').value.trim() || null;
-    const cond2naiss    = document.getElementById('cond2-naissance').value || null;
-    const cond2lieu     = document.getElementById('cond2-lieu').value.trim() || null;
-    const cond2permis   = document.getElementById('cond2-permis').value.trim().toUpperCase() || null;
-    const cond2date     = document.getElementById('cond2-permis-date').value || null;
+    const cond2Active = document.getElementById('cond2-toggle')?.checked;
+    const cond2nom    = cond2Active ? (document.getElementById('cond2-nom').value.trim() || null) : null;
+    const cond2naiss  = cond2Active ? (document.getElementById('cond2-naissance').value || null) : null;
+    const cond2lieu   = cond2Active ? (document.getElementById('cond2-lieu').value.trim() || null) : null;
+    const cond2permis = cond2Active ? (document.getElementById('cond2-permis').value.trim().toUpperCase() || null) : null;
+    const cond2date   = cond2Active ? (document.getElementById('cond2-permis-date').value || null) : null;
 
     if (!nom || !email || !naiss || !lieuNaissance || !adresse || !permis || !permisDate) {
       errEl.textContent = 'Veuillez remplir tous les champs obligatoires.';
@@ -900,8 +935,14 @@ const photos = [
       errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       return;
     }
-    // Vérification conducteur 2 si renseigné
-    if (cond2date) {
+    // Vérification conducteur 2 si toggle activé
+    if (cond2Active) {
+      if (!cond2nom || !cond2naiss || !cond2permis || !cond2date) {
+        errEl.innerHTML = '❌ <strong>Conducteur supplémentaire :</strong> veuillez remplir tous les champs (nom, date de naissance, n° de permis, date d\'obtention).';
+        errEl.style.display = 'block';
+        errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
       const cond2Obtenu = new Date(cond2date);
       if (cond2Obtenu > deuxAnsAvant) {
         const input2 = document.getElementById('cond2-permis-date');
@@ -1775,22 +1816,49 @@ const photos = [
   /* ── Conducteur supplémentaire ── */
   .cond2-section {
     background: var(--bg-3);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(77,212,200,.25);
     border-radius: var(--radius);
     overflow: hidden;
     margin-bottom: .5rem;
   }
-  .cond2-toggle {
-    display: flex; align-items: center; gap: .5rem;
-    padding: .75rem 1rem; cursor: pointer; list-style: none;
-    font-size: .88rem; font-weight: 600; color: var(--text-muted);
-    user-select: none; transition: color .12s;
+  .cond2-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .85rem 1rem;
   }
-  .cond2-toggle::-webkit-details-marker { display: none; }
-  .cond2-toggle:hover { color: var(--teal); }
-  .cond2-section[open] .cond2-toggle { border-bottom: 1px solid var(--border); color: var(--teal); }
-  .cond2-opt { font-size: .75rem; font-weight: 400; color: var(--text-dim); }
-  .cond2-fields { padding: 1rem; display: flex; flex-direction: column; gap: .75rem; }
+  .cond2-header-left { display: flex; align-items: center; gap: .6rem; }
+  .cond2-title { font-size: .9rem; font-weight: 700; color: var(--text); }
+  .cond2-opt {
+    font-size: .7rem; font-weight: 600; color: var(--text-dim);
+    background: rgba(255,255,255,.06); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 99px;
+  }
+  /* Toggle switch */
+  .cond2-switch { display: flex; align-items: center; gap: .5rem; cursor: pointer; user-select: none; }
+  .cond2-switch input { display: none; }
+  .cond2-slider {
+    width: 42px; height: 24px; background: #374151; border-radius: 12px;
+    position: relative; transition: background .2s;
+    flex-shrink: 0;
+  }
+  .cond2-slider::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    transition: transform .2s;
+  }
+  .cond2-switch input:checked + .cond2-slider { background: var(--teal); }
+  .cond2-switch input:checked + .cond2-slider::after { transform: translateX(18px); }
+  .cond2-switch-label { font-size: .82rem; font-weight: 600; color: var(--text-muted); min-width: 22px; }
+  .cond2-switch input:checked ~ .cond2-switch-label { color: var(--teal); }
+
+  .cond2-alert {
+    margin: 0 1rem .75rem;
+    background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
+    border-radius: 8px; padding: .65rem .9rem;
+    font-size: .78rem; color: #fbbf24; line-height: 1.5;
+  }
+  .cond2-alert strong { color: #f59e0b; }
+
+  .cond2-fields { padding: 0 1rem 1rem; display: flex; flex-direction: column; gap: .75rem; }
   .cond2-note { font-size: .78rem; color: var(--text-dim); margin: 0; line-height: 1.5; }
 
   /* ── Upload permis ── */
