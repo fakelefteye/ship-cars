@@ -11,6 +11,8 @@ const resend = new Resend(import.meta.env.RESEND_API_KEY);
 
 const OWNER_EMAIL = 'bill.shipcars@gmail.com';
 const CAUTION_URL = 'https://buy.stripe.com/votre_lien_de_caution_800';
+// Expéditeur configurable : mettre RESEND_FROM_EMAIL=noreply@shipcars.fr dans Vercel une fois le domaine vérifié
+const FROM_EMAIL   = import.meta.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 function fmt(d: string | null | undefined): string {
   if (!d) return '—';
@@ -182,6 +184,10 @@ function ownerEmailHtml(contractHtml: string, res: Record<string, any>): string 
 }
 
 export const POST = async ({ request }) => {
+  // Log initial — visible dans Vercel Functions → Logs pour confirmer que le webhook est appelé
+  console.log('🔔 Webhook Stripe reçu à', new Date().toISOString(),
+    request.headers.get('stripe-signature') ? '✅ signature présente' : '❌ SANS signature');
+
   // Stripe valide la signature sur les bytes bruts — arrayBuffer évite toute
   // transformation d'encodage ou de fins de ligne que text() pourrait introduire.
   const rawBody  = await request.arrayBuffer();
@@ -314,7 +320,7 @@ export const POST = async ({ request }) => {
         if (emailClient) {
           try {
             await resend.emails.send({
-              from: 'Ship Cars <noreply@shipcars.fr>',
+              from: `Ship Cars <${FROM_EMAIL}>`,
               to: emailClient,
               subject: `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
               html: tenantEmailHtml(contractHtml, CAUTION_URL),
@@ -329,7 +335,7 @@ export const POST = async ({ request }) => {
         // 4b. Email au propriétaire (contrat PDF + photos du permis)
         try {
           await resend.emails.send({
-            from: 'Ship Cars <noreply@shipcars.fr>',
+            from: `Ship Cars <${FROM_EMAIL}>`,
             to: OWNER_EMAIL,
             subject: `[Nouvelle résa] ${res.locataire_nom || emailClient || 'Client'} — SC-${contractNum}`,
             html: ownerEmailHtml(contractHtml, res),
