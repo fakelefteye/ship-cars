@@ -240,15 +240,21 @@ export const POST = async ({ request }) => {
               if (d.includes('T')) return d;          // déjà TIMESTAMPTZ → garder tel quel
               return d + 'T00:00:00+02:00';            // DATE seule → minuit Paris
             };
-            const period = await blockDates(String(gaId), ensureISO(resForBlock.date_debut), ensureISO(resForBlock.date_fin));
-            if (period?.id) {
-              await supabase
-                .from('reservations')
-                .update({ getaround_unavailable_period_id: String(period.id) })
-                .eq('id', reservationId);
-              console.log(`✅ Getaround bloqué — voiture ${gaId}, période ${period.id}`);
+            const startISO = ensureISO(resForBlock.date_debut);
+            const endISO   = ensureISO(resForBlock.date_fin);
+            console.log(`[Getaround] Tentative blocage voiture ${gaId} : ${startISO} → ${endISO}`);
+            const period = await blockDates(String(gaId), startISO, endISO);
+            if (period !== null) {
+              // period peut être { id, starts_at, ends_at } ou { starts_at, ends_at } (204 sans corps)
+              if (period.id) {
+                await supabase
+                  .from('reservations')
+                  .update({ getaround_unavailable_period_id: String(period.id) })
+                  .eq('id', reservationId);
+              }
+              console.log(`✅ Getaround bloqué — voiture ${gaId}, période id=${period.id ?? 'n/a'}`);
             } else {
-              console.error(`❌ Getaround a refusé le blocage pour voiture ${gaId}`);
+              console.error(`❌ Getaround a refusé le blocage pour voiture ${gaId} (dates: ${startISO} → ${endISO})`);
             }
           } catch (err) {
             console.error('❌ Erreur technique Getaround blockDates:', err);

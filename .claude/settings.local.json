@@ -13,7 +13,11 @@
       "Bash(grep -E \"\\\\.astro$\")",
       "Bash(npm install *)",
       "Bash(npm list *)",
-      "Bash(node -e \"import\\('pdfkit'\\).then\\(m => console.log\\('OK', typeof m.default\\)\\).catch\\(e => console.error\\('ERR', e.message\\)\\)\")"
+      "Bash(node -e \"import\\('pdfkit'\\).then\\(m => console.log\\('OK', typeof m.default\\)\\).catch\\(e => console.error\\('ERR', e.message\\)\\)\")",
+      "mcp__claude_ai_Vercel__list_projects",
+      "Bash(npx vercel *)",
+      "Bash(python -c \"import sys,json; lines=[l for l in sys.stdin if '/api/stripe' in l or 'webhook' in l.lower\\(\\) or 'stripe' in l.lower\\(\\)]; [print\\(l.strip\\(\\)\\) for l in lines[:20]]\")",
+      "Bash(python -c ' *)"
     ]
   }
 }
