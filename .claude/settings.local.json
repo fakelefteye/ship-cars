@@ -17,7 +17,11 @@
       "mcp__claude_ai_Vercel__list_projects",
       "Bash(npx vercel *)",
       "Bash(python -c \"import sys,json; lines=[l for l in sys.stdin if '/api/stripe' in l or 'webhook' in l.lower\\(\\) or 'stripe' in l.lower\\(\\)]; [print\\(l.strip\\(\\)\\) for l in lines[:20]]\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "mcp__claude_ai_Stripe__stripe_api_execute",
+      "mcp__claude_ai_Stripe__stripe_api_search",
+      "mcp__claude_ai_Stripe__list_payment_intents",
+      "mcp__claude_ai_Stripe__get_stripe_account_info"
     ]
   }
 }
