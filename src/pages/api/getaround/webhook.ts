@@ -77,11 +77,13 @@ export const POST: APIRoute = async ({ request }) => {
 
     // ── Événements de LOCATION ──────────────────────────────────────────────────
     if (
-      eventType === 'rental.booked' ||
-      eventType === 'rental.created' ||
-      eventType === 'rental.confirmed' ||
-      eventType === 'rental.started' ||
-      eventType === 'rental.cancelled' ||
+      eventType === 'rental.booked'         ||
+      eventType === 'rental.created'        ||
+      eventType === 'rental.confirmed'      ||
+      eventType === 'rental.started'        ||
+      eventType === 'rental.times_changed'  ||  // horaires modifiés → mettre à jour le créneau
+      eventType === 'rental.car_switched'   ||  // voiture changée → déplacer le blocage
+      eventType === 'rental.cancelled'      ||
       eventType === 'rental.canceled'
     ) {
       const data     = payload?.data ?? {};
@@ -161,7 +163,13 @@ export const POST: APIRoute = async ({ request }) => {
       );
       if (upsertErr) console.error('[webhook] erreur upsert:', upsertErr.message);
 
-      console.log('[webhook] indisponibilite upsertée pour rental', rental.id);
+      if (eventType === 'rental.times_changed') {
+        console.log(`[webhook] rental.times_changed — créneau mis à jour pour #${rental.id} : ${rental.starts_at} → ${rental.ends_at}`);
+      } else if (eventType === 'rental.car_switched') {
+        console.log(`[webhook] rental.car_switched — blocage déplacé vers voiture GA #${rental.car_id} pour rental #${rental.id}`);
+      } else {
+        console.log('[webhook] indisponibilite upsertée pour rental', rental.id);
+      }
       await logEvent(eventType, payload, upsertErr ? 'error' : 'upserted', upsertErr?.message);
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
