@@ -1,4 +1,17 @@
 {
   "trailingSlash": false,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/.git/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/apple-app-site-association",
+      "destination": "/",
+      "permanent": false
+    }
+  ]
 }

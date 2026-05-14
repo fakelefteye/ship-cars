@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#0f1e33"/>
+  <!-- Carrosserie voiture simplifiée -->
+  <rect x="4" y="18" width="24" height="8" rx="3" fill="#4dd4c8"/>
+  <path d="M8 18 Q9 13 13 12 L19 12 Q23 13 24 18Z" fill="#4dd4c8"/>
+  <!-- Roues -->
+  <circle cx="9" cy="26" r="3" fill="#0a1421"/>
+  <circle cx="9" cy="26" r="1.5" fill="#4dd4c8"/>
+  <circle cx="23" cy="26" r="3" fill="#0a1421"/>
+  <circle cx="23" cy="26" r="1.5" fill="#4dd4c8"/>
+  <!-- Vitres -->
+  <path d="M10 17 Q11 14 13.5 13.5 L18.5 13.5 Q21 14 22 17Z" fill="#0a1421" opacity="0.6"/>
+</svg>
