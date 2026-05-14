@@ -115,7 +115,17 @@ export const POST: APIRoute = async ({ request }) => {
         return new Response(JSON.stringify({ received: true, error: 'rental fetch failed' }), { status: 200 });
       }
 
-      console.log('[webhook] rental récupéré:', rental.id, rental.starts_at, '→', rental.ends_at, 'car:', rental.car_id);
+      // Guard out-of-order : si l'API confirme que la résa est annulée, on supprime
+      // (cas où rental.canceled arrive après rental.booked suite à retry)
+      const rentalState = (rental as any).state ?? '';
+      if (rentalState === 'cancelled' || rentalState === 'canceled') {
+        console.warn(`[webhook] rental #${rentalId} est annulé côté API (state=${rentalState}) — on supprime`);
+        await supabase.from('indisponibilites').delete().eq('getaround_rental_id', String(rentalId));
+        await logEvent(eventType, payload, 'deleted_stale_cancelled');
+        return new Response(JSON.stringify({ received: true, stale: 'cancelled' }), { status: 200 });
+      }
+
+      console.log('[webhook] rental récupéré:', rental.id, rental.starts_at, '→', rental.ends_at, 'car:', rental.car_id, 'state:', rentalState);
 
       // ── Sync CRM Brevo (uniquement sur rental.booked) ─────────────────────
       if ((eventType === 'rental.booked' || eventType === 'rental.created') && (rental as any).user_id) {
