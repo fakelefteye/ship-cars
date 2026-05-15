@@ -674,7 +674,7 @@ const photos = [
     }
 
     // Code promo appliqué
-    let appliedPromo = null; // { code, pourcentage }
+    let appliedPromo = null; // { code, pourcentage, prix_fixe_override }
 
     function recalcTotal() {
       const btn = document.getElementById('btn-book');
@@ -687,16 +687,25 @@ const photos = [
       const promoRowCode = document.getElementById('promo-row-code');
 
       let reduction = 0;
+      let total: string;
       if (appliedPromo) {
-        reduction = +(sousTotal * (appliedPromo.pourcentage / 100)).toFixed(2);
         promoRow.style.display = 'flex';
         promoRowCode.textContent = appliedPromo.code;
-        promoAmountEl.textContent = `-${reduction.toFixed(2)} €`;
+        if (appliedPromo.prix_fixe_override !== null && appliedPromo.prix_fixe_override !== undefined) {
+          // Prix fixe : le total est imposé, la réduction est calculée en différence
+          const fixedTotal = Number(appliedPromo.prix_fixe_override);
+          reduction = Math.max(0, +(sousTotal - fixedTotal).toFixed(2));
+          promoAmountEl.textContent = `Tarif fixe ${fixedTotal.toFixed(2)} €`;
+          total = fixedTotal.toFixed(2);
+        } else {
+          reduction = +(sousTotal * (appliedPromo.pourcentage / 100)).toFixed(2);
+          promoAmountEl.textContent = `-${reduction.toFixed(2)} €`;
+          total = Math.max(0, sousTotal - reduction).toFixed(2);
+        }
       } else {
         promoRow.style.display = 'none';
+        total = Math.max(0, sousTotal).toFixed(2);
       }
-
-      const total = Math.max(0, sousTotal - reduction).toFixed(2);
 
       if (siegeCheckbox.checked) {
         siegeRow.style.display = 'flex';
@@ -748,8 +757,12 @@ const photos = [
         const data = await res.json();
 
         if (data.valid) {
-          appliedPromo = { code: data.code, pourcentage: data.pourcentage };
-          promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
+          appliedPromo = { code: data.code, pourcentage: data.pourcentage, prix_fixe_override: data.prix_fixe_override ?? null };
+          if (data.prix_fixe_override !== null && data.prix_fixe_override !== undefined) {
+            promoFeedback.textContent = `✅ Code ${data.code} — tarif fixe ${Number(data.prix_fixe_override).toFixed(2)} €`;
+          } else {
+            promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
+          }
           promoFeedback.classList.add('ok');
           promoBtn.textContent = 'Retirer';
         } else {
@@ -786,8 +799,12 @@ const photos = [
         const data = await res.json();
         promoFeedback.className = 'promo-feedback';
         if (data.valid) {
-          appliedPromo = { code: data.code, pourcentage: data.pourcentage };
-          promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
+          appliedPromo = { code: data.code, pourcentage: data.pourcentage, prix_fixe_override: data.prix_fixe_override ?? null };
+          if (data.prix_fixe_override !== null && data.prix_fixe_override !== undefined) {
+            promoFeedback.textContent = `✅ Code ${data.code} — tarif fixe ${Number(data.prix_fixe_override).toFixed(2)} €`;
+          } else {
+            promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
+          }
           promoFeedback.classList.add('ok');
         } else {
           appliedPromo = null;

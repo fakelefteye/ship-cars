@@ -77,6 +77,8 @@ const { data: codesPromo } = await supabaseAdmin
   .order('created_at', { ascending: false });
 
 const maintenance = await isMaintenanceMode();
+const { data: mfData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'mardi_flash_actif').single();
+const mardiFlashActif = mfData?.value === 'true';
 
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
@@ -112,6 +114,23 @@ const updated = url.searchParams.get('updated');
         </div>
         <button id="btn-maint" class={maintenance ? 'maint-btn-off' : 'maint-btn-on'} data-current={String(maintenance)}>
           {maintenance ? '✅ Remettre en ligne' : '🔧 Activer maintenance'}
+        </button>
+      </div>
+
+      <!-- MARDI FLASH TOGGLE -->
+      <div class={`maint-card ${mardiFlashActif ? 'mf-on' : ''}`} id="mf-card" style="margin-top:.75rem;">
+        <div class="maint-left">
+          <div class="mf-dot" id="mf-dot"></div>
+          <div>
+            <strong id="mf-label">{mardiFlashActif ? '⚡ Mardi Flash ACTIF' : '⚡ Mardi Flash désactivé'}</strong>
+            <p id="mf-desc">{mardiFlashActif
+              ? 'Code MARDI actif (25€, 50 km, ≤3 jours à l\'avance) — bannière homepage affichée.'
+              : 'Code MARDI désactivé — bannière homepage masquée.'
+            }</p>
+          </div>
+        </div>
+        <button id="btn-mf" class={mardiFlashActif ? 'mf-btn-off' : 'mf-btn-on'} data-current={String(mardiFlashActif)}>
+          {mardiFlashActif ? '⏹️ Désactiver' : '⚡ Activer Mardi Flash'}
         </button>
       </div>
 
@@ -219,7 +238,7 @@ const updated = url.searchParams.get('updated');
 
       <div class="promo-list" id="promo-list">
         {codesPromo?.map((p) => {
-          const fmt = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null;
+          const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null;
           const debut = fmt(p.date_debut_validite);
           const fin = fmt(p.date_fin_validite);
           let windowLabel = null;
@@ -436,6 +455,44 @@ const updated = url.searchParams.get('updated');
         this.disabled = false;
       } else { alert('Erreur : ' + (data.error || 'inconnue')); this.disabled = false; }
     } catch { alert('Erreur réseau'); this.disabled = false; }
+  });
+
+  // ── Mardi Flash toggle ──────────────────────────────────────────────
+  document.getElementById('btn-mf')?.addEventListener('click', async function() {
+    const btn = this as HTMLButtonElement;
+    const cur  = btn.dataset.current === 'true';
+    const next = !cur;
+    btn.disabled = true; btn.textContent = '⏳ En cours…';
+    try {
+      const res  = await fetch('/api/admin/mardi-flash', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        credentials:'include', body: JSON.stringify({ actif: next }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const card  = document.getElementById('mf-card');
+        const label = document.getElementById('mf-label');
+        const desc  = document.getElementById('mf-desc');
+        const dot   = document.getElementById('mf-dot');
+        if (next) {
+          card?.classList.add('mf-on');
+          if (dot) { dot.style.background = '#f97316'; dot.style.boxShadow = '0 0 0 4px rgba(249,115,22,.2)'; }
+          if (label) label.textContent = '⚡ Mardi Flash ACTIF';
+          if (desc)  desc.textContent  = 'Code MARDI actif (25€, 50 km, ≤3 jours à l\'avance) — bannière homepage affichée.';
+          btn.textContent = '⏹️ Désactiver';
+          btn.className   = 'mf-btn-off';
+        } else {
+          card?.classList.remove('mf-on');
+          if (dot) { dot.style.background = '#9ca3af'; dot.style.boxShadow = 'none'; }
+          if (label) label.textContent = '⚡ Mardi Flash désactivé';
+          if (desc)  desc.textContent  = 'Code MARDI désactivé — bannière homepage masquée.';
+          btn.textContent = '⚡ Activer Mardi Flash';
+          btn.className   = 'mf-btn-on';
+        }
+        btn.dataset.current = String(next);
+        btn.disabled = false;
+      } else { alert('Erreur : ' + (data.error || 'inconnue')); btn.disabled = false; }
+    } catch { alert('Erreur réseau'); btn.disabled = false; }
   });
 
   // Script JavaScript pour l'administration
@@ -1024,6 +1081,15 @@ const updated = url.searchParams.get('updated');
   .maint-btn-off { background:#22c55e; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
   .maint-btn-off:hover { opacity:.85; }
   .maint-btn-on:disabled, .maint-btn-off:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* Mardi Flash card */
+  .mf-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; background:#9ca3af; }
+  .mf-card.mf-on { border-color:#f97316; background:#fff7ed; }
+  .mf-btn-on { background:#f97316; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .mf-btn-on:hover { opacity:.85; }
+  .mf-btn-off { background:#6b7280; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .mf-btn-off:hover { opacity:.85; }
+  .mf-btn-on:disabled, .mf-btn-off:disabled { opacity:.5; cursor:not-allowed; }
 
   .admin-container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
   .admin-header { margin-bottom: 2rem; }

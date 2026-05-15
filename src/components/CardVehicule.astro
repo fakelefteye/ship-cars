@@ -5,13 +5,13 @@ const { id, nom, modele, prix, image } = Astro.props;
 <a href={`/vehicules/${id}`} class="card">
   <div class="card-img-wrap">
     <img src={image} alt={`${nom} ${modele}`} loading="lazy" />
-    <div class="card-price-badge">{prix}€<span>/jour</span></div>
+    <div class="card-price-badge"><span class="card-from">à partir de</span>{prix}€<span>/jour</span></div>
   </div>
   <div class="card-body">
     <div class="card-info">
       <h3 class="card-nom">{nom}</h3>
       <p class="card-modele">{modele}</p>
-      <p class="card-included">🛣️ 100 km/jour inclus</p>
+      <p class="card-included">100 km/jour inclus</p>
     </div>
     <div class="card-cta">
       <span class="card-btn">Voir les dispo</span>
@@ -76,6 +76,16 @@ const { id, nom, modele, prix, image } = Astro.props;
     gap: 3px;
   }
 
+  .card-from {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+    line-height: 1;
+    margin-bottom: 1px;
+  }
   .card-price-badge span {
     font-size: 0.7rem;
     font-weight: 400;

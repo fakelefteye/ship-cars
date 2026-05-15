@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { data, error } = await supabaseAdmin
       .from('codes_promo')
-      .select('code, pourcentage, actif, date_debut_validite, date_fin_validite')
+      .select('code, pourcentage, actif, date_debut_validite, date_fin_validite, prix_fixe_override, jours_avant_max, km_inclus_override')
       .eq('code', cleaned)
       .maybeSingle();
 
@@ -25,10 +25,23 @@ export const POST: APIRoute = async ({ request }) => {
     const check = checkDateWindow(data.date_debut_validite, data.date_fin_validite, date_debut, date_fin);
     if (!check.ok) return json({ valid: false, reason: check.reason });
 
+    // Check jours_avant_max : la location doit démarrer dans les X prochains jours
+    if (data.jours_avant_max !== null && data.jours_avant_max !== undefined && date_debut) {
+      const startDate = new Date(date_debut);
+      const now = new Date();
+      const diffDays = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays > data.jours_avant_max) {
+        return json({ valid: false, reason: `Ce code est valable uniquement pour les locations démarrant dans les ${data.jours_avant_max} prochains jours` });
+      }
+    }
+
     return json({
       valid: true,
       code: data.code,
       pourcentage: Number(data.pourcentage),
+      prix_fixe_override: data.prix_fixe_override !== null ? Number(data.prix_fixe_override) : null,
+      jours_avant_max: data.jours_avant_max !== null ? Number(data.jours_avant_max) : null,
+      km_inclus_override: data.km_inclus_override !== null ? Number(data.km_inclus_override) : null,
     });
   } catch (err: any) {
     return json({ valid: false, reason: err.message || 'Erreur serveur' }, 500);

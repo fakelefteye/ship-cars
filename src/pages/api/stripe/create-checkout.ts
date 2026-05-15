@@ -24,10 +24,11 @@ export const POST: APIRoute = async ({ request }) => {
     // Re-vérifie le code promo côté serveur pour empêcher toute manipulation client
     let verifiedPromoCode: string | null = null;
     let verifiedReduction = 0;
+    let prixFixeOverride: number | null = null;
     if (promo_code) {
       const { data: promo } = await supabase
         .from('codes_promo')
-        .select('code, pourcentage, actif, date_debut_validite, date_fin_validite')
+        .select('code, pourcentage, actif, date_debut_validite, date_fin_validite, prix_fixe_override, jours_avant_max')
         .eq('code', String(promo_code).toUpperCase())
         .maybeSingle();
       if (promo && promo.actif) {
@@ -37,12 +38,25 @@ export const POST: APIRoute = async ({ request }) => {
           date_debut,
           date_fin,
         );
-        if (windowOk.ok) {
+        // Vérifie jours_avant_max (location de dernière minute)
+        let joursOk = true;
+        if (promo.jours_avant_max !== null && promo.jours_avant_max !== undefined && date_debut) {
+          const diffDays = (new Date(date_debut).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+          if (diffDays > promo.jours_avant_max) joursOk = false;
+        }
+        if (windowOk.ok && joursOk) {
           verifiedPromoCode = promo.code;
-          verifiedReduction = Number(reduction) || 0;
+          if (promo.prix_fixe_override !== null) {
+            prixFixeOverride = Number(promo.prix_fixe_override);
+          } else {
+            verifiedReduction = Number(reduction) || 0;
+          }
         }
       }
     }
+
+    // Prix final : override si tarif fixe promo, sinon montant client
+    const finalMontant = prixFixeOverride !== null ? prixFixeOverride : parseFloat(montant);
 
     // 1. On crée d'abord une réservation "temporaire" dans Supabase
     // On met le statut à 'en_attente_paiement'
@@ -52,7 +66,7 @@ export const POST: APIRoute = async ({ request }) => {
         vehicule_id,
         date_debut,
         date_fin,
-        montant_total: parseFloat(montant),
+        montant_total: finalMontant,
         statut: 'en_attente_paiement',
         siege_auto: !!siege_auto,
         code_promo: verifiedPromoCode,
@@ -89,7 +103,7 @@ export const POST: APIRoute = async ({ request }) => {
               name: `Location : ${vehicule_nom}`,
               description: `Du ${new Date(date_debut).toLocaleString('fr-FR')} au ${new Date(date_fin).toLocaleString('fr-FR')}`,
             },
-            unit_amount: Math.round(parseFloat(montant) * 100), // Stripe veut des centimes
+            unit_amount: Math.round(finalMontant * 100), // Stripe veut des centimes
           },
           quantity: 1,
         },
