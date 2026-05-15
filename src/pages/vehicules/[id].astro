@@ -78,6 +78,12 @@ const photos = [
             ))}
           </div>
         )}
+
+        {vehicule.description && (
+          <div class="vehicle-description">
+            <p>{vehicule.description}</p>
+          </div>
+        )}
       </section>
 
       <!-- INFOS + RÉSA -->
@@ -95,12 +101,6 @@ const photos = [
             <span><strong>100 km/jour inclus</strong> dans la location</span>
           </div>
         </header>
-
-        {vehicule.description && (
-          <div class="vehicle-description">
-            <p>{vehicule.description}</p>
-          </div>
-        )}
 
         <div class="panel-divider"></div>
 
