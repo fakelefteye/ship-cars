@@ -41,6 +41,10 @@ export const GET = async ({ url }: { url: URL }) => {
 
   return new Response(JSON.stringify(occupied), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Pragma': 'no-cache',
+    },
   });
 };
