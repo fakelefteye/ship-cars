@@ -134,14 +134,15 @@ const contractNum = reservation?.id
     <!-- CAUTION -->
     <div class="caution-box no-print">
       <h2 class="caution-title">Dernière étape : La Caution</h2>
-      <p>Pour finaliser votre dossier, veuillez effectuer la <strong>pré-autorisation (caution) de 800,00€</strong>.</p>
-      <div class="stripe-button-wrapper">
-        <script is:inline async src="https://js.stripe.com/v3/buy-button.js"></script>
-        <stripe-buy-button
-          buy-button-id="buy_btn_1TLl29Lm0bysFbj9rUtBeBSQ"
-          publishable-key="pk_test_51AhCIJLm0bysFbj9Zn7hSJw9G8qq6pA5z0DpHQjKb3KsKEEle6yl4yhjv8AOlMsUc7VpmKgwWVwBZrWEy8fFCG0000vh1zLidr"
-        ></stripe-buy-button>
-      </div>
+      <p>Pour finaliser votre dossier, veuillez effectuer la <strong>pré-autorisation (caution) de 900,00 €</strong>.</p>
+      {reservation?.id && (
+        <a
+          href={`/api/stripe/caution?reservation_id=${reservation.id}`}
+          class="btn-caution"
+        >
+          Sécuriser ma caution (900 €)
+        </a>
+      )}
       <div class="info-alert">
         <small>💡 <strong>Rappel :</strong> Cette somme n'est pas débitée, il s'agit d'une empreinte bancaire pour sécuriser la location.</small>
       </div>
@@ -341,12 +342,21 @@ const contractNum = reservation?.id
     margin-bottom: 1.5rem;
   }
 
-  .stripe-button-wrapper {
-    display: flex;
-    justify-content: center;
+  .btn-caution {
+    display: inline-block;
+    background: #3498db;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 14px 36px;
+    border-radius: var(--radius);
+    text-decoration: none;
     margin: 1.5rem 0;
-    min-height: 50px;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(52,152,219,0.3);
   }
+  .btn-caution:hover { background: #2980b9; transform: translateY(-1px); }
 
   .info-alert {
     background: rgba(77,212,200,0.06);

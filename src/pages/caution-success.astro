@@ -1,0 +1,139 @@
+---
+export const prerender = false;
+import MainLayout from '../layouts/MainLayout.astro';
+import Stripe from 'stripe';
+import { supabaseAdmin } from '../lib/supabase';
+
+const sessionId = Astro.url.searchParams.get('session_id');
+let reservationId: string | null = null;
+let locataireNom: string | null = null;
+
+if (sessionId) {
+  try {
+    const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    reservationId = session.metadata?.reservation_id ?? null;
+    if (reservationId) {
+      const { data } = await supabaseAdmin
+        .from('reservations')
+        .select('locataire_nom')
+        .eq('id', reservationId)
+        .single();
+      locataireNom = data?.locataire_nom ?? null;
+    }
+  } catch (e) {
+    console.error('Erreur récupération caution:', e);
+  }
+}
+---
+
+<MainLayout title="Caution enregistrée — Ship Cars">
+  <div class="page-wrapper">
+
+    <div class="confirm-banner">
+      <span class="confirm-icon">✅</span>
+      <div>
+        <h1 class="confirm-title">Empreinte bancaire enregistrée !</h1>
+        <p class="confirm-sub">
+          {locataireNom ? `Merci ${locataireNom}.` : 'Merci.'}
+          Votre caution de <strong>900 €</strong> est bien enregistrée.
+          <strong>Aucune somme n'a été débitée</strong> — il s'agit uniquement d'une empreinte bancaire.
+        </p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h2 class="info-title">Que se passe-t-il maintenant ?</h2>
+      <ul class="info-list">
+        <li>L'empreinte de 900 € est <strong>retenue temporairement</strong> sur votre carte mais non débitée.</li>
+        <li>Elle sera <strong>libérée intégralement</strong> dans les 7 jours suivant la restitution du véhicule, sans incident.</li>
+        <li>En cas de dommage constaté, tout ou partie de la caution pourra être capturé après accord.</li>
+      </ul>
+    </div>
+
+    <a href="/" class="back-home">← Retour au catalogue</a>
+  </div>
+</MainLayout>
+
+<style>
+  .page-wrapper {
+    max-width: 680px;
+    margin: 3rem auto;
+    padding: 0 1.5rem 5rem;
+  }
+
+  .confirm-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(62,207,142,0.08);
+    border: 1px solid rgba(62,207,142,0.25);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .confirm-icon { font-size: 2rem; flex-shrink: 0; }
+
+  .confirm-title {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .confirm-sub { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+
+  .info-box {
+    background: var(--bg-2);
+    border: 1px solid rgba(77,212,200,0.2);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .info-title {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .info-list li {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    padding-left: 1.25rem;
+    position: relative;
+  }
+
+  .info-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  .back-home {
+    display: block;
+    text-align: center;
+    color: var(--teal);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.15s;
+  }
+  .back-home:hover { color: var(--teal-bright); }
+</style>

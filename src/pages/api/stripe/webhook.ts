@@ -10,9 +10,9 @@ const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 const resend = new Resend(import.meta.env.RESEND_API_KEY);
 
 const OWNER_EMAIL = 'bill.shipcars@gmail.com';
-const CAUTION_URL = 'https://buy.stripe.com/votre_lien_de_caution_800';
+const BASE_URL    = import.meta.env.PUBLIC_SITE_URL || 'https://www.shipcars.fr';
 // Expéditeur configurable : mettre RESEND_FROM_EMAIL=noreply@shipcars.fr dans Vercel une fois le domaine vérifié
-const FROM_EMAIL   = import.meta.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+const FROM_EMAIL  = import.meta.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 function fmt(d: string | null | undefined): string {
   if (!d) return '—';
@@ -101,6 +101,10 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
   </div>`;
 }
 
+function cautionUrl(reservationId: string): string {
+  return `${BASE_URL}/api/stripe/caution?reservation_id=${reservationId}`;
+}
+
 function tenantEmailHtml(contractHtml: string, cautionUrl: string): string {
   return `
   <!DOCTYPE html>
@@ -126,12 +130,12 @@ function tenantEmailHtml(contractHtml: string, cautionUrl: string): string {
         <div style="background:#f0f7ff;border:2px solid #3498db;border-radius:10px;padding:24px;margin:28px 0;text-align:center;">
           <h3 style="color:#2980b9;margin:0 0 10px;font-size:16px;">⚠️ Action requise : La Caution</h3>
           <p style="color:#374151;font-size:14px;margin:0 0 20px;line-height:1.6;">
-            Pour récupérer le véhicule, vous devez déposer une <strong>empreinte bancaire de 800,00 €</strong>.<br>
+            Pour récupérer le véhicule, vous devez déposer une <strong>empreinte bancaire de 900,00 €</strong>.<br>
             <em style="color:#7f8c8d;font-size:13px;">Cette somme n'est pas débitée de votre compte.</em>
           </p>
           <a href="${cautionUrl}"
              style="background:#3498db;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">
-            Sécuriser ma caution (800 €)
+            Sécuriser ma caution (900 €)
           </a>
         </div>
 
@@ -205,6 +209,24 @@ export const POST = async ({ request }) => {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // ── Caution (pré-autorisation) ──
+    if (session.metadata?.type === 'caution') {
+      const resId = session.metadata?.reservation_id;
+      const paymentIntentId = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : (session.payment_intent as any)?.id ?? null;
+      console.log(`✅ Caution autorisée — résa: ${resId} — PI: ${paymentIntentId}`);
+      if (resId) {
+        await supabase
+          .from('reservations')
+          .update({ stripe_caution_id: paymentIntentId, caution_statut: 'autorisee' })
+          .eq('id', resId);
+      }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── Paiement de location ──
     const reservationId = session.metadata?.reservation_id;
     const customerEmail = session.customer_details?.email;
 
@@ -329,7 +351,7 @@ export const POST = async ({ request }) => {
               from: `Ship Cars <${FROM_EMAIL}>`,
               to: emailClient,
               subject: `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
-              html: tenantEmailHtml(contractHtml, CAUTION_URL),
+              html: tenantEmailHtml(contractHtml, cautionUrl(reservationId)),
               attachments: pdfAttachment,
             });
             console.log(`✅ Contrat + PDF envoyés au locataire : ${emailClient}`);
