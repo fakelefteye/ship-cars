@@ -1,0 +1,204 @@
+---
+export const prerender = true;
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Location de voiture gare de Grenoble — Ship Cars | 5 min à pied">
+  <Fragment slot="head">
+    <meta name="description" content="Louez une voiture à la gare de Grenoble. Ship Cars est à 5 minutes à pied. Réservation en ligne avant votre arrivée, véhicule prêt à votre descente du train." />
+    <link rel="canonical" href="https://www.shipcars.fr/location-voiture-gare-grenoble" />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "AutoRental",
+      "name": "Ship Cars — Location voiture gare Grenoble",
+      "url": "https://www.shipcars.fr",
+      "telephone": "+33661691178",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "62 rue Félix Esclangon",
+        "addressLocality": "Grenoble",
+        "postalCode": "38000",
+        "addressCountry": "FR"
+      },
+      "description": "Location de voiture à 5 minutes de la gare SNCF de Grenoble. Réservation en ligne."
+    })}</script>
+  </Fragment>
+
+  <div class="seo-page">
+
+    <section class="seo-hero">
+      <div class="seo-container">
+        <div class="seo-breadcrumb"><a href="/">Accueil</a> › <a href="/location-voiture-grenoble">Location voiture Grenoble</a> › Gare</div>
+        <h1>Location de voiture à la gare de Grenoble</h1>
+        <p class="seo-subtitle">À 5 minutes à pied · Réservez avant de monter dans le train · Véhicule prêt à votre arrivée</p>
+        <a href="/#catalogue" class="seo-cta">Réserver mon véhicule →</a>
+      </div>
+    </section>
+
+    <section class="seo-section">
+      <div class="seo-container">
+        <div class="seo-grid-2">
+          <div>
+            <h2>Le loueur de voiture le plus proche de la gare de Grenoble</h2>
+            <p>Ship Cars est installé au <strong>62 rue Félix Esclangon, 38000 Grenoble</strong> — à environ <strong>5 minutes à pied</strong> de la gare SNCF de Grenoble. Que vous arriviez de Paris en TGV, de Lyon, de Marseille ou d'ailleurs, votre véhicule de location vous attend.</p>
+            <p style="margin-top:1rem;">Grâce à notre système de <strong>réservation 100&nbsp;% en ligne</strong>, préparez votre location depuis le train. Au moment de descendre sur le quai, votre dossier est prêt et votre voiture réservée.</p>
+            <p style="margin-top:1rem;">Idéal pour les déplacements professionnels, les voyageurs sans voiture, ou les touristes qui souhaitent explorer l'Isère et les Alpes à leur arrivée à Grenoble.</p>
+            <div class="seo-badges">
+              <span class="badge">🚶 5 min de la gare</span>
+              <span class="badge">📱 Réservation depuis le train</span>
+              <span class="badge">⚡ Disponible 7j/7</span>
+            </div>
+          </div>
+          <div class="seo-info-card">
+            <h3>Comment ça marche</h3>
+            <div class="steps">
+              <div class="step">
+                <div class="step-num">1</div>
+                <div>
+                  <strong>Avant le voyage</strong>
+                  <p>Réservez en ligne sur shipcars.fr, choisissez vos dates et payez en sécurité.</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div>
+                  <strong>Confirmation par mail</strong>
+                  <p>Vous recevez la confirmation avec l'adresse exacte et les instructions de prise en charge.</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div>
+                  <strong>À votre arrivée</strong>
+                  <p>Rejoignez notre agence à 5 min de la gare. Votre véhicule vous attend.</p>
+                </div>
+              </div>
+            </div>
+            <a href="/#catalogue" class="seo-btn">Voir les véhicules</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-section seo-alt">
+      <div class="seo-container">
+        <h2>Idées de trajets depuis la gare de Grenoble</h2>
+        <p style="margin-bottom:2rem;color:var(--text-muted);">Vous arrivez à Grenoble et souhaitez continuer votre voyage en voiture&nbsp;? Voici les destinations les plus populaires&nbsp;:</p>
+        <div class="trajets-grid">
+          <div class="trajet">
+            <div class="trajet-dest">Chamrousse</div>
+            <div class="trajet-info">Station de ski · 40 min</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Alpe d'Huez</div>
+            <div class="trajet-info">Station alpine · 1h</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Les Deux Alpes</div>
+            <div class="trajet-info">Station ski/été · 1h15</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Vercors</div>
+            <div class="trajet-info">Parc naturel · 45 min</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Chartreuse</div>
+            <div class="trajet-info">Massif alpin · 30 min</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Lyon</div>
+            <div class="trajet-info">Métropole · 1h A48</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Annecy</div>
+            <div class="trajet-info">Lac · 1h15</div>
+          </div>
+          <div class="trajet">
+            <div class="trajet-dest">Torino</div>
+            <div class="trajet-info">Italie · 2h30</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-section">
+      <div class="seo-container">
+        <h2>Questions fréquentes — Location voiture gare Grenoble</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Peut-on récupérer la voiture directement en descendant du train&nbsp;?</summary>
+            <p>Oui. Notre agence est à 5 minutes à pied de la gare. Réservez en ligne avant votre départ et votre véhicule sera prêt. Vous recevrez l'adresse exacte et les instructions par e-mail.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Ship Cars propose-t-il un service de navette depuis la gare&nbsp;?</summary>
+            <p>Pas de navette, mais la proximité (5 min à pied) rend le déplacement très simple. Pour les bagages volumineux, un service d'accompagnement peut être arrangé — contactez-nous via WhatsApp au 06&nbsp;61&nbsp;69&nbsp;11&nbsp;78.</p>
+          </details>
+          <details class="faq-item">
+            <summary>À quelle heure peut-on récupérer ou rendre un véhicule&nbsp;?</summary>
+            <p>Notre service est disponible 7j/7. Les horaires de prise en charge sont convenus lors de la réservation. Contactez-nous si vous avez une contrainte d'horaire particulière (train de nuit, vol tôt le matin).</p>
+          </details>
+          <details class="faq-item">
+            <summary>Peut-on rendre le véhicule à un autre endroit qu'à Grenoble&nbsp;?</summary>
+            <p>Le retour s'effectue au même point qu'à la prise en charge (62 rue Félix Esclangon, Grenoble). Pour un retour dans une autre ville, contactez-nous pour étudier votre demande.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-cta-section">
+      <div class="seo-container" style="text-align:center;">
+        <h2>Réservez votre voiture avant de prendre le train</h2>
+        <p>2 minutes suffisent. Votre véhicule vous attend à la descente du train.</p>
+        <a href="/#catalogue" class="seo-cta-big">Voir les disponibilités</a>
+      </div>
+    </section>
+
+  </div>
+</MainLayout>
+
+<style>
+  .seo-page { color: var(--text); }
+  .seo-container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+  .seo-hero { background: linear-gradient(135deg, #0a1421 0%, #0f1e33 100%); padding: 4rem 0 3rem; border-bottom: 1px solid var(--border); }
+  .seo-breadcrumb { font-size: .78rem; color: var(--text-dim); margin-bottom: 1rem; }
+  .seo-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .seo-hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: .75rem; letter-spacing: -.02em; }
+  .seo-subtitle { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 2rem; }
+  .seo-cta { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 700; padding: .8rem 2rem; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+  .seo-cta:hover { opacity: .85; }
+  .seo-section { padding: 4rem 0; }
+  .seo-alt { background: rgba(15,30,51,.6); }
+  .seo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+  .seo-section h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.25rem; }
+  .seo-section p { color: var(--text-muted); line-height: 1.7; }
+  .seo-badges { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+  .badge { background: rgba(77,212,200,.1); border: 1px solid rgba(77,212,200,.25); color: var(--teal); padding: .35rem .8rem; border-radius: 99px; font-size: .78rem; font-weight: 600; }
+  .seo-info-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; }
+  .seo-info-card h3 { color: var(--teal); text-transform: uppercase; letter-spacing: .05em; font-size: .78rem; font-weight: 700; margin-bottom: 1.25rem; }
+  .steps { display: flex; flex-direction: column; gap: 1.25rem; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--teal); color: #0a1421; font-weight: 800; font-size: .85rem; display: grid; place-items: center; flex-shrink: 0; }
+  .step strong { display: block; font-size: .9rem; margin-bottom: .25rem; }
+  .step p { font-size: .82rem; color: var(--text-muted); margin: 0; }
+  .seo-btn { display: block; margin-top: 1.5rem; background: var(--teal); color: #0a1421; font-weight: 700; padding: .8rem; border-radius: 10px; text-decoration: none; text-align: center; transition: opacity .15s; }
+  .seo-btn:hover { opacity: .85; }
+  .trajets-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .trajet { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+  .trajet-dest { font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: .25rem; }
+  .trajet-info { font-size: .78rem; color: var(--text-muted); }
+  .faq-list { display: flex; flex-direction: column; gap: .75rem; max-width: 780px; }
+  .faq-item { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .faq-item summary { font-weight: 600; cursor: pointer; font-size: .95rem; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .faq-item summary::after { content: '+'; color: var(--teal); font-size: 1.3rem; flex-shrink: 0; }
+  .faq-item[open] summary::after { content: '−'; }
+  .faq-item p { margin-top: 1rem; color: var(--text-muted); font-size: .9rem; line-height: 1.7; }
+  .seo-cta-section { padding: 4rem 0; background: linear-gradient(135deg, rgba(77,212,200,.08), rgba(15,30,51,.4)); border-top: 1px solid var(--border); }
+  .seo-cta-section h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: .75rem; }
+  .seo-cta-section p { color: var(--text-muted); margin-bottom: 2rem; }
+  .seo-cta-big { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 800; padding: 1rem 2.5rem; border-radius: 12px; text-decoration: none; font-size: 1.05rem; transition: opacity .15s; }
+  .seo-cta-big:hover { opacity: .85; }
+  @media (max-width: 768px) {
+    .seo-grid-2, .trajets-grid { grid-template-columns: 1fr; }
+    .trajets-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>

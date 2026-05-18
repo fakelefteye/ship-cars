@@ -1,0 +1,237 @@
+---
+export const prerender = true;
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Location de voiture à Grenoble — Ship Cars | Réservation en ligne">
+  <Fragment slot="head">
+    <meta name="description" content="Ship Cars, location de voiture à Grenoble proche de la gare. Réservation 100% en ligne, paiement sécurisé, véhicules récents. À partir de 35€/jour. Isère, Alpes, PACA." />
+    <link rel="canonical" href="https://www.shipcars.fr/location-voiture-grenoble" />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "AutoRental",
+      "name": "Ship Cars — Location de voiture Grenoble",
+      "url": "https://www.shipcars.fr",
+      "telephone": "+33661691178",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "62 rue Félix Esclangon",
+        "addressLocality": "Grenoble",
+        "postalCode": "38000",
+        "addressCountry": "FR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 45.1882,
+        "longitude": 5.7245
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        "opens": "00:00",
+        "closes": "23:59"
+      },
+      "priceRange": "€€",
+      "description": "Location de voiture en ligne à Grenoble. Véhicules récents, réservation simple, paiement sécurisé Stripe."
+    })}</script>
+  </Fragment>
+
+  <div class="seo-page">
+
+    <!-- Hero -->
+    <section class="seo-hero">
+      <div class="seo-container">
+        <div class="seo-breadcrumb"><a href="/">Accueil</a> › Location voiture Grenoble</div>
+        <h1>Location de voiture à Grenoble</h1>
+        <p class="seo-subtitle">Réservez en ligne en 2 minutes · Véhicules récents · À partir de 35&nbsp;€/jour · 100&nbsp;km inclus</p>
+        <a href="/#catalogue" class="seo-cta">Voir les véhicules disponibles →</a>
+      </div>
+    </section>
+
+    <!-- Intro -->
+    <section class="seo-section">
+      <div class="seo-container">
+        <div class="seo-grid-2">
+          <div>
+            <h2>Votre agence de location de voiture à Grenoble</h2>
+            <p>Ship Cars est une agence de location de véhicules basée au <strong>62 rue Félix Esclangon, 38000 Grenoble</strong>, à deux pas de la gare SNCF. Notre service 100&nbsp;% en ligne vous permet de réserver votre véhicule à tout moment, sans se déplacer en agence, et de payer en toute sécurité via Stripe.</p>
+            <p style="margin-top:1rem;">Que vous ayez besoin d'une citadine pour vos déplacements professionnels, d'un véhicule pour un week-end en montagne ou d'une voiture pour explorer les Alpes et la Provence, Ship Cars propose des <strong>véhicules récents et entretenus</strong> à des tarifs transparents.</p>
+            <div class="seo-badges">
+              <span class="badge">📍 Grenoble centre</span>
+              <span class="badge">🚂 Proche gare SNCF</span>
+              <span class="badge">💳 Paiement sécurisé</span>
+              <span class="badge">🛣️ 100 km/jour inclus</span>
+            </div>
+          </div>
+          <div class="seo-info-card">
+            <h3>Informations pratiques</h3>
+            <ul class="seo-info-list">
+              <li><strong>Adresse</strong><span>62 rue Félix Esclangon, 38000 Grenoble</span></li>
+              <li><strong>Réservation</strong><span>24h/24, 7j/7 en ligne</span></li>
+              <li><strong>Paiement</strong><span>Carte bancaire sécurisée (Stripe)</span></li>
+              <li><strong>Caution</strong><span>Pré-autorisation bancaire (sans débit)</span></li>
+              <li><strong>Kilométrage</strong><span>100 km/jour inclus</span></li>
+              <li><strong>Contact</strong><span>WhatsApp 06 61 69 11 78</span></li>
+            </ul>
+            <a href="/#catalogue" class="seo-btn">Réserver maintenant</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Avantages -->
+    <section class="seo-section seo-alt">
+      <div class="seo-container">
+        <h2 style="text-align:center;margin-bottom:2.5rem;">Pourquoi choisir Ship Cars pour votre location à Grenoble&nbsp;?</h2>
+        <div class="seo-grid-3">
+          <div class="seo-card">
+            <div class="seo-card-icon">🌐</div>
+            <h3>100&nbsp;% en ligne</h3>
+            <p>Réservez, payez et confirmez votre location depuis votre téléphone ou ordinateur. Aucun déplacement en agence nécessaire.</p>
+          </div>
+          <div class="seo-card">
+            <div class="seo-card-icon">💰</div>
+            <h3>Tarifs transparents</h3>
+            <p>Le prix affiché est le prix final. Pas de frais cachés, pas de surprises au retour. 100&nbsp;km/jour inclus dans tous nos tarifs.</p>
+          </div>
+          <div class="seo-card">
+            <div class="seo-card-icon">📍</div>
+            <h3>Idéalement situé</h3>
+            <p>À quelques minutes à pied de la gare de Grenoble. Pratique si vous arrivez en TGV ou en train de Lyon, Paris ou Marseille.</p>
+          </div>
+          <div class="seo-card">
+            <div class="seo-card-icon">🚗</div>
+            <h3>Véhicules récents</h3>
+            <p>Notre flotte est régulièrement renouvelée. Des véhicules entretenus, propres et fiables pour tous vos trajets.</p>
+          </div>
+          <div class="seo-card">
+            <div class="seo-card-icon">🏔️</div>
+            <h3>Liberté de circulation</h3>
+            <p>Nos véhicules circulent en Isère, Rhône-Alpes, PACA, Suisse et Italie. Parfait pour explorer les Alpes ou descendre sur la Côte d'Azur.</p>
+          </div>
+          <div class="seo-card">
+            <div class="seo-card-icon">🛡️</div>
+            <h3>Caution simplifiée</h3>
+            <p>La caution est prise en pré-autorisation bancaire — elle n'est pas débitée si le véhicule est rendu en bon état.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Destinations -->
+    <section class="seo-section">
+      <div class="seo-container">
+        <h2>Depuis Grenoble, où pouvez-vous aller&nbsp;?</h2>
+        <p style="margin-bottom:1.5rem;color:var(--text-muted);">Nos véhicules vous permettent de rayonner dans toute la région. Voici quelques idées de destinations depuis Grenoble&nbsp;:</p>
+        <div class="seo-grid-4">
+          <div class="dest-card"><strong>Lyon</strong><span>1h par l'A48</span></div>
+          <div class="dest-card"><strong>Annecy</strong><span>1h15 via la RN90</span></div>
+          <div class="dest-card"><strong>Valence</strong><span>1h par l'A49</span></div>
+          <div class="dest-card"><strong>Chambéry</strong><span>55 min par l'A41</span></div>
+          <div class="dest-card"><strong>Gap</strong><span>1h45 via le Vercors</span></div>
+          <div class="dest-card"><strong>Marseille</strong><span>3h par l'A51</span></div>
+          <div class="dest-card"><strong>Torino (IT)</strong><span>2h30 via le Fréjus</span></div>
+          <div class="dest-card"><strong>Genève (CH)</strong><span>2h via l'A41</span></div>
+        </div>
+        <p style="margin-top:1.5rem;font-size:.85rem;color:var(--text-dim);">Consultez notre <a href="/zones" style="color:var(--teal);">page zones de circulation</a> pour la liste complète des départements et pays autorisés.</p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="seo-section seo-alt">
+      <div class="seo-container">
+        <h2>Questions fréquentes — Location voiture Grenoble</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Comment réserver une voiture à Grenoble avec Ship Cars&nbsp;?</summary>
+            <p>La réservation se fait entièrement en ligne sur shipcars.fr. Choisissez votre véhicule, sélectionnez vos dates, renseignez vos coordonnées et payez par carte bancaire. Vous recevrez une confirmation par e-mail avec toutes les instructions.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Où se trouve l'agence Ship Cars à Grenoble&nbsp;?</summary>
+            <p>Notre agence est au <strong>62 rue Félix Esclangon, 38000 Grenoble</strong>. Elle est proche de la gare SNCF de Grenoble (à environ 5 minutes à pied) et accessible facilement depuis l'A480.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Quels documents sont nécessaires pour louer une voiture&nbsp;?</summary>
+            <p>Vous aurez besoin d'un permis de conduire valide (obtenu depuis au moins 2 ans), d'une pièce d'identité et d'une carte bancaire pour la caution. Vous transmettrez les photos de votre permis lors de la réservation en ligne.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Le kilométrage est-il inclus dans le prix&nbsp;?</summary>
+            <p>Oui, tous nos tarifs incluent <strong>100&nbsp;km par jour</strong>. Si vous dépassez ce forfait, les kilomètres supplémentaires sont facturés au retour du véhicule.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Puis-je aller en Suisse ou en Italie avec une voiture louée chez Ship Cars&nbsp;?</summary>
+            <p>Oui, nos véhicules peuvent circuler en Suisse, en Italie et dans les principales destinations d'Europe du Sud. Consultez notre <a href="/zones">page zones autorisées</a> pour les détails complets.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Comment fonctionne la caution&nbsp;?</summary>
+            <p>La caution est prise sous forme de pré-autorisation bancaire (900&nbsp;€). Elle n'est <strong>pas débitée</strong> de votre compte — seul le montant de la location est prélevé. La pré-autorisation est levée automatiquement après le retour du véhicule en bon état.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="seo-cta-section">
+      <div class="seo-container" style="text-align:center;">
+        <h2>Prêt à réserver votre voiture à Grenoble&nbsp;?</h2>
+        <p>Consultez nos disponibilités et réservez en ligne en 2 minutes.</p>
+        <a href="/#catalogue" class="seo-cta-big">Voir les véhicules disponibles</a>
+      </div>
+    </section>
+
+  </div>
+</MainLayout>
+
+<style>
+  .seo-page { color: var(--text); }
+  .seo-container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+  .seo-hero { background: linear-gradient(135deg, #0a1421 0%, #0f1e33 100%); padding: 4rem 0 3rem; border-bottom: 1px solid var(--border); }
+  .seo-breadcrumb { font-size: .78rem; color: var(--text-dim); margin-bottom: 1rem; }
+  .seo-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .seo-hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: .75rem; letter-spacing: -.02em; }
+  .seo-subtitle { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 2rem; }
+  .seo-cta { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 700; padding: .8rem 2rem; border-radius: 10px; text-decoration: none; font-size: 1rem; transition: opacity .15s; }
+  .seo-cta:hover { opacity: .85; }
+  .seo-section { padding: 4rem 0; }
+  .seo-alt { background: rgba(15,30,51,.6); }
+  .seo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+  .seo-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .seo-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .seo-section h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.25rem; letter-spacing: -.01em; }
+  .seo-section p { color: var(--text-muted); line-height: 1.7; }
+  .seo-badges { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+  .badge { background: rgba(77,212,200,.1); border: 1px solid rgba(77,212,200,.25); color: var(--teal); padding: .35rem .8rem; border-radius: 99px; font-size: .78rem; font-weight: 600; }
+  .seo-info-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; }
+  .seo-info-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--teal); text-transform: uppercase; letter-spacing: .05em; font-size: .78rem; }
+  .seo-info-list { list-style: none; display: flex; flex-direction: column; gap: .75rem; }
+  .seo-info-list li { display: flex; justify-content: space-between; gap: 1rem; font-size: .88rem; border-bottom: 1px solid var(--border); padding-bottom: .75rem; }
+  .seo-info-list li strong { color: var(--text-muted); flex-shrink: 0; }
+  .seo-info-list li span { color: var(--text); text-align: right; }
+  .seo-btn { display: block; margin-top: 1.5rem; background: var(--teal); color: #0a1421; font-weight: 700; padding: .8rem; border-radius: 10px; text-decoration: none; text-align: center; transition: opacity .15s; }
+  .seo-btn:hover { opacity: .85; }
+  .seo-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+  .seo-card-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+  .seo-card h3 { font-size: .95rem; font-weight: 700; margin-bottom: .5rem; }
+  .seo-card p { font-size: .85rem; color: var(--text-muted); line-height: 1.6; }
+  .dest-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; display: flex; flex-direction: column; gap: .25rem; }
+  .dest-card strong { font-size: .9rem; color: var(--text); }
+  .dest-card span { font-size: .78rem; color: var(--text-muted); }
+  .faq-list { display: flex; flex-direction: column; gap: .75rem; max-width: 780px; }
+  .faq-item { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .faq-item summary { font-weight: 600; cursor: pointer; font-size: .95rem; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .faq-item summary::after { content: '+'; color: var(--teal); font-size: 1.3rem; flex-shrink: 0; }
+  .faq-item[open] summary::after { content: '−'; }
+  .faq-item p { margin-top: 1rem; color: var(--text-muted); font-size: .9rem; line-height: 1.7; }
+  .seo-cta-section { padding: 4rem 0; background: linear-gradient(135deg, rgba(77,212,200,.08), rgba(15,30,51,.4)); border-top: 1px solid var(--border); }
+  .seo-cta-section h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: .75rem; }
+  .seo-cta-section p { color: var(--text-muted); margin-bottom: 2rem; }
+  .seo-cta-big { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 800; padding: 1rem 2.5rem; border-radius: 12px; text-decoration: none; font-size: 1.05rem; transition: opacity .15s; }
+  .seo-cta-big:hover { opacity: .85; }
+  @media (max-width: 768px) {
+    .seo-grid-2, .seo-grid-3 { grid-template-columns: 1fr; }
+    .seo-grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .seo-grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
