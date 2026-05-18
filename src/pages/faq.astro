@@ -8,6 +8,8 @@ const faqs = [
     items: [
       { q: "Comment réserver un véhicule Ship Cars ?", a: "La réservation se fait entièrement en ligne sur shipcars.fr. Choisissez votre véhicule, sélectionnez vos dates, renseignez vos informations personnelles et votre permis de conduire, puis payez par carte bancaire sécurisée. Vous recevez une confirmation par e-mail immédiatement." },
       { q: "Peut-on annuler ou modifier une réservation ?", a: "Pour toute demande de modification ou d'annulation, contactez-nous via WhatsApp au 06 61 69 11 78 ou par e-mail. Les conditions d'annulation sont précisées dans nos Conditions Générales de Location." },
+      { q: "Proposez-vous des véhicules 7 places ?", a: "Pas encore. Notre flotte est actuellement composée de citadines et de berlines. L'ajout de véhicules 7 places est envisagé prochainement. En attendant, n'hésitez pas à nous contacter si vous avez un besoin spécifique." },
+      { q: "Puis-je louer un véhicule avec attelage / boule de remorquage ?", a: "Oui, certains de nos véhicules peuvent être équipés d'un attelage. Il faut nous prévenir à l'avance lors de la réservation afin que nous procédions à l'achat et à la pose d'un col de cygne. Ce service est facturé 50 € en sus du prix de la location." },
       { q: "La réservation en ligne est-elle sécurisée ?", a: "Oui. Les paiements sont traités via Stripe, l'un des leaders mondiaux du paiement en ligne. Vos coordonnées bancaires ne transitent jamais par nos serveurs." },
       { q: "Peut-on réserver pour le même jour ?", a: "Oui, selon les disponibilités. Vérifiez le calendrier de disponibilité sur la fiche du véhicule. En cas d'urgence, contactez-nous directement sur WhatsApp." },
     ]
@@ -15,7 +17,7 @@ const faqs = [
   {
     cat: "Tarifs & Paiement",
     items: [
-      { q: "Quel est le prix d'une location de voiture chez Ship Cars ?", a: "Nos tarifs démarrent à partir de 35 € par jour pour une citadine, 100 km inclus. Le prix exact est affiché sur chaque fiche véhicule en temps réel selon vos dates choisies. Aucun frais caché : le prix affiché est le prix final." },
+      { q: "Quel est le prix d'une location de voiture chez Ship Cars ?", a: "Nos tarifs démarrent à partir de 35 € par jour pour une citadine, 100 km inclus. Le prix varie selon le véhicule, la période et la durée — simulez une réservation sur la fiche véhicule pour obtenir le prix exact en temps réel. Aucun frais caché : le prix affiché est le prix final." },
       { q: "Quels modes de paiement sont acceptés ?", a: "Nous acceptons toutes les cartes bancaires (Visa, Mastercard, American Express) via Stripe. Le paiement s'effectue en ligne lors de la confirmation de réservation." },
       { q: "Y a-t-il des frais de carburant ou de nettoyage ?", a: "Le plein doit être fait au retour du véhicule (ou à l'état initial constaté au départ). En cas de retour avec le véhicule très sale, des frais de nettoyage peuvent être appliqués. Ces conditions sont précisées dans le contrat de location." },
       { q: "Proposez-vous des réductions ou codes promo ?", a: "Oui ! Nous proposons régulièrement des offres spéciales. Notamment le Mardi Flash : un tarif fixe avantageux pour les locations de dernière minute (jusqu'à 3 jours à l'avance). Surveillez notre page d'accueil pour les offres en cours." },
@@ -33,7 +35,7 @@ const faqs = [
     cat: "Permis & Conditions",
     items: [
       { q: "Quelle ancienneté de permis est requise ?", a: "Le permis de conduire doit être obtenu depuis au moins 2 ans. Cette règle s'applique également au conducteur secondaire si vous en ajoutez un lors de la réservation." },
-      { q: "Peut-on ajouter un deuxième conducteur ?", a: "Oui. Lors de la réservation, vous pouvez renseigner les coordonnées d'un conducteur secondaire (nom, date de naissance, numéro de permis). Les deux conducteurs doivent satisfaire aux mêmes conditions (permis valide, 2 ans d'ancienneté)." },
+      { q: "Peut-on ajouter un deuxième conducteur ?", a: "Oui, et c'est gratuit. Lors de la réservation, vous pouvez renseigner les coordonnées d'un conducteur secondaire (nom, date de naissance, numéro de permis). Les deux conducteurs doivent satisfaire aux mêmes conditions (permis valide, 2 ans d'ancienneté)." },
       { q: "Quels documents sont à fournir lors de la prise en charge ?", a: "Permis de conduire original valide, pièce d'identité (CNI ou passeport) et la carte bancaire ayant servi au paiement (pour la caution)." },
       { q: "Y a-t-il un âge minimum pour louer ?", a: "Il n'y a pas d'âge minimum fixé au-delà de la possession d'un permis valide. En revanche, le permis doit avoir été obtenu depuis au moins 2 ans." },
     ]
@@ -41,7 +43,7 @@ const faqs = [
   {
     cat: "Zones de circulation",
     items: [
-      { q: "Dans quelles zones puis-je circuler avec un véhicule Ship Cars ?", a: "Nos véhicules sont autorisés en France métropolitaine (notamment Isère, Rhône, Savoie, Haute-Savoie, Drôme, Hautes-Alpes, PACA), ainsi qu'en Suisse et en Italie. Consultez notre page Zones pour la liste complète des départements et pays autorisés." },
+      { q: "Dans quelles zones puis-je circuler avec un véhicule Ship Cars ?", a: "Nos véhicules sont autorisés en France métropolitaine (notamment Isère, Rhône, Savoie, Haute-Savoie, Drôme, Hautes-Alpes, PACA), ainsi qu'en Suisse et en Italie. Consultez notre <a href='/zones' style='color:var(--teal);font-weight:600;'>page zones autorisées</a> pour la liste complète des départements et pays." },
       { q: "Puis-je aller dans les stations de ski avec un véhicule Ship Cars ?", a: "Oui. Les véhicules sont équipés ou peuvent accéder aux stations accessibles sans équipements spéciaux obligatoires. Pour les routes nécessitant des chaînes ou pneus neige, vérifiez avec nous avant la location." },
       { q: "Puis-je traverser la frontière suisse ou italienne ?", a: "Oui, sous réserve que votre destination soit incluse dans notre zone de circulation autorisée. Consultez la liste complète sur notre page Zones et contactez-nous en cas de doute sur un trajet particulier." },
     ]
