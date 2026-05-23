@@ -52,6 +52,8 @@ const diffDays = reservation
 const contractNum = reservation?.id
   ? (reservation.id as string).replace(/-/g, '').slice(0, 8).toUpperCase()
   : '—';
+
+const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
 ---
 
 <MainLayout title="Récépissé de réservation — Ship Cars">
@@ -132,20 +134,29 @@ const contractNum = reservation?.id
       🖨️ Imprimer le reçu (PDF)
     </button>
 
-    <!-- CAUTION -->
-    <div class="caution-box no-print">
-      <h2 class="caution-title">Dernière étape : La Caution</h2>
-      <p>Pour finaliser votre dossier, veuillez effectuer la <strong>pré-autorisation (caution) de 900,00 €</strong>.</p>
-      {reservation?.id && (
-        <a
-          href={`/api/stripe/caution?reservation_id=${reservation.id}`}
-          class="btn-caution"
-        >
-          Sécuriser ma caution (900 €)
-        </a>
-      )}
-      <div class="info-alert">
-        <small>💡 <strong>Rappel :</strong> Cette somme n'est pas débitée, il s'agit d'une empreinte bancaire pour sécuriser la location.</small>
+    <!-- CAUTION — statut mis à jour en live via polling -->
+    <div class={`caution-status no-print${cautionDejaAutorisee ? ' done' : ''}`} id="caution-block">
+      <span class="caution-icon" id="caution-icon">{cautionDejaAutorisee ? '🔒' : '⏳'}</span>
+      <div>
+        <p class="caution-title-line" id="caution-title">
+          {cautionDejaAutorisee ? 'Caution enregistrée' : "Caution en cours d'enregistrement…"}
+        </p>
+        <p class="caution-sub" id="caution-sub">
+          {cautionDejaAutorisee
+            ? <>L'empreinte bancaire de <strong>900 €</strong> a bien été enregistrée. <strong>Aucune somme n'a été débitée.</strong></>
+            : <>Nous enregistrons automatiquement votre empreinte bancaire de <strong>900 €</strong>. <strong>Aucune somme ne sera débitée.</strong></>
+          }
+        </p>
+        {reservation?.id && !cautionDejaAutorisee && (
+          <a
+            href={`/api/stripe/caution?reservation_id=${reservation.id}`}
+            class="caution-link-fallback"
+            id="caution-fallback"
+            style="display:none"
+          >
+            Compléter la caution manuellement →
+          </a>
+        )}
       </div>
     </div>
 
@@ -318,57 +329,56 @@ const contractNum = reservation?.id
   }
   .btn-print:hover { background: var(--teal-bright); transform: translateY(-1px); }
 
-  /* ── CAUTION ── */
-  .caution-box {
-    background: var(--bg-2);
-    border: 1px solid rgba(77,212,200,0.2);
+  /* ── CAUTION STATUS ── */
+  .caution-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
     border-radius: var(--radius-lg);
-    padding: 2rem;
+    padding: 1.25rem 1.5rem;
     margin-bottom: 2rem;
-    text-align: center;
+    border: 1px solid rgba(77, 212, 200, 0.2);
+    background: var(--bg-2);
+    transition: background 0.4s, border-color 0.4s;
   }
 
-  .caution-title {
+  .caution-status.done {
+    background: rgba(62, 207, 142, 0.06);
+    border-color: rgba(62, 207, 142, 0.3);
+  }
+
+  .caution-status.failed {
+    background: rgba(234, 179, 8, 0.06);
+    border-color: rgba(234, 179, 8, 0.3);
+  }
+
+  .caution-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1.2; }
+
+  .caution-title-line {
     font-family: 'Exo 2', sans-serif;
-    font-size: 1.2rem;
     font-weight: 700;
+    font-size: 0.95rem;
     color: var(--text);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.3rem;
   }
 
-  .caution-box p {
+  .caution-sub {
+    font-size: 0.85rem;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
+    line-height: 1.55;
+    margin: 0 0 0.5rem;
   }
 
-  .btn-caution {
+  .caution-link-fallback {
     display: inline-block;
-    background: #3498db;
-    color: #fff;
-    font-family: 'Exo 2', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    padding: 14px 36px;
-    border-radius: var(--radius);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #3498db;
     text-decoration: none;
-    margin: 1.5rem 0;
-    transition: background 0.2s, transform 0.15s;
-    box-shadow: 0 4px 16px rgba(52,152,219,0.3);
+    margin-top: 0.5rem;
   }
-  .btn-caution:hover { background: #2980b9; transform: translateY(-1px); }
 
-  .info-alert {
-    background: rgba(77,212,200,0.06);
-    border: 1px solid rgba(77,212,200,0.18);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    text-align: left;
-  }
+  .caution-link-fallback:hover { text-decoration: underline; }
 
   .mail-info {
     font-size: 0.85rem;
@@ -402,3 +412,54 @@ const contractNum = reservation?.id
     }
   }
 </style>
+
+{!cautionDejaAutorisee && reservation?.id && (
+  <script is:inline define:vars={{ reservationId: reservation.id }}>
+    const MAX_ATTEMPTS = 20;
+    const INTERVAL_MS  = 3000;
+    let attempts = 0;
+
+    const block    = document.getElementById('caution-block');
+    const icon     = document.getElementById('caution-icon');
+    const title    = document.getElementById('caution-title');
+    const sub      = document.getElementById('caution-sub');
+    const fallback = document.getElementById('caution-fallback');
+
+    function setDone() {
+      block?.classList.add('done');
+      if (icon)  icon.textContent  = '🔒';
+      if (title) title.textContent = 'Caution enregistrée';
+      if (sub)   sub.innerHTML     = "L'empreinte bancaire de <strong>900 €</strong> a bien été enregistrée. <strong>Aucune somme n'a été débitée.</strong>";
+      if (fallback) fallback.style.display = 'none';
+    }
+
+    function setFailed() {
+      block?.classList.add('failed');
+      if (icon)  icon.textContent  = '⚠️';
+      if (title) title.textContent = 'Action requise : complétez votre caution';
+      if (sub)   sub.innerHTML     = "L'enregistrement automatique n'a pas pu aboutir. Cliquez sur le lien ci-dessous pour déposer votre caution de <strong>900 €</strong> (aucun débit immédiat).";
+      if (fallback) fallback.style.display = 'inline-block';
+    }
+
+    async function poll() {
+      attempts++;
+      try {
+        const res  = await fetch(`/api/reservations/caution-status?reservation_id=${reservationId}`);
+        const data = await res.json();
+
+        if (data.caution_statut === 'autorisee') {
+          setDone();
+          return;
+        }
+      } catch (_) {}
+
+      if (attempts >= MAX_ATTEMPTS) {
+        setFailed();
+        return;
+      }
+      setTimeout(poll, INTERVAL_MS);
+    }
+
+    setTimeout(poll, INTERVAL_MS);
+  </script>
+)}

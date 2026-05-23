@@ -240,13 +240,58 @@ export const POST = async ({ request }) => {
         .update({ statut: 'paye' })
         .eq('id', reservationId);
 
+
       if (updateError) {
         console.error('❌ Erreur maj Supabase:', updateError.message);
       } else {
         console.log(`✅ Réservation ${reservationId} marquée comme PAYÉE.`);
       }
 
-      // 2. Blocage Getaround après paiement confirmé
+      // 2. Caution automatique — pré-autorisation off-session avec la carte enregistrée
+      try {
+        const piId = typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : (session.payment_intent as any)?.id;
+        const customerId = typeof session.customer === 'string'
+          ? session.customer
+          : null;
+
+        if (piId && customerId) {
+          const pi = await stripe.paymentIntents.retrieve(piId);
+          const pmId = typeof pi.payment_method === 'string' ? pi.payment_method : null;
+
+          if (pmId) {
+            const cautionPI = await stripe.paymentIntents.create({
+              amount: 90000,
+              currency: 'eur',
+              customer: customerId,
+              payment_method: pmId,
+              capture_method: 'manual',
+              confirm: true,
+              off_session: true,
+              description: 'Caution de location — Ship Cars',
+              metadata: { type: 'caution', reservation_id: reservationId },
+            });
+
+            if (cautionPI.status === 'requires_capture') {
+              await supabase
+                .from('reservations')
+                .update({ stripe_caution_id: cautionPI.id, caution_statut: 'autorisee' })
+                .eq('id', reservationId);
+              console.log(`✅ Caution auto-enregistrée — PI: ${cautionPI.id}`);
+            } else {
+              console.warn(`⚠️ Caution PI statut inattendu: ${cautionPI.status}`);
+            }
+          }
+        } else {
+          console.warn(`⚠️ Caution auto impossible — piId: ${piId}, customerId: ${customerId}`);
+        }
+      } catch (cautionErr: any) {
+        // 3DS requis ou carte refusée → le client recevra le lien dans l'email
+        console.warn(`⚠️ Caution off-session échouée (3DS ou refus): ${cautionErr.message}`);
+      }
+
+      // 3. Blocage Getaround après paiement confirmé
       const { data: resForBlock } = await supabase
         .from('reservations')
         .select('date_debut, date_fin, vehicules(getaround_id)')
@@ -291,7 +336,7 @@ export const POST = async ({ request }) => {
         }
       }
 
-      // 3. Récupération de la réservation complète avec le véhicule
+      // 4. Récupération de la réservation complète avec le véhicule
       const { data: res } = await supabase
         .from('reservations')
         .select('*, vehicules(*)')

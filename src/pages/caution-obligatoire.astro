@@ -1,0 +1,6 @@
+---
+export const prerender = false;
+// Cette page n'est plus dans le flux principal (la caution est maintenant automatique).
+// Redirige vers l'accueil si quelqu'un y accède directement.
+return Astro.redirect('/', 302);
+---

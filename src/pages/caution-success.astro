@@ -51,6 +51,11 @@ if (sessionId) {
       </ul>
     </div>
 
+    {reservationId && (
+      <a href={`/success?reservation_id=${reservationId}`} class="back-home" style="margin-bottom:0.75rem;display:block;">
+        📄 Voir mon récépissé de réservation
+      </a>
+    )}
     <a href="/" class="back-home">← Retour au catalogue</a>
   </div>
 </MainLayout>

@@ -95,6 +95,7 @@ export const POST: APIRoute = async ({ request }) => {
     // 2. On crée la session de paiement Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer_creation: 'always',
       line_items: [
         {
           price_data: {
@@ -109,6 +110,9 @@ export const POST: APIRoute = async ({ request }) => {
         },
       ],
       mode: 'payment',
+      payment_intent_data: {
+        setup_future_usage: 'off_session',
+      },
       // On passe l'ID de la résa en metadata pour la retrouver lors du Webhook
       metadata: {
         reservation_id: reservation.id,
