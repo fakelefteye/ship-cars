@@ -12,7 +12,8 @@ function fmtDateTime(s: string | null | undefined): string {
   if (!s) return '—';
   return new Date(s).toLocaleString('fr-FR', {
     day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'Europe/Paris',
   });
 }
 

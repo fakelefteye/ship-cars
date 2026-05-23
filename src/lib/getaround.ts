@@ -14,13 +14,34 @@ function headers(): Record<string, string> {
   };
 }
 
-// Formate une date en ISO8601 avec offset explicite +00:00 (sans millisecondes).
-// La doc Getaround utilise ce format : "2018-08-14T07:30:00.000+02:00"
-// URLSearchParams encode + en %2B → correspond à l'exemple du quick start.
+// Formate une date au format attendu par l'API Getaround :
+//   "2026-05-25T12:00:00.000+02:00"
+// Règles :
+//   - Offset Paris réel (+01:00 en hiver, +02:00 en été) — pas UTC
+//   - Millisecondes obligatoires (.000)
+//   - Granularité 30 min (arrondi à la demi-heure la plus proche)
 function toGA(input: string): string {
   const d = new Date(input);
   if (isNaN(d.getTime())) return input;
-  return d.toISOString().slice(0, 19) + '+00:00';
+
+  // Arrondi à la demi-heure la plus proche
+  const HALF_HOUR = 30 * 60 * 1000;
+  const rounded = new Date(Math.round(d.getTime() / HALF_HOUR) * HALF_HOUR);
+
+  // Heure locale Paris (sv-SE donne "YYYY-MM-DD HH:mm:ss")
+  const localStr = rounded
+    .toLocaleString('sv-SE', { timeZone: 'Europe/Paris' })
+    .replace(' ', 'T');
+
+  // Offset Paris en minutes (écart entre heure Paris lue comme UTC et heure UTC réelle)
+  const parisAsUTC = new Date(localStr + 'Z').getTime();
+  const offsetMin  = Math.round((parisAsUTC - rounded.getTime()) / 60000);
+  const sign       = offsetMin >= 0 ? '+' : '-';
+  const absMin     = Math.abs(offsetMin);
+  const hh         = String(Math.floor(absMin / 60)).padStart(2, '0');
+  const mm         = String(absMin % 60).padStart(2, '0');
+
+  return `${localStr}.000${sign}${hh}:${mm}`;
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────

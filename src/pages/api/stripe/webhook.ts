@@ -19,6 +19,7 @@ function fmt(d: string | null | undefined): string {
   return new Date(d).toLocaleString('fr-FR', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
+    timeZone: 'Europe/Paris',
   });
 }
 
@@ -254,7 +255,11 @@ export const POST = async ({ request }) => {
 
       if (resForBlock) {
         const gaId = (resForBlock.vehicules as any)?.getaround_id;
-        if (gaId) {
+        const gaApiKey = import.meta.env.GETAROUND_API_KEY ?? '';
+        if (!gaApiKey) {
+          console.error('❌ [Getaround] GETAROUND_API_KEY absent — impossible de bloquer les dates !');
+        }
+        if (gaId != null && gaId !== '' && gaId !== 0) {
           try {
             // Garantit un format ISO complet — si date sans heure (DATE col), force minuit Paris (UTC+2)
             const ensureISO = (d: string) => {
@@ -264,8 +269,8 @@ export const POST = async ({ request }) => {
             };
             const startISO = ensureISO(resForBlock.date_debut);
             const endISO   = ensureISO(resForBlock.date_fin);
-            console.log(`[Getaround] Tentative blocage voiture ${gaId} : ${startISO} → ${endISO}`);
-            const period = await blockDates(String(gaId), startISO, endISO);
+            console.log(`[Getaround] Tentative blocage voiture ${gaId} : ${startISO} → ${endISO} | API key présente: ${!!gaApiKey}`);
+            const period = await blockDates(String(gaId), startISO, endISO, 'booked');
             if (period !== null) {
               // period peut être { id, starts_at, ends_at } ou { starts_at, ends_at } (204 sans corps)
               if (period.id) {
@@ -276,11 +281,13 @@ export const POST = async ({ request }) => {
               }
               console.log(`✅ Getaround bloqué — voiture ${gaId}, période id=${period.id ?? 'n/a'}`);
             } else {
-              console.error(`❌ Getaround a refusé le blocage pour voiture ${gaId} (dates: ${startISO} → ${endISO})`);
+              console.error(`❌ Getaround a refusé le blocage — voiture ${gaId}, dates: ${startISO} → ${endISO}. Vérifiez GETAROUND_API_KEY et getaround_id du véhicule.`);
             }
           } catch (err) {
             console.error('❌ Erreur technique Getaround blockDates:', err);
           }
+        } else {
+          console.warn(`⚠️ [Getaround] getaround_id manquant ou nul pour véhicule de la résa ${reservationId} — blocage ignoré`);
         }
       }
 

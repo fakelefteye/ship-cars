@@ -101,7 +101,7 @@ export const POST: APIRoute = async ({ request }) => {
             currency: 'eur',
             product_data: {
               name: `Location : ${vehicule_nom}`,
-              description: `Du ${new Date(date_debut).toLocaleString('fr-FR')} au ${new Date(date_fin).toLocaleString('fr-FR')}`,
+              description: `Du ${new Date(date_debut).toLocaleString('fr-FR', {timeZone:'Europe/Paris'})} au ${new Date(date_fin).toLocaleString('fr-FR', {timeZone:'Europe/Paris'})}`,
             },
             unit_amount: Math.round(finalMontant * 100), // Stripe veut des centimes
           },
