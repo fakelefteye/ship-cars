@@ -191,10 +191,10 @@ const photos = [
               </div>
             </div>
             <div class="caution-notice">
-              <div class="caution-icon">⚠️</div>
+              <div class="caution-icon">🔒</div>
               <div>
-                <strong>Caution : 900 €</strong>
-                <p>Pré-autorisation bancaire après le paiement — aucune somme débitée.</p>
+                <strong>Caution : 900 € — pré-autorisée</strong>
+                <p>Aucune somme débitée sur votre compte. <a href="/faq#cat-2" target="_blank" class="caution-faq-link">Qu'est-ce qu'une pré-autorisation&nbsp;?&nbsp;→</a></p>
               </div>
             </div>
           </div>
@@ -1639,8 +1639,8 @@ const photos = [
   .caution-notice {
     display: flex;
     gap: 10px;
-    background: rgba(77,212,200,0.06);
-    border: 1px solid rgba(77,212,200,0.2);
+    background: rgba(77,212,200,0.08);
+    border: 1px solid rgba(77,212,200,0.35);
     border-radius: var(--radius);
     padding: 0.9rem 1rem;
     margin-bottom: 1.25rem;
@@ -1656,6 +1656,14 @@ const photos = [
   }
 
   .caution-notice p { color: var(--text-dim); line-height: 1.5; }
+
+  .caution-faq-link {
+    color: var(--teal);
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .caution-faq-link:hover { text-decoration: underline; }
 
   .btn-book {
     width: 100%;

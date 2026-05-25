@@ -143,8 +143,8 @@ const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
         </p>
         <p class="caution-sub" id="caution-sub">
           {cautionDejaAutorisee
-            ? <>L'empreinte bancaire de <strong>900 €</strong> a bien été enregistrée. <strong>Aucune somme n'a été débitée.</strong></>
-            : <>Nous enregistrons automatiquement votre empreinte bancaire de <strong>900 €</strong>. <strong>Aucune somme ne sera débitée.</strong></>
+            ? <>L'empreinte bancaire de <strong>900 €</strong> a bien été enregistrée. <strong>Aucune somme n'a été débitée.</strong> <a href="/faq#cat-2" target="_blank" class="caution-faq-link">Comprendre la pré-autorisation →</a></>
+            : <>Nous enregistrons automatiquement votre empreinte bancaire de <strong>900 €</strong>. <strong>Aucune somme ne sera débitée.</strong> <a href="/faq#cat-2" target="_blank" class="caution-faq-link">Comprendre la pré-autorisation →</a></>
           }
         </p>
         {reservation?.id && !cautionDejaAutorisee && (
@@ -379,6 +379,16 @@ const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
   }
 
   .caution-link-fallback:hover { text-decoration: underline; }
+
+  .caution-faq-link {
+    display: inline-block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--teal);
+    text-decoration: none;
+    margin-top: 0.35rem;
+  }
+  .caution-faq-link:hover { text-decoration: underline; }
 
   .mail-info {
     font-size: 0.85rem;
