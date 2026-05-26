@@ -568,7 +568,10 @@ const photos = [
 
         errorEl.style.display = 'none';
 
-        const diffH    = (end - start) / 3600000;
+        // Arrondi à la minute pour éviter les faux positifs liés aux secondes (Flatpickr)
+        const startMs  = Math.round(start.getTime() / 60000) * 60000;
+        const endMs    = Math.round(end.getTime()   / 60000) * 60000;
+        const diffH    = (endMs - startMs) / 3600000;
         const diffDays = Math.max(1, Math.ceil(diffH / 24));
 
         // Validation durée minimale

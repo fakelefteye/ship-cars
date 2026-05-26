@@ -46,13 +46,16 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: updateErr.message }), { status: 500 });
   }
 
-  // 3. Supprime le blocage sur Getaround si on a l'id de la période
+  // 3. Supprime le blocage sur Getaround via la plage de dates de la réservation
   const carId = reservation.vehicules?.getaround_id;
-  const periodId = reservation.getaround_unavailable_period_id;
   let getaroundUnblocked = false;
 
-  if (carId && periodId) {
-    getaroundUnblocked = await unblockDates(String(carId), String(periodId));
+  if (carId && reservation.date_debut && reservation.date_fin) {
+    getaroundUnblocked = await unblockDates(
+      String(carId),
+      reservation.date_debut,
+      reservation.date_fin,
+    );
   }
 
   return new Response(

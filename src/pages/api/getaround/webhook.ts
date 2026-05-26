@@ -23,10 +23,27 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
     console.warn('[webhook] GETAROUND_WEBHOOK_SECRET non configuré — signature non vérifiée');
     return true;
   }
-  if (!signature) return false;
-  const expected = 'sha1=' + createHmac('sha1', secret).update(rawBody).digest('hex');
+  if (!signature) {
+    console.error('[webhook] Aucune signature reçue (x-drivy-signature absent)');
+    return false;
+  }
+
+  const hmac = createHmac('sha1', secret).update(rawBody).digest('hex');
+  // Getaround envoie soit "sha1=<hex>" soit juste "<hex>" selon la version
+  const candidates = ['sha1=' + hmac, hmac];
+
+  // Diagnostic sans exposer le secret
+  console.log(`[webhook] sig_reçue: longueur=${signature.length}, début="${signature.slice(0, 10)}…"`);
+  console.log(`[webhook] sig_attendue sha1=prefix: longueur=${candidates[0].length}, début="${candidates[0].slice(0, 10)}…"`);
+
   try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    for (const expected of candidates) {
+      if (expected.length === signature.length &&
+          timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+        return true;
+      }
+    }
+    return false;
   } catch {
     return false;
   }

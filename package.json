@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/vercel": "^10.0.5",
     "@supabase/supabase-js": "^2.39.0",
+    "@vercel/analytics": "^2.0.1",
     "astro": "^6.1.5",
     "npx": "^10.2.2",
     "pdfkit": "^0.18.0",

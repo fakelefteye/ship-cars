@@ -106,7 +106,7 @@ function cautionUrl(reservationId: string): string {
   return `${BASE_URL}/api/stripe/caution?reservation_id=${reservationId}`;
 }
 
-function tenantEmailHtml(contractHtml: string, cautionUrl: string): string {
+function tenantEmailHtml(contractHtml: string): string {
   return `
   <!DOCTYPE html>
   <html lang="fr">
@@ -126,19 +126,6 @@ function tenantEmailHtml(contractHtml: string, cautionUrl: string): string {
         </p>
 
         ${contractHtml}
-
-        <!-- Bloc caution -->
-        <div style="background:#f0f7ff;border:2px solid #3498db;border-radius:10px;padding:24px;margin:28px 0;text-align:center;">
-          <h3 style="color:#2980b9;margin:0 0 10px;font-size:16px;">⚠️ Action requise : La Caution</h3>
-          <p style="color:#374151;font-size:14px;margin:0 0 20px;line-height:1.6;">
-            Pour récupérer le véhicule, vous devez déposer une <strong>empreinte bancaire de 900,00 €</strong>.<br>
-            <em style="color:#7f8c8d;font-size:13px;">Cette somme n'est pas débitée de votre compte.</em>
-          </p>
-          <a href="${cautionUrl}"
-             style="background:#3498db;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">
-            Sécuriser ma caution (900 €)
-          </a>
-        </div>
 
         <p style="font-size:13px;color:#6b7280;margin-top:24px;">
           À bientôt sur la route,<br>
@@ -403,7 +390,7 @@ export const POST = async ({ request }) => {
               from: `Ship Cars <${FROM_EMAIL}>`,
               to: emailClient,
               subject: `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
-              html: tenantEmailHtml(contractHtml, cautionUrl(reservationId)),
+              html: tenantEmailHtml(contractHtml),
               attachments: pdfAttachment,
             });
             console.log(`✅ Contrat + PDF envoyés au locataire : ${emailClient}`);
