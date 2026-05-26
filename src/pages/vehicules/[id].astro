@@ -117,7 +117,7 @@ const photos = [
                   <span class="date-pill-value" id="start-display">Choisir une date</span>
                 </div>
               </div>
-              <div class="date-pill-sep">→</div>
+              <div class="date-pill-sep">retour</div>
               <div class="date-pill">
                 <span class="date-pill-icon">🔙</span>
                 <div class="date-pill-content">
@@ -1138,7 +1138,7 @@ const photos = [
 
   .detail-grid {
     display: grid;
-    grid-template-columns: 1fr 400px;
+    grid-template-columns: 1fr 480px;
     gap: 2.5rem;
     align-items: start;
   }
@@ -1341,8 +1341,8 @@ const photos = [
   /* Déclencheur Départ / Retour */
   .date-trigger {
     display: flex;
-    align-items: stretch;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
     background: linear-gradient(135deg, var(--bg-3) 0%, rgba(77,212,200,0.05) 100%);
     border: 1px solid var(--border-md);
     border-radius: var(--radius);
@@ -1359,14 +1359,14 @@ const photos = [
   }
 
   .date-pill {
-    flex: 1;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 10px 14px;
     background: var(--bg-2);
     border-radius: calc(var(--radius) - 2px);
-    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
   .date-pill-icon {
     font-size: 1.1rem;
@@ -1375,9 +1375,8 @@ const photos = [
   }
   .date-pill-content {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+    align-items: center;
+    gap: 10px;
     flex: 1;
   }
   .date-pill-label {
@@ -1386,26 +1385,36 @@ const photos = [
     letter-spacing: 0.1em;
     color: var(--text-dim);
     font-weight: 700;
+    flex-shrink: 0;
+    width: 46px;
   }
   .date-pill-value {
     color: var(--text-muted);
     font-family: 'Exo 2', sans-serif;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .date-pill-value.filled {
     color: var(--text);
     font-weight: 700;
   }
   .date-pill-sep {
-    color: var(--gold);
-    font-size: 1.1rem;
-    font-weight: 800;
-    align-self: center;
-    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    color: rgba(77,212,200,0.4);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    gap: 6px;
+  }
+  .date-pill-sep::before,
+  .date-pill-sep::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
   }
 
   .calendar-legend {
