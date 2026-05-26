@@ -7,7 +7,7 @@ import MainLayout from '../layouts/MainLayout.astro';
     <div class="legal-header">
       <div class="legal-badge">Document légal</div>
       <h1>Conditions Générales d'Utilisation</h1>
-      <p class="legal-meta">Version en vigueur au 7 mai 2026 · SHIP CARS · SIRET 95083648600015</p>
+      <p class="legal-meta">Version en vigueur au 26 mai 2026 · SHIP CARS · SIRET 95083648600015</p>
     </div>
 
     <div class="legal-body">
@@ -50,7 +50,71 @@ import MainLayout from '../layouts/MainLayout.astro';
       <section>
         <h2>Article 3 – Véhicules disponibles à la location</h2>
         <p>Tous les véhicules mis à la location répondent aux critères suivants : immatriculés en France, disposant d'un contrôle technique valide, assurés, révisés conformément aux préconisations constructeur, et équipés du Boîtier Connect SHIP CARS.</p>
-        <p>Les véhicules sont destinés à une utilisation sur le territoire français métropolitain. Toute utilisation à l'étranger requiert une autorisation expresse de SHIP CARS.</p>
+
+        <h3>3.1 Zone géographique de circulation autorisée</h3>
+        <p>La circulation est autorisée <strong>exclusivement</strong> dans les zones ci-dessous. Toute sortie de cette zone, même temporaire, constitue une violation du contrat et entraîne la <strong>déchéance de l'assurance</strong> — l'intégralité des frais (dommages, recours de tiers, rapatriement) resterait à la charge du Locataire.</p>
+
+        <p><strong>France métropolitaine — Départements autorisés :</strong></p>
+        <div class="zone-grid">
+          <div class="zone-col">
+            <p class="zone-subtitle">Secteur Sud-Est et Alpes</p>
+            <ul>
+              <li>01 — Ain</li>
+              <li>04 — Alpes-de-Haute-Provence</li>
+              <li>05 — Hautes-Alpes</li>
+              <li>07 — Ardèche</li>
+              <li>26 — Drôme</li>
+              <li>38 — Isère</li>
+              <li>42 — Loire</li>
+              <li>69 — Rhône</li>
+              <li>73 — Savoie</li>
+              <li>74 — Haute-Savoie</li>
+              <li>84 — Vaucluse</li>
+            </ul>
+          </div>
+          <div class="zone-col">
+            <p class="zone-subtitle">Façade Méditerranéenne</p>
+            <ul>
+              <li>06 — Alpes-Maritimes</li>
+              <li>11 — Aude</li>
+              <li>13 — Bouches-du-Rhône</li>
+              <li>30 — Gard</li>
+              <li>34 — Hérault</li>
+              <li>66 — Pyrénées-Orientales</li>
+              <li>83 — Var</li>
+            </ul>
+          </div>
+        </div>
+
+        <p><strong>Suisse — Cantons autorisés :</strong></p>
+        <ul>
+          <li>Canton de Genève (Genève ville)</li>
+          <li>Canton de Vaud (Lausanne, Montreux)</li>
+          <li>Canton du Valais (Martigny, Sion)</li>
+          <li>Canton de Fribourg (sud du canton)</li>
+        </ul>
+
+        <p><strong>Italie — Régions autorisées :</strong></p>
+        <ul>
+          <li>Piémont — la ville de Turin (environ 200 km de Grenoble par autoroute)</li>
+          <li>Vallée d'Aoste — Intégralement (Aoste, Courmayeur)</li>
+        </ul>
+
+        <p>Toute circulation hors de ces zones doit faire l'objet d'un <strong>accord écrit préalable et exprès</strong> de SHIP CARS. À défaut, ni les dommages au véhicule ni les recours de tiers ne seront couverts.</p>
+
+        <h3>3.2 Usages interdits</h3>
+        <p>Le véhicule ne peut en aucun cas être utilisé pour :</p>
+        <ul>
+          <li>Le transport à titre onéreux de voyageurs ou de marchandises (taxi, VTC, ambulance…)</li>
+          <li>L'enseignement de la conduite</li>
+          <li>La sous-location à des tiers</li>
+          <li>Le transport de matières inflammables, explosives, corrosives ou comburantes</li>
+          <li>La circulation à l'intérieur des zones aéroportuaires</li>
+          <li>Toute course, rallye ou compétition sportive</li>
+          <li>Toute conduite sous l'emprise d'alcool, de stupéfiants ou de substance altérant les facultés</li>
+          <li>Toute conduite sans permis de conduire valide ou en état de retrait/suspension</li>
+        </ul>
+        <p>Le non-respect de l'une de ces interdictions entraîne la <strong>déchéance immédiate de la garantie d'assurance</strong> et la responsabilité personnelle et intégrale du Locataire (police AXA n° 11029669304, courtier AON).</p>
       </section>
 
       <section>
@@ -104,7 +168,57 @@ import MainLayout from '../layouts/MainLayout.astro';
 
       <section>
         <h2>Article 9 – Nettoyage</h2>
-        <p>Le véhicule doit être restitué propre. Des frais de nettoyage sont facturés en cas de restitution non conforme (nettoyage léger, complet ou extérieur) selon le barème en vigueur sur le Site.</p>
+        <p>Le véhicule doit être restitué dans un état de propreté identique à celui de la prise en charge. En cas de restitution non conforme, les frais de nettoyage suivants sont facturés :</p>
+        <div class="tarif-table-wrap">
+          <table class="tarif-table">
+            <thead>
+              <tr><th>Type de salissure</th><th>Tarif</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Nettoyage léger (poussière, miettes, trace légère)</td><td>10 €</td></tr>
+              <tr><td>Salissures importantes (boue, taches tenaces sur sièges)</td><td>25 €</td></tr>
+              <tr><td>Crème solaire incrustée sur les plastiques intérieurs</td><td>30 €</td></tr>
+              <tr><td>Nettoyage complet intérieur + extérieur</td><td>70 €</td></tr>
+              <tr><td>Taches d'huile ou matières grasses</td><td>40 €</td></tr>
+              <tr><td>Poils d'animaux incrustés (traitement spécifique)</td><td>50 €</td></tr>
+              <tr><td>Odeurs de cigarette / vapotage (traitement désodorisant)</td><td>50 €</td></tr>
+              <tr><td>Vomissures ou matières biologiques</td><td>90 €</td></tr>
+              <tr><td>Nettoyage professionnel sur facture (cas extrême)</td><td>Coût réel</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Les animaux de compagnie ne sont pas autorisés dans le véhicule sauf accord préalable écrit du Loueur. Tout non-respect entraîne la facturation des frais de nettoyage correspondants. Il est formellement interdit de fumer ou de vapoter dans le véhicule — une pénalité forfaitaire de <strong>50 €</strong> est appliquée en plus du nettoyage si nécessaire.</p>
+      </section>
+
+      <section>
+        <h2>Article 9bis – Barème indicatif des réparations</h2>
+        <p>En cas de dommage survenu pendant la location dont la responsabilité incombe au Locataire (dans la limite de la franchise applicable — voir Article 11), les tarifs ci-dessous sont fournis à titre <strong>purement indicatif</strong>. Le montant réel sera déterminé sur devis d'un carrossier agréé et pourra différer selon le véhicule, les pièces et la main-d'œuvre.</p>
+        <div class="tarif-table-wrap">
+          <table class="tarif-table">
+            <thead>
+              <tr><th>Type de dommage</th><th>Fourchette indicative</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Rayure superficielle (vernis seul, sans métal apparent)</td><td>80 – 150 €</td></tr>
+              <tr><td>Rayure profonde (jusqu'au métal, petite surface)</td><td>200 – 400 €</td></tr>
+              <tr><td>Rayure profonde (grande surface ou panneau entier)</td><td>400 – 800 €</td></tr>
+              <tr><td>Bosse sans rayure (débosselage sans peinture)</td><td>100 – 300 €</td></tr>
+              <tr><td>Bosse avec rayure (débosselage + repeinture)</td><td>350 – 900 €</td></tr>
+              <tr><td>Jante rayée ou voilée</td><td>80 – 250 €</td></tr>
+              <tr><td>Remplacement d'un pneumatique</td><td>80 – 200 €</td></tr>
+              <tr><td>Rétroviseur cassé ou délogé</td><td>100 – 350 €</td></tr>
+              <tr><td>Bris de vitre latérale</td><td>150 – 400 €</td></tr>
+              <tr><td>Bris de pare-brise</td><td>250 – 700 €</td></tr>
+              <tr><td>Optique / phare avant cassé</td><td>200 – 700 €</td></tr>
+              <tr><td>Feu arrière cassé</td><td>100 – 400 €</td></tr>
+              <tr><td>Pare-choc avant ou arrière rayé / enfoncé</td><td>250 – 800 €</td></tr>
+              <tr><td>Pare-choc avant ou arrière à remplacer</td><td>500 – 1 500 €</td></tr>
+              <tr><td>Aile enfoncée (hors mécanique)</td><td>300 – 900 €</td></tr>
+              <tr><td>Dommage mécanique (erreur de carburant, etc.)</td><td>Coût réel — non couvert par l'assurance</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tarif-note">Ces tarifs sont donnés à titre indicatif uniquement. Le montant effectivement facturé sera établi sur devis d'un professionnel agréé. Des frais de gestion administrative de <strong>40 €</strong> s'ajoutent à tout sinistre géré par SHIP CARS.</p>
       </section>
 
       <section>
@@ -316,7 +430,63 @@ import MainLayout from '../layouts/MainLayout.astro';
     color: var(--text);
   }
 
+  .zone-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 0.75rem 0;
+  }
+  .zone-col { }
+  .zone-subtitle {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--silver);
+    margin-bottom: 0.4rem;
+  }
+
+  .tarif-table-wrap {
+    overflow-x: auto;
+    margin: 0.75rem 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-md);
+  }
+  .tarif-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+  }
+  .tarif-table th {
+    background: var(--bg-2);
+    color: var(--teal);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border-md);
+    white-space: nowrap;
+  }
+  .tarif-table td {
+    padding: 0.55rem 1rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .tarif-table tr:last-child td { border-bottom: none; }
+  .tarif-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .tarif-table td:last-child {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .tarif-note {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+
   @media (max-width: 600px) {
     .legal-wrap { padding: 2rem 1.25rem 4rem; }
+    .zone-grid { grid-template-columns: 1fr; }
   }
 </style>
