@@ -44,12 +44,28 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
       </div>
       <h1 class="hero-title">
         Location de voiture<br>
-        <em>simple, rapide, sécurisée</em>
+        <em>sans guichet, sans attente</em>
       </h1>
       <p class="hero-sub">
         <strong>62 rue Félix Esclangon, 38000 Grenoble</strong> — à 2 min à pied de la gare.<br>
-        Réservez en ligne, payez par Stripe, récupérez votre clé. Sans boutique physique, sans file d'attente.
+        Réservez en ligne, payez par Stripe, <strong>ouvrez votre voiture depuis votre téléphone</strong>. Zéro guichet, zéro file d'attente.
       </p>
+      <div class="hero-unlock-strip">
+        <div class="unlock-step">
+          <span class="unlock-num">1</span>
+          <span>Réservez en ligne</span>
+        </div>
+        <svg class="unlock-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="unlock-step">
+          <span class="unlock-num">2</span>
+          <span>Payez par carte</span>
+        </div>
+        <svg class="unlock-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="unlock-step unlock-step--highlight">
+          <span class="unlock-num">3</span>
+          <span>🔓 Ouvrez à distance</span>
+        </div>
+      </div>
       <div class="hero-cta">
         <a href="#catalogue" class="btn-primary">Voir les véhicules disponibles</a>
         <div class="hero-stats">
@@ -59,13 +75,13 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
           </div>
           <div class="stat-divider"></div>
           <div class="stat">
-            <strong>100%</strong>
-            <span>en ligne</span>
+            <strong>0</strong>
+            <span>guichet · 0 attente</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat">
-            <strong>Stripe</strong>
-            <span>paiement sécurisé</span>
+            <strong>📱</strong>
+            <span>ouverture à distance</span>
           </div>
         </div>
       </div>
@@ -150,10 +166,10 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
           <h3>Paiement sécurisé</h3>
           <p>Stripe gère votre paiement et la caution par empreinte bancaire. Aucune somme bloquée.</p>
         </div>
-        <div class="why-card">
-          <div class="why-icon-wrap">⚡</div>
-          <h3>Réservation instantanée</h3>
-          <p>Choisissez vos dates, payez en ligne. Votre créneau est bloqué immédiatement, 24h/24.</p>
+        <div class="why-card why-card--accent">
+          <div class="why-icon-wrap">🔓</div>
+          <h3>Ouverture à distance</h3>
+          <p>Pas de clé à récupérer en main propre. Votre véhicule s'ouvre depuis votre téléphone — à l'heure exacte de votre réservation.</p>
         </div>
         <div class="why-card">
           <div class="why-icon-wrap">🛡️</div>
@@ -222,9 +238,49 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
   .hero-sub {
     font-size: 1rem; color: #a0b4c8;
     line-height: 1.8; max-width: 580px;
-    margin-bottom: 2.5rem; font-weight: 300;
+    margin-bottom: 1.5rem; font-weight: 300;
   }
   .hero-sub strong { color: #cbd5e1; font-weight: 600; }
+
+  .hero-unlock-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    padding: 0.85rem 1.25rem;
+    background: rgba(77,212,200,0.07);
+    border: 1px solid rgba(77,212,200,0.2);
+    border-radius: var(--radius);
+    max-width: 520px;
+  }
+  .unlock-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #a0b4c8;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 500;
+  }
+  .unlock-step--highlight {
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .unlock-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    background: rgba(77,212,200,0.15);
+    border: 1px solid rgba(77,212,200,0.3);
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--teal);
+    flex-shrink: 0;
+  }
+  .unlock-arrow { color: rgba(77,212,200,0.4); flex-shrink: 0; }
 
   .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 2rem; }
 
@@ -343,6 +399,16 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
     color: #0f1e33; margin-bottom: 0.5rem;
   }
   .why-card p { font-size: .85rem; color: #5a6e82; line-height: 1.65; font-weight: 300; }
+  .why-card--accent {
+    background: linear-gradient(135deg, #f0fdfb 0%, #e6faf8 100%);
+    border-color: rgba(77,212,200,0.45);
+    box-shadow: 0 4px 20px rgba(77,212,200,0.12);
+  }
+  .why-card--accent h3 { color: #0e6b61; }
+  .why-card--accent:hover {
+    border-color: rgba(77,212,200,0.7);
+    box-shadow: 0 8px 28px rgba(77,212,200,0.2);
+  }
 
   @media (max-width: 700px) {
     .hero { padding: 4rem 0 3rem; }
