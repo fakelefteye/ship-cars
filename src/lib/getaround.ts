@@ -102,6 +102,30 @@ export async function getRental(rentalId: string | number): Promise<GetaroundRen
   }
 }
 
+/**
+ * Liste les locations sur une plage de dates (max 30 jours).
+ * GET /rentals.json?start_date=...&end_date=...
+ * Retourne uniquement les IDs — appeler getRental() pour les détails.
+ */
+export async function getRentals(startDate: string, endDate: string): Promise<Array<{ id: number }>> {
+  try {
+    const params = new URLSearchParams({
+      start_date: toGA(startDate),
+      end_date:   toGA(endDate),
+    });
+    const res = await fetch(`${API_BASE}/rentals.json?${params}`, { headers: headers() });
+    if (!res.ok) {
+      console.error('[Getaround] getRentals error', res.status);
+      return [];
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.error('[Getaround] getRentals network error', e);
+    return [];
+  }
+}
+
 // ─── Utilisateurs ────────────────────────────────────────────────────────────
 
 /**

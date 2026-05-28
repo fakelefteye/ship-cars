@@ -100,6 +100,19 @@ const photos = [
             <span class="included-icon">🛣️</span>
             <span><strong>100 km/jour inclus</strong> dans la location</span>
           </div>
+
+          {vehicule.getaround_url && (
+            <div class="getaround-info">
+              <div class="getaround-info-top">
+                <span class="ga-icon">⚡</span>
+                <div>
+                  <strong>Moins de 3 jours ? Louez sur Getaround</strong>
+                  <p>Ce véhicule est aussi disponible sur Getaround. Utilisez notre <a href="https://fr.getaround.com/r/2718614-cdc?utm_campaign=referral-driver-web&utm_content=copy-link&utm_medium=click&utm_source=drivy" target="_blank" rel="noopener" class="ga-ref">lien de parrainage</a> pour obtenir <strong>15 € offerts</strong> sur votre 1ère réservation.</p>
+                </div>
+              </div>
+              <a href={vehicule.getaround_url} target="_blank" rel="noopener" class="ga-cta">Voir ce véhicule sur Getaround →</a>
+            </div>
+          )}
         </header>
 
         <div class="panel-divider"></div>
@@ -202,6 +215,19 @@ const photos = [
           <div class="zone-notice" style="margin-bottom:.75rem;">
             📍 <span>Circulation <strong>limitée à certaines zones</strong> (Sud-Est France, Suisse, Italie frontalière). <a href="/zones" target="_blank">Voir les zones autorisées →</a></span>
           </div>
+
+          {vehicule.getaround_url && (
+            <div id="getaround-suggest" class="getaround-suggest" style="display:none;">
+              <div class="ga-suggest-left">
+                <span class="ga-suggest-icon">⚡</span>
+                <div>
+                  <strong>Location courte — Getaround recommandé</strong>
+                  <span>Pour moins de 3 jours, ce véhicule est disponible sur Getaround sans caution ni franchise.</span>
+                </div>
+              </div>
+              <a href={vehicule.getaround_url} target="_blank" rel="noopener" class="ga-suggest-link">Réserver sur Getaround →</a>
+            </div>
+          )}
 
           <button id="btn-book" class="btn-book" disabled>
             Payer la location
@@ -408,6 +434,7 @@ const photos = [
   dureeMaxJours: dureeMaxJours,
   delaiHeures: delaiReservationHeures,
   plageDispo: plageDispo,
+  getaroundUrl: vehicule.getaround_url ?? null,
 }}>
   async function initCalendar() {
     let reservations = [];
@@ -615,6 +642,10 @@ const photos = [
           const prixData = await prixRes.json();
           if (prixData.total) locationAmount = prixData.total;
         } catch (e) { /* fallback silencieux */ }
+
+        // Suggestion Getaround pour durée < 3 jours
+        const gaSuggest = document.getElementById('getaround-suggest');
+        if (gaSuggest && getaroundUrl) gaSuggest.style.display = diffDays < 3 ? 'flex' : 'none';
 
         document.getElementById('duration-text').textContent = `${diffDays} jour(s) (${Math.floor(diffH)}h)`;
         document.getElementById('location-amount').textContent = `${locationAmount.toFixed(2)} €`;
@@ -2147,4 +2178,107 @@ const photos = [
     .upload-grid { grid-template-columns: 1fr; }
     .upload-zone-selfie { grid-column: auto; }
   }
+
+  /* ── Getaround ── */
+  .getaround-info {
+    margin-top: 1rem;
+    background: rgba(255, 165, 0, 0.07);
+    border: 1px solid rgba(255, 165, 0, 0.28);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .getaround-info-top {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .ga-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .getaround-info-top strong {
+    display: block;
+    font-size: 0.87rem;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 3px;
+  }
+  .getaround-info-top p {
+    font-size: 0.79rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .ga-ref {
+    color: #fbbf24;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ga-ref:hover { color: #f59e0b; }
+  .ga-cta {
+    display: block;
+    text-align: center;
+    background: rgba(255, 165, 0, 0.15);
+    border: 1px solid rgba(255, 165, 0, 0.4);
+    color: #fbbf24;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 0.83rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .ga-cta:hover {
+    background: rgba(255, 165, 0, 0.25);
+    border-color: rgba(255, 165, 0, 0.6);
+  }
+
+  .getaround-suggest {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: rgba(255, 165, 0, 0.1);
+    border: 1px solid rgba(255, 165, 0, 0.35);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .ga-suggest-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .ga-suggest-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .ga-suggest-left strong {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 2px;
+  }
+  .ga-suggest-left span {
+    font-size: 0.77rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .ga-suggest-link {
+    white-space: nowrap;
+    background: #fbbf24;
+    color: #000;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 800;
+    font-size: 0.82rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .ga-suggest-link:hover { background: #f59e0b; transform: translateY(-1px); }
 </style>

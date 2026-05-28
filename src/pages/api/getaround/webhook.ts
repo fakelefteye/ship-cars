@@ -73,7 +73,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!verifySignature(rawBody, signature)) {
       console.error('[webhook] Signature invalide');
-      await logEvent('unknown', {}, 'rejected_signature');
+      // Log le début du body pour déboguer ce que Getaround envoie réellement
+      await logEvent('unknown', { raw_preview: rawBody.slice(0, 300), sig_header: signature?.slice(0, 20) }, 'rejected_signature');
       return new Response('Signature invalide', { status: 401 });
     }
 
