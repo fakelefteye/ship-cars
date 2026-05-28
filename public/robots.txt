@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /success
+Disallow: /caution-success
+Disallow: /caution-obligatoire
+
+Sitemap: https://shipcars.fr/sitemap.xml
