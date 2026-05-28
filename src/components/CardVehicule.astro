@@ -2,7 +2,7 @@
 const { id, nom, modele, prix, image } = Astro.props;
 ---
 
-<a href={`/vehicules/${id}`} class="card">
+<a href={`/vehicules/${id}`} class="card" data-vehicule-id={id}>
   <div class="card-img-wrap">
     <img src={image} alt={`${nom} ${modele}`} loading="lazy" />
     <div class="card-price-badge"><span class="card-from">à partir de</span>{prix}€<span>/jour</span></div>
@@ -146,4 +146,25 @@ const { id, nom, modele, prix, image } = Astro.props;
 
   .card:hover .card-btn { color: var(--gold-light); }
   .card:hover .card-arrow { transform: translateX(3px); }
+
+  .card--unavailable {
+    opacity: 0.42;
+    filter: grayscale(60%);
+    pointer-events: none;
+    position: relative;
+  }
+  .card--unavailable::after {
+    content: 'Indisponible';
+    position: absolute;
+    top: 12px; left: 12px;
+    background: rgba(220,38,38,0.88);
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
 </style>

@@ -131,7 +131,33 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
         </div>
       </div>
 
-      <div class="grid-cars">
+      <!-- FILTRE DATES -->
+      <div class="date-filter">
+        <div class="df-picker" id="df-trigger" role="button" tabindex="0">
+          <div class="df-pill">
+            <span class="df-pill-icon">🚗</span>
+            <div class="df-pill-content">
+              <span class="df-label">Départ</span>
+              <span class="df-value" id="df-start">Choisir une date</span>
+            </div>
+          </div>
+          <div class="df-sep">→</div>
+          <div class="df-pill">
+            <span class="df-pill-icon">🔙</span>
+            <div class="df-pill-content">
+              <span class="df-label">Retour</span>
+              <span class="df-value" id="df-end">Choisir une date</span>
+            </div>
+          </div>
+        </div>
+        <button id="df-reset" class="df-reset" style="display:none" type="button">✕ Effacer</button>
+        <input type="text" id="df-range" class="df-hidden" readonly aria-hidden="true" />
+        <div id="df-result" class="df-result" style="display:none">
+          <span id="df-count"></span>
+        </div>
+      </div>
+
+      <div class="grid-cars" id="grid-cars">
         {vehicules?.map((car) => (
           <CardVehicule
             id={car.id}
@@ -181,6 +207,100 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
   </section>
 
 </MainLayout>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+
+<script is:inline>
+(function () {
+  function fmt(d) {
+    const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return date + ' · ' + time;
+  }
+
+  const trigger  = document.getElementById('df-trigger');
+  const startEl  = document.getElementById('df-start');
+  const endEl    = document.getElementById('df-end');
+  const resetBtn = document.getElementById('df-reset');
+  const resultEl = document.getElementById('df-result');
+  const countEl  = document.getElementById('df-count');
+
+  function clearFilter() {
+    startEl.textContent = 'Choisir une date';
+    endEl.textContent   = 'Choisir une date';
+    startEl.classList.remove('filled');
+    endEl.classList.remove('filled');
+    trigger.classList.remove('has-selection');
+    resetBtn.style.display = 'none';
+    resultEl.style.display = 'none';
+    document.querySelectorAll('.card[data-vehicule-id]').forEach(c => {
+      c.classList.remove('card--unavailable');
+      c.style.display = '';
+    });
+    fp.clear();
+  }
+
+  async function applyFilter(start, end) {
+    const debut = start.toISOString();
+    const fin   = end.toISOString();
+    try {
+      const res  = await fetch('/api/reservations/available-vehicles?debut=' + encodeURIComponent(debut) + '&fin=' + encodeURIComponent(fin));
+      const data = await res.json();
+      const unavailable = new Set(data.unavailable ?? []);
+      const available   = data.available ?? [];
+
+      document.querySelectorAll('.card[data-vehicule-id]').forEach(card => {
+        const id = card.getAttribute('data-vehicule-id');
+        if (unavailable.has(id)) {
+          card.classList.add('card--unavailable');
+        } else {
+          card.classList.remove('card--unavailable');
+        }
+        card.style.display = '';
+      });
+
+      const n = available.length;
+      countEl.textContent = n === 0
+        ? 'Aucun véhicule disponible sur ces dates'
+        : n + ' véhicule' + (n > 1 ? 's' : '') + ' disponible' + (n > 1 ? 's' : '') + ' sur ces dates';
+      resultEl.style.display = 'flex';
+      resultEl.className = 'df-result ' + (n === 0 ? 'df-result--none' : 'df-result--ok');
+    } catch (e) {
+      console.error('[filtre dispo]', e);
+    }
+  }
+
+  const fp = flatpickr('#df-range', {
+    mode: 'range',
+    enableTime: true,
+    time_24hr: true,
+    minuteIncrement: 30,
+    minDate: 'today',
+    dateFormat: 'Y-m-d H:i',
+    locale: 'fr',
+    clickOpens: false,
+    onChange(dates) {
+      if (dates[0]) {
+        startEl.textContent = fmt(dates[0]);
+        startEl.classList.add('filled');
+      }
+      if (dates[1]) {
+        endEl.textContent = fmt(dates[1]);
+        endEl.classList.add('filled');
+        trigger.classList.add('has-selection');
+        resetBtn.style.display = 'inline-flex';
+        applyFilter(dates[0], dates[1]);
+      }
+    },
+  });
+
+  trigger.addEventListener('click', () => fp.open());
+  trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fp.open(); } });
+  resetBtn.addEventListener('click', clearFilter);
+})();
+</script>
 
 <style>
   /* ── HERO ── */
@@ -367,6 +487,109 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
   .info-chip--zone a { color: var(--teal); font-weight: 600; text-decoration: none; }
   .info-chip--zone a:hover { text-decoration: underline; }
 
+  /* ── Filtre dates ── */
+  .date-filter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  .df-picker {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #f8fafc;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    flex: 1;
+    min-width: 280px;
+  }
+  .df-picker:hover,
+  .df-picker:focus-visible,
+  .df-picker.has-selection {
+    border-color: #4dd4c8;
+    box-shadow: 0 0 0 3px rgba(77,212,200,0.12);
+    outline: none;
+  }
+  .df-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.75rem 1rem;
+    flex: 1;
+  }
+  .df-pill + .df-pill { border-left: 1px solid #e5e7eb; }
+  .df-pill-icon { font-size: 1rem; flex-shrink: 0; }
+  .df-pill-content { display: flex; flex-direction: column; gap: 1px; }
+  .df-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9ca3af;
+    font-weight: 700;
+    font-family: 'Exo 2', sans-serif;
+  }
+  .df-value {
+    font-size: 0.88rem;
+    color: #9ca3af;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 500;
+  }
+  .df-value.filled { color: #0f1e33; font-weight: 700; }
+  .df-sep {
+    padding: 0 0.5rem;
+    color: #d1d5db;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .df-hidden {
+    position: absolute;
+    width: 0; height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .df-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 0.8rem;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 600;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .df-reset:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+  .df-result {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Exo 2', sans-serif;
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .df-result--ok  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .df-result--none { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
   .grid-cars {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -416,5 +639,8 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
     .grid-cars { grid-template-columns: 1fr; }
     .flash-inner { gap: 1rem; }
     .flash-content { flex-direction: column; align-items: flex-start; }
+    .date-filter { flex-direction: column; align-items: stretch; }
+    .df-picker { min-width: unset; }
+    .df-result { justify-content: center; }
   }
 </style>
