@@ -601,6 +601,10 @@ const photos = [
         const diffH    = (endMs - startMs) / 3600000;
         const diffDays = Math.max(1, Math.ceil(diffH / 24));
 
+        // Suggestion Getaround pour durée < 3 jours (avant le return de durée min)
+        const gaSuggest = document.getElementById('getaround-suggest');
+        if (gaSuggest && getaroundUrl) gaSuggest.style.display = diffDays < 3 ? 'flex' : 'none';
+
         // Validation durée minimale
         if (dureeMinHeures > 0 && diffH < dureeMinHeures) {
           const minLabel = dureeMinHeures >= 24
@@ -631,10 +635,6 @@ const photos = [
           const prixData = await prixRes.json();
           if (prixData.total) locationAmount = prixData.total;
         } catch (e) { /* fallback silencieux */ }
-
-        // Suggestion Getaround pour durée < 3 jours
-        const gaSuggest = document.getElementById('getaround-suggest');
-        if (gaSuggest && getaroundUrl) gaSuggest.style.display = diffDays < 3 ? 'flex' : 'none';
 
         document.getElementById('duration-text').textContent = `${diffDays} jour(s) (${Math.floor(diffH)}h)`;
         document.getElementById('location-amount').textContent = `${locationAmount.toFixed(2)} €`;
