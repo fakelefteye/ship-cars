@@ -384,11 +384,12 @@ const photos = [
         <div class="consent-block">
           <label class="consent-row consent-required">
             <input type="checkbox" id="cgu-accept" required />
-            <span>J'ai lu et j'accepte les <a href="/cgu" target="_blank">Conditions Générales d'Utilisation</a>, notamment les zones de circulation autorisées et les franchises applicables. <span class="consent-required-badge">Obligatoire</span></span>
+            <span>J'accepte les <a href="/cgv" target="_blank">Conditions Générales de Vente</a> et la <a href="/politique-confidentialite" target="_blank">Politique de Confidentialité</a>, notamment les zones de circulation autorisées et les franchises applicables. <span class="consent-required-badge">Obligatoire</span></span>
           </label>
+          <p class="rgpd-notice">Vos données sont traitées par Ship Cars pour gérer votre location. En tant que client, nous pourrons vous envoyer des offres commerciales pour nos services de location de véhicules.</p>
           <label class="consent-row">
             <input type="checkbox" id="offres-commerciales" />
-            <span>J'accepte de recevoir des offres commerciales et promotionnelles de Ship Cars par email. <span class="consent-optional-badge">Optionnel</span></span>
+            <span>Je NE souhaite PAS recevoir d'offres commerciales ou de promotions par email. <span class="consent-optional-badge">Optionnel</span></span>
           </label>
         </div>
 
@@ -980,13 +981,14 @@ const photos = [
 
     const cguAccept = document.getElementById('cgu-accept')?.checked;
     if (!cguAccept) {
-      errEl.textContent = 'Vous devez accepter les Conditions Générales d\'Utilisation pour continuer.';
+      errEl.textContent = 'Vous devez accepter les Conditions Générales de Vente et la Politique de Confidentialité pour continuer.';
       errEl.style.display = 'block';
       errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       return;
     }
 
-    const accepteOffres = document.getElementById('offres-commerciales')?.checked ?? false;
+    const refuseOffres = document.getElementById('offres-commerciales')?.checked ?? false;
+    const accepteOffres = !refuseOffres;
 
     // Vérification : permis obtenu depuis au moins 2 ans
     const permisObtenu = new Date(permisDate);
@@ -1936,6 +1938,16 @@ const photos = [
     cursor: pointer;
   }
   .consent-row a { color: var(--teal); text-decoration: underline; text-underline-offset: 2px; }
+  .rgpd-notice {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin: 0.25rem 0 0.1rem;
+    padding: 0.5rem 0.6rem;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--border-md);
+    border-radius: 0 4px 4px 0;
+  }
   .consent-required-badge {
     display: inline-block;
     font-size: 0.68rem;
