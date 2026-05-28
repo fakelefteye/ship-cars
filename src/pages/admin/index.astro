@@ -76,6 +76,24 @@ const { data: codesPromo } = await supabaseAdmin
   .select('*')
   .order('created_at', { ascending: false });
 
+// Comptage des utilisations par code promo (toutes réservations avec code_promo renseigné)
+const { data: promoUsages } = await supabaseAdmin
+  .from('reservations')
+  .select('code_promo, statut')
+  .not('code_promo', 'is', null)
+  .neq('code_promo', '');
+
+// Agréger en JS : { CODE: { total, paye, annulee, ... } }
+const promoStats: Record<string, { total: number; paye: number; annulee: number; autres: number }> = {};
+for (const r of promoUsages ?? []) {
+  const c = (r.code_promo as string).toUpperCase();
+  if (!promoStats[c]) promoStats[c] = { total: 0, paye: 0, annulee: 0, autres: 0 };
+  promoStats[c].total++;
+  if (r.statut === 'paye' || r.statut === 'confirmee') promoStats[c].paye++;
+  else if (r.statut === 'annulee') promoStats[c].annulee++;
+  else promoStats[c].autres++;
+}
+
 const maintenance = await isMaintenanceMode();
 const { data: mfData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'mardi_flash_actif').single();
 const mardiFlashActif = mfData?.value === 'true';
@@ -245,6 +263,7 @@ const updated = url.searchParams.get('updated');
           if (debut && fin) windowLabel = `📅 ${debut} → ${fin}`;
           else if (debut) windowLabel = `📅 à partir du ${debut}`;
           else if (fin) windowLabel = `📅 jusqu'au ${fin}`;
+          const stats = promoStats[p.code] ?? { total: 0, paye: 0, annulee: 0, autres: 0 };
           return (
             <div class={`promo-row ${p.actif ? '' : 'off'}`} data-id={p.id}>
               <div class="promo-info">
@@ -253,6 +272,11 @@ const updated = url.searchParams.get('updated');
                   <strong>-{p.pourcentage}%</strong>
                   {p.description && <span class="promo-desc">· {p.description}</span>}
                   {windowLabel && <span class="promo-window">{windowLabel}</span>}
+                  <span class={`promo-usage-badge ${stats.total === 0 ? 'zero' : stats.paye > 0 ? 'has-paye' : ''}`}
+                    title={`${stats.paye} payée(s) · ${stats.annulee} annulée(s) · ${stats.autres} autre(s)`}>
+                    🎟️ {stats.total} utilisation{stats.total !== 1 ? 's' : ''}
+                    {stats.paye > 0 && <span> · <strong>{stats.paye} payée{stats.paye !== 1 ? 's' : ''}</strong></span>}
+                  </span>
                 </div>
               </div>
               <div class="promo-actions">
@@ -1197,6 +1221,9 @@ const updated = url.searchParams.get('updated');
   .promo-meta strong { font-size: 1rem; }
   .promo-desc { color: #888; font-weight: 300; }
   .promo-window { color: #4dd4c8; font-size: 0.82rem; font-weight: 500; background: rgba(77,212,200,0.1); padding: 2px 8px; border-radius: 6px; }
+  .promo-usage-badge { font-size: 0.78rem; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; white-space: nowrap; }
+  .promo-usage-badge.zero { background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; }
+  .promo-usage-badge.has-paye { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
   .promo-hint { font-size: 0.82rem; color: #666; background: #f8f9fa; padding: 0.75rem 1rem; border-left: 3px solid #4dd4c8; border-radius: 4px; margin: 0; }
   .promo-date-row { grid-template-columns: 1fr 1fr; }
   .optional { color: #aaa; font-weight: 400; font-size: 0.82em; }
