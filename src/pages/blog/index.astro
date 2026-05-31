@@ -1,0 +1,180 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const articles = [
+  {
+    slug: 'louer-voiture-carte-bancaire-quelquun-dautre',
+    titre: 'Louer une voiture avec la carte bancaire de quelqu\'un d\'autre',
+    resume: 'Parent, ami, employeur… Vous pouvez payer la location de voiture Ship Cars avec la carte d\'un tiers. Découvrez le processus sécurisé, les documents requis et vos protections légales.',
+    date: '2026-05-31',
+    tag: 'Paiement',
+    emoji: '💳',
+    readTime: '5 min',
+  },
+  {
+    slug: 'location-voiture-sans-agence-grenoble',
+    titre: 'Location de voiture sans agence à Grenoble : l\'avantage du 100 % digital',
+    resume: 'Pas de guichet, pas d\'attente, pas de clé à récupérer en main propre. Ship Cars révolutionne la location courte durée à Grenoble grâce à l\'ouverture à distance et la réservation en ligne.',
+    date: '2026-05-28',
+    tag: 'Pratique',
+    emoji: '📱',
+    readTime: '4 min',
+  },
+  {
+    slug: 'ouverture-voiture-distance-grenoble',
+    titre: 'Ouvrir sa voiture à distance : comment ça marche avec Ship Cars ?',
+    resume: 'Boîtier Connect, application mobile, horaire précis… Ship Cars vous explique comment fonctionne l\'ouverture de voiture à distance à Grenoble et pourquoi c\'est plus simple qu\'un double de clé.',
+    date: '2026-05-20',
+    tag: 'Technologie',
+    emoji: '🔓',
+    readTime: '4 min',
+  },
+];
+
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<MainLayout title="Blog — Conseils et actus location de voiture à Grenoble | Ship Cars">
+  <Fragment slot="head">
+    <meta name="description" content="Blog Ship Cars : conseils pratiques, actus location de voiture à Grenoble, paiement par tiers, ouverture à distance et bien plus." />
+    <link rel="canonical" href="https://www.shipcars.fr/blog" />
+  </Fragment>
+
+  <div class="blog-page">
+
+    <section class="blog-hero">
+      <div class="blog-container">
+        <div class="blog-breadcrumb"><a href="/">Accueil</a> › Blog</div>
+        <h1>Blog Ship Cars</h1>
+        <p class="blog-subtitle">Conseils pratiques, nouveautés et guides pour louer simplement à Grenoble</p>
+      </div>
+    </section>
+
+    <div class="blog-container blog-body">
+      <div class="articles-grid">
+        {articles.map((a) => (
+          <a href={`/blog/${a.slug}`} class="article-card">
+            <div class="article-emoji">{a.emoji}</div>
+            <div class="article-meta">
+              <span class="article-tag">{a.tag}</span>
+              <span class="article-date">{fmtDate(a.date)}</span>
+              <span class="article-read">{a.readTime} de lecture</span>
+            </div>
+            <h2 class="article-titre">{a.titre}</h2>
+            <p class="article-resume">{a.resume}</p>
+            <span class="article-lire">Lire l'article →</span>
+          </a>
+        ))}
+      </div>
+
+      <div class="blog-cta">
+        <p>Vous avez une question sur votre location ?</p>
+        <div class="blog-cta-btns">
+          <a href="/faq" class="btn-faq">Voir la FAQ →</a>
+          <a href="/#catalogue" class="btn-resa">Réserver un véhicule</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</MainLayout>
+
+<style>
+  .blog-page { color: var(--text); }
+  .blog-container { max-width: 1000px; margin: 0 auto; padding: 0 2rem; }
+  .blog-hero {
+    background: linear-gradient(135deg, #0a1421 0%, #0f1e33 100%);
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .blog-breadcrumb { font-size: .78rem; color: var(--text-dim); margin-bottom: 1rem; }
+  .blog-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .blog-hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800; margin-bottom: .75rem; letter-spacing: -.02em;
+  }
+  .blog-subtitle { color: var(--text-muted); font-size: 1rem; }
+
+  .blog-body { padding-top: 3rem; padding-bottom: 5rem; }
+
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .article-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    transition: border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .article-card:hover {
+    border-color: rgba(77,212,200,.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.3);
+  }
+
+  .article-emoji { font-size: 2rem; line-height: 1; }
+
+  .article-meta {
+    display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+    font-size: .72rem;
+  }
+  .article-tag {
+    background: rgba(77,212,200,.12);
+    color: var(--teal);
+    border: 1px solid rgba(77,212,200,.25);
+    padding: 2px 10px; border-radius: 99px;
+    font-weight: 600; letter-spacing: .04em;
+  }
+  .article-date, .article-read { color: var(--text-dim); }
+  .article-date::before { content: '·'; margin-right: .4rem; }
+
+  .article-titre {
+    font-size: 1.05rem; font-weight: 700;
+    line-height: 1.4; color: var(--text);
+  }
+  .article-resume {
+    font-size: .85rem; color: var(--text-muted);
+    line-height: 1.7; flex: 1;
+  }
+  .article-lire {
+    font-size: .82rem; color: var(--teal);
+    font-weight: 600; margin-top: .25rem;
+  }
+
+  .blog-cta {
+    background: rgba(77,212,200,.06);
+    border: 1px solid rgba(77,212,200,.2);
+    border-radius: 16px; padding: 2rem;
+    text-align: center;
+  }
+  .blog-cta p { color: var(--text-muted); font-size: .95rem; margin-bottom: 1.25rem; }
+  .blog-cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-faq {
+    background: transparent; border: 1px solid var(--teal);
+    color: var(--teal); font-weight: 700; padding: .7rem 1.4rem;
+    border-radius: 10px; text-decoration: none; font-size: .9rem;
+    transition: background .15s;
+  }
+  .btn-faq:hover { background: rgba(77,212,200,.1); }
+  .btn-resa {
+    background: var(--teal); color: #0a1421; font-weight: 700;
+    padding: .7rem 1.4rem; border-radius: 10px;
+    text-decoration: none; font-size: .9rem; transition: opacity .15s;
+  }
+  .btn-resa:hover { opacity: .85; }
+
+  @media (max-width: 700px) {
+    .articles-grid { grid-template-columns: 1fr; }
+  }
+</style>

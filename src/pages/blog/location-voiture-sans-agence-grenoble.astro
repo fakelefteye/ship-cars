@@ -1,0 +1,122 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre    = "Location de voiture sans agence à Grenoble : l'avantage du 100 % digital";
+const slug     = "location-voiture-sans-agence-grenoble";
+const date     = "2026-05-28";
+const desc     = "Ship Cars propose la location de voiture sans agence physique à Grenoble. Pas de guichet, pas d'attente, pas de clé à récupérer en main propre. Réservation en ligne, paiement Stripe, ouverture à distance.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": { "@type": "Organization", "name": "Ship Cars", "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" } },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+    <header class="article-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb"><a href="/">Accueil</a> › <a href="/blog">Blog</a> › <span>Location sans agence</span></div>
+        <div class="article-tag-header">
+          <span class="tag">📱 Pratique</span>
+          <span class="meta-date">28 mai 2026</span>
+          <span class="meta-read">· 4 min de lecture</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          À Grenoble, louer une voiture rime encore souvent avec file d'attente, guichets fermés et formulaires en papier.
+          Ship Cars casse ce modèle : <strong>tout se fait en ligne, depuis votre téléphone, en quelques minutes</strong>.
+          Voici comment fonctionne la location de voiture sans agence physique.
+        </p>
+      </div>
+    </header>
+
+    <div class="art-container article-body">
+      <div class="article-content">
+
+        <section>
+          <h2>Pourquoi les agences traditionnelles sont contraignantes</h2>
+          <p>Les agences de location classiques ont plusieurs défauts bien connus :</p>
+          <ul>
+            <li>Horaires d'ouverture limités — difficile de récupérer un véhicule tôt le matin ou tard le soir</li>
+            <li>Files d'attente aux guichets, surtout les weekends et les jours fériés</li>
+            <li>Papiers à signer sur place, souvent en double exemplaire</li>
+            <li>Frais cachés découverts au dernier moment</li>
+            <li>Nécessité de revenir physiquement pour rendre les clés</li>
+          </ul>
+          <p>Ship Cars a été conçu pour éliminer toutes ces frictions.</p>
+        </section>
+
+        <section>
+          <h2>Le modèle Ship Cars : 3 étapes, zéro guichet</h2>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-content"><strong>Réservez en ligne</strong><p>Choisissez votre véhicule, vos dates et horaires précis sur shipcars.fr. Le calendrier de disponibilité est mis à jour en temps réel. Renseignez vos informations et uploadez votre permis depuis votre téléphone.</p></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-content"><strong>Payez par carte via Stripe</strong><p>Paiement 100 % sécurisé. Une caution de 900 € est pré-autorisée (non débitée). Vous recevez votre contrat de location par email immédiatement après le paiement.</p></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-content"><strong>Récupérez le véhicule sans contact</strong><p>À l'heure exacte de votre réservation, le véhicule s'ouvre depuis votre téléphone via le Boîtier Connect. Pas de clé, pas de code, pas de passage en agence.</p></div></div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Où récupérer le véhicule à Grenoble ?</h2>
+          <p>Le véhicule est situé au <strong>62 rue Félix Esclangon, 38000 Grenoble</strong>, à environ 2 minutes à pied de la gare SNCF. C'est l'un des emplacements les plus pratiques de l'agglomération grenobloise pour une prise en charge rapide.</p>
+          <p>Que vous arriviez en train, en tram ou en voiture, l'accès est immédiat. Pas besoin de chercher un agent ou de sonner à un interphone — le Boîtier Connect gère tout.</p>
+        </section>
+
+        <section>
+          <h2>Ship Cars, c'est pour qui ?</h2>
+          <ul>
+            <li><strong>Les voyageurs</strong> qui arrivent à la gare de Grenoble et ont besoin d'une voiture immédiatement</li>
+            <li><strong>Les étudiants</strong> qui ont besoin d'un véhicule pour le weekend sans contrainte horaire</li>
+            <li><strong>Les professionnels</strong> en déplacement qui veulent un processus rapide sans paperasse</li>
+            <li><strong>Les locaux</strong> dont la voiture est en réparation et qui ont besoin d'un dépannage rapide</li>
+            <li><strong>Les touristes</strong> qui veulent explorer les Alpes et la Provence depuis Grenoble</li>
+          </ul>
+        </section>
+
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Essayez Ship Cars</h2>
+            <p>Réservez en 5 minutes depuis votre téléphone. Véhicule disponible 62 rue Félix Esclangon, Grenoble.</p>
+            <a href="/#catalogue" class="cta-btn">Voir les véhicules →</a>
+          </div>
+        </div>
+
+      </div>
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>Pratique</strong>
+          <ul>
+            <li>📍 62 rue Félix Esclangon, Grenoble</li>
+            <li>🚉 2 min de la gare SNCF</li>
+            <li>⏰ Disponible 7j/7, 24h/24</li>
+            <li>💳 Paiement Stripe sécurisé</li>
+            <li>🔓 Ouverture à distance</li>
+          </ul>
+          <a href="/#catalogue" class="sidebar-btn">Réserver →</a>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/louer-voiture-carte-bancaire-quelquun-dautre">Louer avec la CB de quelqu'un d'autre →</a>
+          <a href="/blog/ouverture-voiture-distance-grenoble">Ouverture à distance →</a>
+          <a href="/faq">FAQ →</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page{color:var(--text)}.art-container{max-width:1060px;margin:0 auto;padding:0 2rem}.article-hero{background:linear-gradient(135deg,#0a1421,#0f1e33);padding:4rem 0 3.5rem;border-bottom:1px solid var(--border)}.article-breadcrumb{font-size:.76rem;color:var(--text-dim);margin-bottom:1.25rem}.article-breadcrumb a{color:var(--teal);text-decoration:none}.article-tag-header{display:flex;align-items:center;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap;font-size:.78rem}.tag{background:rgba(77,212,200,.12);color:var(--teal);border:1px solid rgba(77,212,200,.25);padding:3px 12px;border-radius:99px;font-weight:600}.meta-date,.meta-read{color:var(--text-dim)}.article-hero h1{font-size:clamp(1.5rem,3.5vw,2.2rem);font-weight:800;line-height:1.25;letter-spacing:-.02em;margin-bottom:1.25rem}.article-lead{font-size:1.05rem;color:var(--text-muted);line-height:1.8;max-width:720px}.article-lead strong{color:var(--teal)}.article-body{display:grid;grid-template-columns:1fr 280px;gap:3rem;padding-top:3rem;padding-bottom:5rem;align-items:start}.article-content{min-width:0}.article-content section{margin-bottom:2.5rem}.article-content h2{font-size:1.3rem;font-weight:700;color:var(--teal);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}.article-content p{font-size:.92rem;color:var(--text-muted);line-height:1.8;margin-bottom:.75rem}.article-content ul{list-style:none;padding:0;margin:.5rem 0 .75rem;display:flex;flex-direction:column;gap:.4rem}.article-content li{font-size:.9rem;color:var(--text-muted);padding-left:1.2rem;position:relative;line-height:1.6}.article-content li::before{content:'›';position:absolute;left:0;color:var(--teal);font-weight:700}.article-content strong{color:var(--text)}.steps{display:flex;flex-direction:column;gap:1rem;margin:1.25rem 0}.step{display:flex;gap:1rem;align-items:flex-start;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem}.step-num{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#0a1421;font-weight:800;font-size:.88rem;display:grid;place-items:center;flex-shrink:0}.step-content strong{display:block;font-size:.92rem;color:var(--text);margin-bottom:.3rem}.step-content p{font-size:.84rem;color:var(--text-muted);margin:0;line-height:1.6}.article-cta{background:linear-gradient(135deg,rgba(77,212,200,.1),rgba(29,78,216,.1));border:1px solid rgba(77,212,200,.25);border-radius:16px;padding:2rem;margin-top:2rem;text-align:center}.cta-inner h2{font-size:1.3rem;font-weight:800;margin-bottom:.5rem}.cta-inner p{color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem}.cta-btn{display:inline-block;background:var(--teal);color:#0a1421;font-weight:800;font-size:.95rem;padding:.9rem 1.8rem;border-radius:10px;text-decoration:none;transition:opacity .15s}.cta-btn:hover{opacity:.85}.article-sidebar{position:sticky;top:80px;display:flex;flex-direction:column;gap:1rem}.sidebar-card{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:1.25rem}.sidebar-card strong{display:block;color:var(--silver);font-size:.88rem;margin-bottom:.75rem}.sidebar-card ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}.sidebar-card li{font-size:.82rem;color:var(--text-muted)}.sidebar-card li::before{display:none}.sidebar-btn{display:block;background:var(--teal);color:#0a1421;font-weight:700;text-align:center;padding:.65rem 1rem;border-radius:8px;text-decoration:none;font-size:.88rem;transition:opacity .15s}.sidebar-btn:hover{opacity:.85}.sidebar-related{display:flex;flex-direction:column;gap:.5rem}.sidebar-related a{color:var(--teal);font-size:.82rem;text-decoration:none}.sidebar-related a:hover{text-decoration:underline}@media (max-width:860px){.article-body{grid-template-columns:1fr}.article-sidebar{position:static}}
+</style>

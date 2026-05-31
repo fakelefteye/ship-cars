@@ -97,6 +97,8 @@ for (const r of promoUsages ?? []) {
 const maintenance = await isMaintenanceMode();
 const { data: mfData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'mardi_flash_actif').single();
 const mardiFlashActif = mfData?.value === 'true';
+const { data: dmData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'derniere_minute_actif').single();
+const derniereMinuteActif = dmData?.value === 'true';
 
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
@@ -152,6 +154,37 @@ const updated = url.searchParams.get('updated');
         </button>
       </div>
 
+      <!-- NETTOYAGE RÉSERVATIONS EN ATTENTE -->
+      <div class="maint-card" id="cleanup-card" style="margin-top:.75rem;">
+        <div class="maint-left">
+          <div style="font-size:1.3rem;flex-shrink:0;">🧹</div>
+          <div>
+            <strong>Nettoyage automatique</strong>
+            <p id="cleanup-desc">Annule toutes les réservations « paiement en attente » de plus de 15 min. Tourne automatiquement toutes les 15 min (pg_cron).</p>
+          </div>
+        </div>
+        <button id="btn-cleanup" class="maint-btn-on" style="background:#6366f1;">
+          🧹 Nettoyer maintenant
+        </button>
+      </div>
+
+      <!-- DERNIÈRE MINUTE TOGGLE -->
+      <div class={`maint-card ${derniereMinuteActif ? 'dm-on' : ''}`} id="dm-card" style="margin-top:.75rem;">
+        <div class="maint-left">
+          <div class="dm-dot" id="dm-dot"></div>
+          <div>
+            <strong id="dm-label">{derniereMinuteActif ? '🕐 Dernière Minute ACTIF' : '🕐 Prix Dernière Minute désactivé'}</strong>
+            <p id="dm-desc">{derniereMinuteActif
+              ? 'Code MINUTE actif (25€, 50 km, ≤2 jours, semaine) — bannière homepage affichée.'
+              : 'Code MINUTE désactivé — bannière homepage masquée.'
+            }</p>
+          </div>
+        </div>
+        <button id="btn-dm" class={derniereMinuteActif ? 'dm-btn-off' : 'dm-btn-on'} data-current={String(derniereMinuteActif)}>
+          {derniereMinuteActif ? '⏹️ Désactiver' : '🕐 Activer Dernière Minute'}
+        </button>
+      </div>
+
       {success && <p class="success-msg">✅ L'élément a été ajouté avec succès !</p>}
       {deleted && <p class="success-msg">✅ L'élément a été supprimé avec succès !</p>}
       {updated && <p class="success-msg">✅ L'élément a été modifié avec succès !</p>}
@@ -183,6 +216,52 @@ const updated = url.searchParams.get('updated');
         {(!vehicules || vehicules.length === 0) && (
           <p class="empty">Aucun véhicule enregistré.</p>
         )}
+      </div>
+    </section>
+
+    <!-- ÉTAT DES VÉHICULES (km + carburant) -->
+    <section class="admin-card">
+      <h2>🚗 État des véhicules au départ</h2>
+      <p class="subtitle">Renseignez le kilométrage compteur et le niveau de carburant avant chaque remise des clés. Ces informations apparaissent dans le contrat envoyé par mail.</p>
+      <div class="etat-list" id="etat-list">
+        {vehicules?.map((v) => (
+          <div class="etat-row" data-id={v.id}>
+            <div class="etat-nom">
+              <strong>{v.nom}</strong>
+              {v.modele && <span class="etat-modele"> — {v.modele}</span>}
+              {v.immatriculation && <span class="etat-immat">{v.immatriculation}</span>}
+            </div>
+            <div class="etat-fields">
+              <div class="etat-field">
+                <label class="etat-label">Type carburant</label>
+                <select class="etat-select-carburant" data-id={v.id}>
+                  <option value="" selected={!v.carburant}>—</option>
+                  <option value="Essence" selected={v.carburant === 'Essence'}>Essence</option>
+                  <option value="Diesel" selected={v.carburant === 'Diesel'}>Diesel</option>
+                  <option value="Hybride" selected={v.carburant === 'Hybride'}>Hybride</option>
+                  <option value="Électrique" selected={v.carburant === 'Électrique'}>Électrique</option>
+                  <option value="GPL" selected={v.carburant === 'GPL'}>GPL</option>
+                </select>
+              </div>
+              <div class="etat-field">
+                <label class="etat-label">Km au départ</label>
+                <input type="number" class="etat-input-km" data-id={v.id} value={v.kilometrage_depart ?? ''} placeholder="Ex : 42500" min="0" />
+              </div>
+              <div class="etat-field">
+                <label class="etat-label">Niveau carburant</label>
+                <select class="etat-select-niveau" data-id={v.id}>
+                  <option value="" selected={!v.carburant_depart}>—</option>
+                  <option value="Plein" selected={v.carburant_depart === 'Plein'}>Plein</option>
+                  <option value="3/4" selected={v.carburant_depart === '3/4'}>3/4</option>
+                  <option value="1/2" selected={v.carburant_depart === '1/2'}>1/2</option>
+                  <option value="1/4" selected={v.carburant_depart === '1/4'}>1/4</option>
+                  <option value="Vide" selected={v.carburant_depart === 'Vide'}>Vide</option>
+                </select>
+              </div>
+              <button class="btn-save-etat" data-id={v.id}>💾 Enregistrer</button>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
 
@@ -512,6 +591,108 @@ const updated = url.searchParams.get('updated');
           if (desc)  desc.textContent  = 'Code MARDI désactivé — bannière homepage masquée.';
           btn.textContent = '⚡ Activer Mardi Flash';
           btn.className   = 'mf-btn-on';
+        }
+        btn.dataset.current = String(next);
+        btn.disabled = false;
+      } else { alert('Erreur : ' + (data.error || 'inconnue')); btn.disabled = false; }
+    } catch { alert('Erreur réseau'); btn.disabled = false; }
+  });
+
+  // ── État des véhicules (km + carburant) ────────────────────────────
+  document.querySelectorAll('.btn-save-etat').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const id = this.getAttribute('data-id');
+      const row = this.closest('.etat-row');
+      const km      = row.querySelector('.etat-input-km').value;
+      const niveau  = row.querySelector('.etat-select-niveau').value;
+      const carburant = row.querySelector('.etat-select-carburant').value;
+      const btnEl = this;
+      btnEl.disabled = true; btnEl.textContent = '⏳…';
+      try {
+        const res = await fetch('/api/admin/update-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: 'vehicule',
+            id,
+            kilometrage_depart: km !== '' ? parseInt(km) : null,
+            carburant_depart:   niveau   || null,
+            carburant:          carburant || null,
+          }),
+        });
+        if (res.ok || res.status === 303) {
+          btnEl.textContent = '✅ Enregistré';
+          setTimeout(() => { btnEl.textContent = '💾 Enregistrer'; btnEl.disabled = false; }, 2500);
+        } else {
+          const d = await res.json().catch(() => ({}));
+          alert('Erreur : ' + (d.error || res.status));
+          btnEl.textContent = '💾 Enregistrer'; btnEl.disabled = false;
+        }
+      } catch { alert('Erreur réseau'); btnEl.textContent = '💾 Enregistrer'; btnEl.disabled = false; }
+    });
+  });
+
+  // ── Nettoyage réservations en attente ──────────────────────────────
+  document.getElementById('btn-cleanup')?.addEventListener('click', async function() {
+    const btn = this as HTMLButtonElement;
+    btn.disabled = true; btn.textContent = '⏳ Nettoyage…';
+    const desc = document.getElementById('cleanup-desc');
+    try {
+      const res  = await fetch('/api/admin/cleanup-pending', {
+        method: 'POST', credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) {
+        const n = data.annulees ?? 0;
+        btn.textContent = '✅ Fait';
+        if (desc) desc.textContent = n === 0
+          ? 'Aucune réservation en attente à annuler.'
+          : `${n} réservation${n > 1 ? 's' : ''} annulée${n > 1 ? 's' : ''} (créneaux libérés).`;
+        setTimeout(() => {
+          btn.textContent = '🧹 Nettoyer maintenant';
+          btn.disabled = false;
+          if (desc) desc.textContent = 'Annule toutes les réservations « paiement en attente » de plus de 15 min. Tourne automatiquement toutes les 15 min (pg_cron).';
+        }, 4000);
+      } else {
+        alert('Erreur : ' + (data.error || 'inconnue'));
+        btn.textContent = '🧹 Nettoyer maintenant';
+        btn.disabled = false;
+      }
+    } catch { alert('Erreur réseau'); btn.textContent = '🧹 Nettoyer maintenant'; btn.disabled = false; }
+  });
+
+  // ── Dernière Minute toggle ──────────────────────────────────────────
+  document.getElementById('btn-dm')?.addEventListener('click', async function() {
+    const btn = this as HTMLButtonElement;
+    const cur  = btn.dataset.current === 'true';
+    const next = !cur;
+    btn.disabled = true; btn.textContent = '⏳ En cours…';
+    try {
+      const res  = await fetch('/api/admin/derniere-minute', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        credentials:'include', body: JSON.stringify({ actif: next }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const card  = document.getElementById('dm-card');
+        const label = document.getElementById('dm-label');
+        const desc  = document.getElementById('dm-desc');
+        const dot   = document.getElementById('dm-dot');
+        if (next) {
+          card?.classList.add('dm-on');
+          if (dot) { dot.style.background = '#2563eb'; dot.style.boxShadow = '0 0 0 4px rgba(37,99,235,.2)'; }
+          if (label) label.textContent = '🕐 Dernière Minute ACTIF';
+          if (desc)  desc.textContent  = 'Code MINUTE actif (25€, 50 km, ≤2 jours, semaine) — bannière homepage affichée.';
+          btn.textContent = '⏹️ Désactiver';
+          btn.className   = 'dm-btn-off';
+        } else {
+          card?.classList.remove('dm-on');
+          if (dot) { dot.style.background = '#9ca3af'; dot.style.boxShadow = 'none'; }
+          if (label) label.textContent = '🕐 Prix Dernière Minute désactivé';
+          if (desc)  desc.textContent  = 'Code MINUTE désactivé — bannière homepage masquée.';
+          btn.textContent = '🕐 Activer Dernière Minute';
+          btn.className   = 'dm-btn-on';
         }
         btn.dataset.current = String(next);
         btn.disabled = false;
@@ -1115,6 +1296,15 @@ const updated = url.searchParams.get('updated');
   .mf-btn-off:hover { opacity:.85; }
   .mf-btn-on:disabled, .mf-btn-off:disabled { opacity:.5; cursor:not-allowed; }
 
+  /* Dernière Minute card */
+  .dm-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; background:#9ca3af; }
+  .dm-card.dm-on { border-color:#2563eb; background:#eff6ff; }
+  .dm-btn-on { background:#2563eb; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .dm-btn-on:hover { opacity:.85; }
+  .dm-btn-off { background:#6b7280; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .dm-btn-off:hover { opacity:.85; }
+  .dm-btn-on:disabled, .dm-btn-off:disabled { opacity:.5; cursor:not-allowed; }
+
   .admin-container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
   .admin-header { margin-bottom: 2rem; }
   .success-msg { background: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; border: 1px solid #c3e6cb; margin-top: 1rem; }
@@ -1242,6 +1432,22 @@ const updated = url.searchParams.get('updated');
     .promo-row { flex-direction: column; align-items: stretch; gap: 0.75rem; }
     .promo-actions { justify-content: space-between; }
   }
+
+  /* État des véhicules */
+  .etat-list { display: flex; flex-direction: column; gap: 1rem; }
+  .etat-row { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .75rem; }
+  .etat-nom { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .etat-nom strong { font-size: .95rem; color: #0f1e33; }
+  .etat-modele { font-size: .82rem; color: #6b7280; }
+  .etat-immat { font-size: .72rem; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; letter-spacing: .05em; }
+  .etat-fields { display: flex; align-items: flex-end; gap: .75rem; flex-wrap: wrap; }
+  .etat-field { display: flex; flex-direction: column; gap: .3rem; }
+  .etat-label { font-size: .72rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
+  .etat-input-km { width: 130px; padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .92rem; font-weight: 600; }
+  .etat-select-niveau, .etat-select-carburant { padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .92rem; font-weight: 600; background: #fff; cursor: pointer; }
+  .btn-save-etat { background: #4dd4c8; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; align-self: flex-end; transition: opacity .15s; }
+  .btn-save-etat:hover { opacity: .85; }
+  .btn-save-etat:disabled { opacity: .5; cursor: not-allowed; }
 
   /* Styles pour les notifications */
   .notification { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 6px; color: white; font-weight: bold; z-index: 1001; }

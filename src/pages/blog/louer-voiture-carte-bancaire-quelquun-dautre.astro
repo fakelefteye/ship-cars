@@ -1,0 +1,500 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre    = "Louer une voiture avec la carte bancaire de quelqu'un d'autre : tout ce qu'il faut savoir";
+const slug     = "louer-voiture-carte-bancaire-quelquun-dautre";
+const date     = "2026-05-31";
+const readTime = "5 min";
+const desc     = "Parent, ami, employeur qui paye la location ? Ship Cars accepte les tiers payeurs avec un processus 100 % en ligne, sécurisé et légalement encadré. Découvrez comment louer une voiture à Grenoble avec la CB de quelqu'un d'autre.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Ship Cars",
+        "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" }
+      },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+
+    <header class="article-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb">
+          <a href="/">Accueil</a> ›
+          <a href="/blog">Blog</a> ›
+          <span>Tiers payeur</span>
+        </div>
+        <div class="article-tag-header">
+          <span class="tag">💳 Paiement</span>
+          <span class="meta-date">31 mai 2026</span>
+          <span class="meta-read">· {readTime} de lecture</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          Vous avez besoin d'une voiture à Grenoble mais c'est un parent, un ami ou votre employeur qui règle la facture ?
+          Bonne nouvelle : <strong>Ship Cars accepte les paiements par tiers</strong>, avec un processus 100 % en ligne,
+          sécurisé et légalement encadré. Voici tout ce qu'il faut savoir.
+        </p>
+      </div>
+    </header>
+
+    <div class="art-container article-body">
+
+      <div class="article-content">
+
+        <nav class="sommaire">
+          <strong>Sommaire</strong>
+          <ol>
+            <li><a href="#cas-usage">Dans quels cas louer avec la CB de quelqu'un d'autre ?</a></li>
+            <li><a href="#comment-ca-marche">Comment ça marche chez Ship Cars ?</a></li>
+            <li><a href="#documents">Quels documents doit fournir le tiers payeur ?</a></li>
+            <li><a href="#protection">Pourquoi c'est sécurisé pour tout le monde</a></li>
+            <li><a href="#legal">Cadre légal : que dit la loi ?</a></li>
+            <li><a href="#faq-tiers">Questions fréquentes</a></li>
+          </ol>
+        </nav>
+
+        <section id="cas-usage">
+          <h2>Dans quels cas louer avec la carte bancaire de quelqu'un d'autre ?</h2>
+          <p>
+            Il existe de nombreuses situations où le conducteur d'un véhicule loué n'est pas la même personne que celle qui paye :
+          </p>
+          <ul>
+            <li><strong>Un parent paye pour son enfant étudiant</strong> qui a besoin d'un véhicule pour un stage, un déménagement ou un week-end</li>
+            <li><strong>Un ami ou proche règle la location</strong> à titre de cadeau ou d'entraide ponctuelle</li>
+            <li><strong>Un employeur ou une entreprise</strong> rembourse ou paye directement la location pour un collaborateur en déplacement</li>
+            <li><strong>Un couple</strong> dont l'un des deux n'a pas de carte bancaire suffisamment approvisionnée</li>
+            <li><strong>Une association ou un groupe</strong> qui gère les frais de déplacement de ses membres</li>
+          </ul>
+          <p>
+            Jusqu'à récemment, ces situations étaient refusées ou très mal gérées par les agences de location classiques.
+            Chez Ship Cars, nous avons conçu un processus <strong>entièrement en ligne</strong> qui protège à la fois le conducteur, le tiers payeur et notre agence.
+          </p>
+        </section>
+
+        <section id="comment-ca-marche">
+          <h2>Comment ça marche chez Ship Cars ?</h2>
+          <p>Le processus est simple et ne nécessite aucune présence physique de qui que ce soit.</p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <strong>Le conducteur remplit la réservation en ligne normalement</strong>
+                <p>Il choisit son véhicule, ses dates, fournit ses informations et son permis de conduire.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <strong>Il coche « La carte bancaire appartient à quelqu'un d'autre »</strong>
+                <p>Un formulaire apparaît pour renseigner le nom, l'email et le téléphone du tiers payeur.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <strong>Le tiers payeur fournit ses documents d'identité</strong>
+                <p>Le conducteur uploade (au nom du tiers) : une photo de sa pièce d'identité ET un selfie tenant la pièce d'identité visible face caméra.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <strong>Le tiers paye via Stripe avec authentification 3D Secure</strong>
+                <p>La banque du tiers valide l'opération par SMS ou application bancaire — c'est une preuve d'authentification forte.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-content">
+                <strong>Le tiers reçoit un email de confirmation et accepte la clause de solidarité</strong>
+                <p>Un lien unique lui est envoyé. En cliquant « J'accepte », il confirme son accord — cela constitue une signature électronique valide.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">6</div>
+              <div class="step-content">
+                <strong>Le véhicule s'ouvre à l'heure prévue</strong>
+                <p>Le conducteur reçoit son contrat de location. La location se déroule normalement.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="documents">
+          <h2>Quels documents doit fournir le tiers payeur ?</h2>
+
+          <div class="info-box">
+            <strong>📋 Documents obligatoires pour le tiers payeur</strong>
+            <ul>
+              <li>✅ Photo de la <strong>pièce d'identité</strong> (carte nationale d'identité ou passeport, recto)</li>
+              <li>✅ <strong>Selfie tenant la pièce d'identité</strong> face caméra (pour confirmer que c'est bien lui)</li>
+              <li>✅ <strong>Validation 3D Secure</strong> lors du paiement Stripe (code SMS ou application bancaire)</li>
+              <li>✅ <strong>Clic de consentement</strong> sur le lien reçu par email</li>
+            </ul>
+          </div>
+
+          <p>
+            Ces éléments permettent de s'assurer que <strong>la personne qui paye est bien le titulaire légitime de la carte bancaire</strong>
+            et qu'elle a consciemment autorisé le paiement. Cela vous protège tous les deux en cas de litige.
+          </p>
+
+          <h3>Et pour le conducteur ?</h3>
+          <p>Le conducteur fournit les mêmes documents qu'habituellement :</p>
+          <ul>
+            <li>Permis de conduire recto/verso</li>
+            <li>Selfie tenant son permis</li>
+            <li>Informations personnelles (adresse, date de naissance, etc.)</li>
+          </ul>
+        </section>
+
+        <section id="protection">
+          <h2>Pourquoi c'est sécurisé pour tout le monde ?</h2>
+
+          <h3>Pour Ship Cars</h3>
+          <p>
+            En cas de contestation de paiement (chargeback), Ship Cars dispose de plusieurs preuves irréfutables :
+          </p>
+          <ul>
+            <li><strong>Stripe 3D Secure</strong> — authentification forte reconnue par toutes les banques européennes (directive DSP2)</li>
+            <li><strong>Photo pièce d'identité + selfie</strong> — identification formelle du titulaire de la carte</li>
+            <li><strong>Email de consentement envoyé à l'adresse du tiers</strong> — preuve de notification</li>
+            <li><strong>Clic horodaté + adresse IP enregistrée</strong> — signature électronique simple valide (art. 1366 Code civil)</li>
+            <li><strong>Clause de solidarité dans le contrat</strong> — engagement contractuel écrit</li>
+          </ul>
+          <p>
+            Face à ces éléments, les banques refusent systématiquement les contestations frauduleuses.
+          </p>
+
+          <h3>Pour le tiers payeur</h3>
+          <p>
+            Le tiers payeur sait exactement ce qu'il paye et pour qui.
+            Le contrat lui est transmis et la clause de solidarité lui est expliquée clairement avant qu'il n'accepte.
+            S'il n'a pas autorisé le paiement, il peut refuser de cliquer et contacter Ship Cars immédiatement.
+          </p>
+
+          <h3>Pour le conducteur</h3>
+          <p>
+            Le conducteur n'a pas à se soucier du paiement. Dès lors que le tiers a confirmé son accord,
+            la location se déroule exactement comme une location classique.
+          </p>
+        </section>
+
+        <section id="legal">
+          <h2>Cadre légal : que dit la loi française ?</h2>
+
+          <p>
+            La location avec tiers payeur repose sur deux principes juridiques solides :
+          </p>
+
+          <div class="legal-cards">
+            <div class="legal-card">
+              <h3>⚖️ La solidarité passive (art. 1200 Code civil)</h3>
+              <p>
+                Lorsque plusieurs personnes sont codébitrices d'une obligation, le créancier peut réclamer
+                la totalité de la dette à n'importe laquelle d'entre elles. Ship Cars peut donc se retourner
+                indifféremment contre le conducteur <em>ou</em> le tiers payeur pour recouvrer tout impayé.
+              </p>
+            </div>
+            <div class="legal-card">
+              <h3>🖊️ La signature électronique (art. 1366 Code civil + eIDAS)</h3>
+              <p>
+                L'écrit électronique a la même force probante que l'écrit papier. Le clic de consentement
+                horodaté, associé à l'adresse IP et à l'email du tiers, constitue une <strong>signature
+                électronique simple</strong> pleinement valide devant les tribunaux français.
+              </p>
+            </div>
+          </div>
+
+          <div class="warning-box">
+            <strong>⚠️ Attention en cas d'utilisation frauduleuse de carte</strong>
+            <p>
+              Si une personne utilise la carte bancaire d'un tiers <strong>sans son consentement</strong>,
+              cela constitue une fraude à la carte bancaire (art. 313-1 Code pénal).
+              Notre processus de vérification est conçu précisément pour éviter ces situations :
+              le selfie tenant la pièce d'identité et la validation 3D Secure rendent la fraude
+              pratiquement impossible et facilement détectable.
+            </p>
+          </div>
+        </section>
+
+        <section id="faq-tiers">
+          <h2>Questions fréquentes sur le tiers payeur</h2>
+
+          <details class="faq-item-blog">
+            <summary>Le tiers payeur doit-il être présent lors de la remise du véhicule ?</summary>
+            <p>Non. Ship Cars étant une agence 100 % en ligne avec ouverture à distance, personne ne doit se déplacer. Le tiers confirme son accord depuis son téléphone ou ordinateur, depuis n'importe où.</p>
+          </details>
+          <details class="faq-item-blog">
+            <summary>La caution est-elle prélevée sur la carte du tiers payeur ?</summary>
+            <p>Oui. La caution de 900 € est pré-autorisée sur la carte utilisée pour le paiement de la location, c'est-à-dire la carte du tiers payeur. Elle est libérée automatiquement en l'absence de frais supplémentaires après la location.</p>
+          </details>
+          <details class="faq-item-blog">
+            <summary>Que se passe-t-il si le tiers ne clique pas sur le lien de consentement ?</summary>
+            <p>Ship Cars peut refuser de mettre le véhicule à disposition tant que le consentement n'est pas validé. Nous vous encourageons à vous assurer que le tiers payeur dispose de son email et est prévenu avant la réservation.</p>
+          </details>
+          <details class="faq-item-blog">
+            <summary>Le tiers payeur peut-il aussi conduire le véhicule ?</summary>
+            <p>Seulement s'il est déclaré comme conducteur supplémentaire lors de la réservation (avec son permis, 2 ans d'ancienneté minimum). Le fait de payer ne suffit pas pour conduire.</p>
+          </details>
+          <details class="faq-item-blog">
+            <summary>Y a-t-il des frais supplémentaires pour un tiers payeur ?</summary>
+            <p>Non, aucun frais supplémentaire. Le prix de la location est identique que vous payiez vous-même ou via un tiers.</p>
+          </details>
+        </section>
+
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Prêt à réserver ?</h2>
+            <p>Louez votre véhicule à Grenoble dès maintenant. Le processus tiers payeur est intégré directement dans le formulaire de réservation.</p>
+            <a href="/#catalogue" class="cta-btn">Voir les véhicules disponibles →</a>
+            <a href="/faq" class="cta-faq">Questions fréquentes</a>
+          </div>
+        </div>
+
+      </div>
+
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>En résumé</strong>
+          <ul>
+            <li>✅ Tiers payeur accepté</li>
+            <li>✅ 100 % en ligne</li>
+            <li>✅ Sécurisé par Stripe 3DS</li>
+            <li>✅ Pièce d'identité + selfie requis</li>
+            <li>✅ Consentement électronique légal</li>
+            <li>✅ Aucun frais supplémentaire</li>
+          </ul>
+          <a href="/#catalogue" class="sidebar-btn">Réserver →</a>
+        </div>
+        <div class="sidebar-card sidebar-contact">
+          <strong>Une question ?</strong>
+          <p>Contactez-nous avant de réserver.</p>
+          <a href="https://wa.me/33661691178" target="_blank" rel="noopener" class="sidebar-wa">WhatsApp — 06 61 69 11 78</a>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/location-voiture-sans-agence-grenoble">Location sans agence à Grenoble →</a>
+          <a href="/blog/ouverture-voiture-distance-grenoble">Ouverture à distance : comment ça marche →</a>
+          <a href="/faq">FAQ complète →</a>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page { color: var(--text); }
+  .art-container { max-width: 1060px; margin: 0 auto; padding: 0 2rem; }
+
+  .article-hero {
+    background: linear-gradient(135deg, #0a1421, #0f1e33);
+    padding: 4rem 0 3.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .article-breadcrumb { font-size: .76rem; color: var(--text-dim); margin-bottom: 1.25rem; }
+  .article-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .article-breadcrumb span { color: var(--text-dim); }
+
+  .article-tag-header {
+    display: flex; align-items: center; gap: .5rem;
+    margin-bottom: 1.25rem; flex-wrap: wrap; font-size: .78rem;
+  }
+  .tag {
+    background: rgba(77,212,200,.12); color: var(--teal);
+    border: 1px solid rgba(77,212,200,.25);
+    padding: 3px 12px; border-radius: 99px; font-weight: 600;
+  }
+  .meta-date, .meta-read { color: var(--text-dim); }
+
+  .article-hero h1 {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 800; line-height: 1.25;
+    letter-spacing: -.02em; margin-bottom: 1.25rem;
+  }
+  .article-lead {
+    font-size: 1.05rem; color: var(--text-muted);
+    line-height: 1.8; max-width: 720px;
+  }
+  .article-lead strong { color: var(--teal); }
+
+  .article-body {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 3rem;
+    padding-top: 3rem;
+    padding-bottom: 5rem;
+    align-items: start;
+  }
+
+  /* ── CONTENU ── */
+  .article-content { min-width: 0; }
+
+  .sommaire {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem; font-size: .88rem;
+  }
+  .sommaire strong { display: block; color: var(--silver); margin-bottom: .75rem; font-size: .9rem; }
+  .sommaire ol { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .sommaire a { color: var(--teal); text-decoration: none; }
+  .sommaire a:hover { text-decoration: underline; }
+
+  .article-content section { margin-bottom: 2.75rem; }
+
+  .article-content h2 {
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--teal); margin-bottom: 1rem;
+    padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  }
+  .article-content h3 {
+    font-size: 1rem; font-weight: 700;
+    color: var(--silver); margin: 1.25rem 0 .6rem;
+  }
+  .article-content p {
+    font-size: .92rem; color: var(--text-muted);
+    line-height: 1.8; margin-bottom: .75rem;
+  }
+  .article-content ul {
+    list-style: none; padding: 0; margin: .5rem 0 .75rem;
+    display: flex; flex-direction: column; gap: .4rem;
+  }
+  .article-content li {
+    font-size: .9rem; color: var(--text-muted);
+    padding-left: 1.2rem; position: relative; line-height: 1.6;
+  }
+  .article-content li::before {
+    content: '›'; position: absolute; left: 0;
+    color: var(--teal); font-weight: 700;
+  }
+  .article-content strong { color: var(--text); }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 1rem; margin: 1.25rem 0; }
+  .step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.25rem;
+  }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--teal); color: #0a1421;
+    font-weight: 800; font-size: .88rem;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .step-content strong { display: block; font-size: .92rem; color: var(--text); margin-bottom: .3rem; }
+  .step-content p { font-size: .84rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+
+  /* Boxes */
+  .info-box {
+    background: rgba(77,212,200,.06); border: 1px solid rgba(77,212,200,.25);
+    border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0 1.25rem;
+  }
+  .info-box strong { display: block; color: var(--teal); margin-bottom: .75rem; font-size: .92rem; }
+  .info-box ul { margin: 0; }
+  .info-box li { color: var(--text-muted); font-size: .88rem; }
+  .info-box li::before { content: none; }
+
+  .warning-box {
+    background: rgba(234,179,8,.06); border: 1px solid rgba(234,179,8,.3);
+    border-radius: 12px; padding: 1.25rem 1.5rem; margin-top: 1.25rem;
+  }
+  .warning-box strong { display: block; color: #ca8a04; margin-bottom: .5rem; font-size: .92rem; }
+  .warning-box p { font-size: .87rem; color: var(--text-muted); margin: 0; line-height: 1.7; }
+
+  /* Legal cards */
+  .legal-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .legal-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.1rem 1.25rem;
+  }
+  .legal-card h3 { font-size: .88rem; color: var(--teal); margin-bottom: .5rem; }
+  .legal-card p { font-size: .84rem; color: var(--text-muted); line-height: 1.65; margin: 0; }
+
+  /* FAQ blog */
+  .faq-item-blog {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: .9rem 1.2rem;
+    margin-bottom: .5rem; font-size: .88rem;
+  }
+  .faq-item-blog summary {
+    font-weight: 600; cursor: pointer; color: var(--text);
+    list-style: none; display: flex; justify-content: space-between;
+  }
+  .faq-item-blog summary::-webkit-details-marker { display: none; }
+  .faq-item-blog summary::after { content: '+'; color: var(--teal); font-size: 1.2rem; font-weight: 300; }
+  .faq-item-blog[open] summary::after { content: '−'; }
+  .faq-item-blog p { margin-top: .75rem; color: var(--text-muted); line-height: 1.7; font-size: .86rem; }
+
+  /* CTA */
+  .article-cta {
+    background: linear-gradient(135deg, rgba(77,212,200,.1), rgba(29,78,216,.1));
+    border: 1px solid rgba(77,212,200,.25);
+    border-radius: 16px; padding: 2rem;
+    margin-top: 2rem; text-align: center;
+  }
+  .cta-inner h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .5rem; }
+  .cta-inner p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
+  .cta-btn {
+    display: inline-block; background: var(--teal); color: #0a1421;
+    font-weight: 800; font-size: .95rem; padding: .9rem 1.8rem;
+    border-radius: 10px; text-decoration: none; transition: opacity .15s;
+    margin-bottom: .75rem;
+  }
+  .cta-btn:hover { opacity: .85; }
+  .cta-faq {
+    display: block; color: var(--teal); text-decoration: none;
+    font-size: .85rem; margin-top: .5rem;
+  }
+
+  /* ── SIDEBAR ── */
+  .article-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 1rem; }
+
+  .sidebar-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem;
+  }
+  .sidebar-card strong { display: block; color: var(--silver); font-size: .88rem; margin-bottom: .75rem; }
+  .sidebar-card ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+  .sidebar-card li { font-size: .82rem; color: var(--text-muted); }
+  .sidebar-card li::before { display: none; }
+  .sidebar-btn {
+    display: block; background: var(--teal); color: #0a1421;
+    font-weight: 700; text-align: center; padding: .65rem 1rem;
+    border-radius: 8px; text-decoration: none; font-size: .88rem;
+    transition: opacity .15s;
+  }
+  .sidebar-btn:hover { opacity: .85; }
+  .sidebar-contact p { font-size: .82rem; color: var(--text-muted); margin-bottom: .75rem; }
+  .sidebar-wa {
+    display: block; background: #25d366; color: #fff;
+    font-weight: 700; text-align: center; padding: .6rem 1rem;
+    border-radius: 8px; text-decoration: none; font-size: .82rem;
+  }
+  .sidebar-related { display: flex; flex-direction: column; gap: .5rem; }
+  .sidebar-related a { color: var(--teal); font-size: .82rem; text-decoration: none; }
+  .sidebar-related a:hover { text-decoration: underline; }
+
+  @media (max-width: 860px) {
+    .article-body { grid-template-columns: 1fr; }
+    .article-sidebar { position: static; }
+    .legal-cards { grid-template-columns: 1fr; }
+  }
+</style>

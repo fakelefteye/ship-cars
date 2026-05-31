@@ -1,0 +1,228 @@
+---
+export const prerender = false;
+import MainLayout from '../../layouts/MainLayout.astro';
+import { supabaseAdmin } from '../../lib/supabase';
+
+const { token } = Astro.params;
+
+if (!token) return Astro.redirect('/');
+
+const { data: res } = await supabaseAdmin
+  .from('reservations')
+  .select('id, locataire_nom, tiers_payeur_nom, tiers_payeur_email, tiers_payeur_consent_at, montant_total, date_debut, date_fin, vehicules(nom, modele)')
+  .eq('tiers_payeur_consent_token', token)
+  .maybeSingle();
+
+if (!res) return Astro.redirect('/');
+
+const dejaConfirme = !!res.tiers_payeur_consent_at;
+
+function fmt(d: string | null | undefined): string {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('fr-FR', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris',
+  });
+}
+
+const vehicule = (res.vehicules as any);
+const vehiculeNom = vehicule ? `${vehicule.nom}${vehicule.modele ? ` — ${vehicule.modele}` : ''}` : '—';
+---
+
+<MainLayout title="Confirmation de consentement — Ship Cars">
+  <div class="consent-wrap">
+    <div class="consent-card">
+      <div class="consent-header">
+        <div class="brand">Ship<span>Cars</span></div>
+        {dejaConfirme ? (
+          <div class="status-badge ok">✅ Consentement déjà enregistré</div>
+        ) : (
+          <div class="status-badge pending">⚠️ Confirmation requise</div>
+        )}
+      </div>
+
+      {dejaConfirme ? (
+        <div class="already-done">
+          <div class="check-icon">✅</div>
+          <h2>Votre accord a déjà été enregistré</h2>
+          <p>Vous avez confirmé votre consentement le {new Date(res.tiers_payeur_consent_at!).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}. Merci.</p>
+        </div>
+      ) : (
+        <>
+          <h1 class="consent-title">Confirmation de votre accord<br>en tant que tiers payeur</h1>
+          <p class="consent-intro">
+            Bonjour {res.tiers_payeur_nom || ''},<br><br>
+            Vous avez réglé une location de véhicule Ship Cars au nom de <strong>{res.locataire_nom}</strong>.
+            Veuillez lire attentivement les informations ci-dessous et confirmer votre accord.
+          </p>
+
+          <div class="recap-box">
+            <div class="recap-row"><span>Véhicule</span><strong>{vehiculeNom}</strong></div>
+            <div class="recap-row"><span>Conducteur</span><strong>{res.locataire_nom}</strong></div>
+            <div class="recap-row"><span>Départ</span><strong>{fmt(res.date_debut)}</strong></div>
+            <div class="recap-row"><span>Retour</span><strong>{fmt(res.date_fin)}</strong></div>
+            <div class="recap-row total"><span>Montant payé</span><strong>{Number(res.montant_total).toFixed(2)} €</strong></div>
+          </div>
+
+          <div class="clause-box">
+            <h3>📋 Clause de solidarité financière</h3>
+            <p>
+              En tant que titulaire de la carte bancaire ayant servi au règlement de la présente location,
+              <strong>{res.tiers_payeur_nom || 'le tiers payeur'}</strong> s'engage solidairement avec
+              le conducteur <strong>{res.locataire_nom}</strong> au paiement de toutes sommes dues à
+              <strong>SHIP CARS</strong> au titre de ladite location, incluant notamment :
+            </p>
+            <ul>
+              <li>La caution de <strong>900 €</strong> (pré-autorisée, libérée en l'absence de frais)</li>
+              <li>Les frais kilométriques supplémentaires au tarif de <strong>0,40 € TTC / km</strong></li>
+              <li>Les frais de remise en niveau de carburant si restitution inférieure au niveau de départ</li>
+              <li>Les frais de nettoyage en cas de restitution non conforme</li>
+              <li>Les franchises applicables en cas de sinistre selon le contrat d'assurance (AXA / AON)</li>
+              <li>Toute amende ou pénalité résultant d'une infraction commise pendant la location</li>
+            </ul>
+            <p>
+              Le tiers payeur déclare avoir pris connaissance des
+              <a href="/cgu" target="_blank">Conditions Générales d'Utilisation de Ship Cars</a> et les accepter sans réserve.
+            </p>
+            <p class="clause-legal">
+              <em>Conformément aux articles 1200 et suivants du Code civil (solidarité passive),
+              Ship Cars pourra se retourner indifféremment contre le conducteur ou le tiers payeur
+              pour le recouvrement de toute somme due. La présente acceptation électronique,
+              horodatée et associée à votre adresse IP, constitue une signature électronique
+              valide au sens de l'article 1366 du Code civil et du règlement eIDAS n° 910/2014.</em>
+            </p>
+          </div>
+
+          <div id="consent-result" style="display:none;"></div>
+
+          <button id="btn-accept" class="btn-accept">
+            ✅ Je confirme mon accord et accepte les conditions
+          </button>
+          <p class="consent-footer">
+            Si vous n'avez pas autorisé ce paiement, ne cliquez pas et
+            <a href="mailto:bill.shipcars@gmail.com">contactez-nous immédiatement</a>
+            ou appelez le 06 61 69 11 78.
+          </p>
+        </>
+      )}
+    </div>
+  </div>
+</MainLayout>
+
+<script define:vars={{ token, dejaConfirme }}>
+  if (!dejaConfirme) {
+    document.getElementById('btn-accept')?.addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = '⏳ Enregistrement…';
+      const resultEl = document.getElementById('consent-result');
+      try {
+        const res = await fetch('/api/tiers-consent/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          btn.style.display = 'none';
+          resultEl.innerHTML = `
+            <div class="success-box">
+              <div style="font-size:2.5rem;margin-bottom:.75rem;">✅</div>
+              <h2>Consentement enregistré</h2>
+              <p>Votre accord a été enregistré le ${new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}.</p>
+              <p>Un exemplaire du contrat a été envoyé à votre adresse email.</p>
+            </div>`;
+          resultEl.style.display = 'block';
+        } else {
+          btn.disabled = false;
+          btn.textContent = '✅ Je confirme mon accord et accepte les conditions';
+          alert('Erreur : ' + (data.error || 'Veuillez réessayer.'));
+        }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = '✅ Je confirme mon accord et accepte les conditions';
+        alert('Erreur réseau. Veuillez réessayer.');
+      }
+    });
+  }
+</script>
+
+<style>
+  .consent-wrap {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(160deg, #0d1f35, #071219);
+  }
+  .consent-card {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 640px;
+    width: 100%;
+    padding: 2.5rem;
+    color: #1f2937;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .consent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .brand { font-size: 1.4rem; font-weight: 800; color: #0f1e33; }
+  .brand span { color: #4dd4c8; }
+  .status-badge { font-size: .78rem; font-weight: 700; padding: 4px 12px; border-radius: 99px; }
+  .status-badge.ok { background: #d1fae5; color: #065f46; }
+  .status-badge.pending { background: #fef3c7; color: #92400e; }
+
+  .consent-title { font-size: 1.4rem; font-weight: 800; line-height: 1.3; margin-bottom: 1rem; color: #0f1e33; }
+  .consent-intro { font-size: .92rem; color: #374151; line-height: 1.75; margin-bottom: 1.5rem; }
+
+  .recap-box { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
+  .recap-row { display: flex; justify-content: space-between; padding: 9px 14px; font-size: .88rem; border-bottom: 1px solid #f3f4f6; }
+  .recap-row:last-child { border-bottom: none; }
+  .recap-row span { color: #6b7280; }
+  .recap-row strong { color: #1f2937; text-align: right; }
+  .recap-row.total { background: #f8fafc; }
+  .recap-row.total strong { font-size: 1rem; color: #0f1e33; }
+
+  .clause-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .clause-box h3 { font-size: .95rem; font-weight: 700; color: #92400e; margin-bottom: .75rem; }
+  .clause-box p { font-size: .84rem; color: #374151; line-height: 1.7; margin-bottom: .6rem; }
+  .clause-box ul { margin: .5rem 0 .75rem 1.2rem; display: flex; flex-direction: column; gap: .3rem; }
+  .clause-box li { font-size: .83rem; color: #374151; line-height: 1.5; }
+  .clause-box a { color: #4dd4c8; }
+  .clause-legal { font-size: .78rem !important; color: #9ca3af !important; }
+
+  .btn-accept {
+    width: 100%;
+    background: #4dd4c8;
+    color: #0a1421;
+    font-weight: 800;
+    font-size: 1rem;
+    border: none;
+    padding: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity .15s;
+    margin-bottom: 1rem;
+  }
+  .btn-accept:hover { opacity: .88; }
+  .btn-accept:disabled { opacity: .5; cursor: not-allowed; }
+
+  .consent-footer { font-size: .8rem; color: #9ca3af; text-align: center; line-height: 1.6; }
+  .consent-footer a { color: #4dd4c8; }
+
+  .already-done { text-align: center; padding: 2rem 0; }
+  .check-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .already-done h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: .5rem; }
+  .already-done p { font-size: .9rem; color: #6b7280; }
+
+  .success-box { background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 1.5rem; text-align: center; }
+  .success-box h2 { font-size: 1.1rem; font-weight: 700; color: #065f46; margin-bottom: .5rem; }
+  .success-box p { font-size: .88rem; color: #065f46; margin: .25rem 0; }
+</style>

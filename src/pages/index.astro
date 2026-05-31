@@ -4,13 +4,15 @@ import CardVehicule from '../components/CardVehicule.astro';
 import { supabaseAdmin } from '../lib/supabase';
 import { isMaintenanceMode } from '../lib/maintenance';
 
-const [{ data: vehicules }, maintenance, mardiConfig] = await Promise.all([
+const [{ data: vehicules }, maintenance, mardiConfig, derniereMinuteConfig] = await Promise.all([
   supabaseAdmin.from('vehicules').select('*').eq('disponible_resa', true),
   isMaintenanceMode(),
   supabaseAdmin.from('app_config').select('value').eq('key', 'mardi_flash_actif').single(),
+  supabaseAdmin.from('app_config').select('value').eq('key', 'derniere_minute_actif').single(),
 ]);
 
 const mardiFlashActif = mardiConfig?.data?.value === 'true';
+const derniereMinuteActif = derniereMinuteConfig?.data?.value === 'true';
 ---
 
 <MainLayout title="Ship Cars — Location de véhicules à Grenoble">
@@ -108,6 +110,26 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
     </section>
   )}
 
+  <!-- DERNIÈRE MINUTE (si actif) -->
+  {derniereMinuteActif && !maintenance && (
+    <section class="flash-section dm-section">
+      <div class="container flash-inner">
+        <div class="flash-badge">🕐 Dernière minute</div>
+        <div class="flash-content">
+          <div class="flash-text">
+            <h2 class="flash-title">Prix Dernière Minute</h2>
+            <p class="flash-desc">25 € la journée · 50 km inclus · Départ sous 48 h · En semaine uniquement (lun–ven)</p>
+          </div>
+          <div class="flash-code-block">
+            <span class="flash-code-label">Code promo</span>
+            <span class="flash-code">MINUTE</span>
+          </div>
+          <a href="#catalogue" class="flash-btn">En profiter →</a>
+        </div>
+      </div>
+    </section>
+  )}
+
   <!-- CATALOGUE -->
   <section id="catalogue" class="catalogue">
     <div class="container">
@@ -158,15 +180,22 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
       </div>
 
       <div class="grid-cars" id="grid-cars">
-        {vehicules?.map((car) => (
+        {vehicules?.map((car) => {
+          const prixMin = Math.min(
+            ...[car.prix_basse, car.prix_moyenne, car.prix_journalier_base]
+              .filter((p) => p != null && p > 0)
+              .map(Number)
+          );
+          return (
           <CardVehicule
             id={car.id}
             nom={car.nom}
             modele={car.modele}
-            prix={car.prix_journalier_base}
+            prix={prixMin || car.prix_journalier_base}
             image={car.image_url || '/img/default-car.jpg'}
           />
-        ))}
+          );
+        })}
         {(!vehicules || vehicules.length === 0) && (
           <div class="empty-state">
             <div class="empty-icon">🚗</div>
@@ -458,6 +487,11 @@ const mardiFlashActif = mardiConfig?.data?.value === 'true';
     box-shadow: 0 2px 8px rgba(0,0,0,.15);
   }
   .flash-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+
+  /* ── DERNIÈRE MINUTE ── */
+  .dm-section {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+  }
 
   /* ── CATALOGUE ── */
   .catalogue { padding: 5rem 0; background: #f8fafc; }

@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { data, error } = await supabaseAdmin
       .from('codes_promo')
-      .select('code, pourcentage, actif, date_debut_validite, date_fin_validite, prix_fixe_override, jours_avant_max, km_inclus_override')
+      .select('code, pourcentage, actif, date_debut_validite, date_fin_validite, prix_fixe_override, jours_avant_max, km_inclus_override, semaine_uniquement')
       .eq('code', cleaned)
       .maybeSingle();
 
@@ -32,6 +32,19 @@ export const POST: APIRoute = async ({ request }) => {
       const diffDays = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
       if (diffDays > data.jours_avant_max) {
         return json({ valid: false, reason: `Ce code est valable uniquement pour les locations démarrant dans les ${data.jours_avant_max} prochains jours` });
+      }
+    }
+
+    // Check semaine_uniquement : la location doit démarrer et se terminer en semaine (lun–ven)
+    if (data.semaine_uniquement && date_debut && date_fin) {
+      const startDay = new Date(date_debut).getDay(); // 0=dim, 1=lun, ..., 5=ven, 6=sam
+      const endDay   = new Date(date_fin).getDay();
+      const isWeekend = (d: number) => d === 0 || d === 6;
+      if (isWeekend(startDay)) {
+        return json({ valid: false, reason: 'Ce tarif est valable uniquement pour les locations démarrant en semaine (lundi–vendredi)' });
+      }
+      if (isWeekend(endDay)) {
+        return json({ valid: false, reason: 'Ce tarif est valable uniquement pour les locations se terminant en semaine (lundi–vendredi)' });
       }
     }
 

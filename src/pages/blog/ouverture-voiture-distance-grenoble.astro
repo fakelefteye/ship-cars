@@ -1,0 +1,131 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre    = "Ouvrir sa voiture à distance à Grenoble : comment fonctionne le Boîtier Connect Ship Cars ?";
+const slug     = "ouverture-voiture-distance-grenoble";
+const date     = "2026-05-20";
+const desc     = "Avec Ship Cars à Grenoble, vous ouvrez votre voiture de location depuis votre téléphone sans clé ni contact. Découvrez comment fonctionne le Boîtier Connect et pourquoi c'est plus simple et plus sûr qu'une clé traditionnelle.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": { "@type": "Organization", "name": "Ship Cars", "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" } },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+    <header class="article-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb"><a href="/">Accueil</a> › <a href="/blog">Blog</a> › <span>Ouverture à distance</span></div>
+        <div class="article-tag-header">
+          <span class="tag">🔓 Technologie</span>
+          <span class="meta-date">20 mai 2026</span>
+          <span class="meta-read">· 4 min de lecture</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          Fini les rendez-vous à l'agence pour récupérer une clé. Avec Ship Cars à Grenoble,
+          <strong>votre téléphone est votre clé de voiture</strong>. Le Boîtier Connect embarqué dans chaque véhicule
+          gère l'ouverture à distance, la géolocalisation et la surveillance en temps réel.
+        </p>
+      </div>
+    </header>
+
+    <div class="art-container article-body">
+      <div class="article-content">
+
+        <section>
+          <h2>Qu'est-ce que le Boîtier Connect ?</h2>
+          <p>
+            Le Boîtier Connect est un dispositif électronique installé dans chaque véhicule Ship Cars.
+            Il est connecté en permanence au réseau et communique avec notre système de gestion.
+            Il permet :
+          </p>
+          <ul>
+            <li><strong>L'ouverture et la fermeture des portes à distance</strong> via une application ou notre système web</li>
+            <li>La <strong>géolocalisation GPS en temps réel</strong> du véhicule</li>
+            <li>Le suivi du <strong>kilométrage</strong> et du <strong>niveau de carburant</strong></li>
+            <li>L'envoi d'<strong>alertes techniques</strong> (batterie faible, problème mécanique)</li>
+            <li>L'<strong>authentification du locataire</strong> autorisé — seule la personne ayant réservé peut déverrouiller</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Comment s'ouvre le véhicule lors de la location ?</h2>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-content"><strong>Vous avez réservé et payé en ligne</strong><p>Votre réservation est confirmée avec des horaires précis (à la demi-heure près).</p></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-content"><strong>À l'heure exacte de votre départ</strong><p>Notre système active automatiquement l'accès au véhicule pour votre créneau réservé.</p></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-content"><strong>Vous approchez du véhicule</strong><p>Le Boîtier Connect reçoit l'ordre d'ouverture. Les portes se déverrouillent. Aucune clé physique n'est nécessaire.</p></div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-content"><strong>À votre retour</strong><p>Vous garez le véhicule à son emplacement, les portes se verrouillent automatiquement à l'heure de fin de votre réservation.</p></div></div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Est-ce vraiment plus sûr qu'une clé ?</h2>
+          <p>Oui, à plusieurs titres :</p>
+          <ul>
+            <li><strong>Pas de risque de perte de clé</strong> — il n'y a pas de clé physique à perdre ou à copier</li>
+            <li><strong>Accès limité dans le temps</strong> — le véhicule ne peut être ouvert qu'aux horaires exacts de votre réservation</li>
+            <li><strong>Traçabilité complète</strong> — chaque ouverture et fermeture est enregistrée avec horodatage</li>
+            <li><strong>Géolocalisation permanente</strong> — en cas de vol ou de litige, nous savons où se trouve le véhicule</li>
+            <li><strong>Authentification</strong> — seul le locataire autorisé peut accéder au véhicule</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Avantages pour le locataire</h2>
+          <ul>
+            <li>Pas besoin de se synchroniser avec un agent pour récupérer une clé</li>
+            <li>Prise en charge possible à n'importe quelle heure, y compris tôt le matin ou tard le soir</li>
+            <li>Processus identique pour le retour — pas de file d'attente</li>
+            <li>En cas de problème technique, notre équipe peut intervenir à distance immédiatement</li>
+          </ul>
+        </section>
+
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Vivez l'expérience Ship Cars</h2>
+            <p>Réservez votre véhicule à Grenoble en ligne et récupérez-le sans contact.</p>
+            <a href="/#catalogue" class="cta-btn">Voir les véhicules disponibles →</a>
+          </div>
+        </div>
+
+      </div>
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>En bref</strong>
+          <ul>
+            <li>🔓 Ouverture sans clé physique</li>
+            <li>⏰ Accès aux horaires exacts</li>
+            <li>📍 GPS en temps réel</li>
+            <li>🔒 Authentification sécurisée</li>
+            <li>📱 Depuis votre téléphone</li>
+          </ul>
+          <a href="/#catalogue" class="sidebar-btn">Réserver →</a>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/location-voiture-sans-agence-grenoble">Location sans agence →</a>
+          <a href="/blog/louer-voiture-carte-bancaire-quelquun-dautre">CB de quelqu'un d'autre →</a>
+          <a href="/faq">FAQ →</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page{color:var(--text)}.art-container{max-width:1060px;margin:0 auto;padding:0 2rem}.article-hero{background:linear-gradient(135deg,#0a1421,#0f1e33);padding:4rem 0 3.5rem;border-bottom:1px solid var(--border)}.article-breadcrumb{font-size:.76rem;color:var(--text-dim);margin-bottom:1.25rem}.article-breadcrumb a{color:var(--teal);text-decoration:none}.article-tag-header{display:flex;align-items:center;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap;font-size:.78rem}.tag{background:rgba(77,212,200,.12);color:var(--teal);border:1px solid rgba(77,212,200,.25);padding:3px 12px;border-radius:99px;font-weight:600}.meta-date,.meta-read{color:var(--text-dim)}.article-hero h1{font-size:clamp(1.4rem,3.2vw,2.1rem);font-weight:800;line-height:1.25;letter-spacing:-.02em;margin-bottom:1.25rem}.article-lead{font-size:1.05rem;color:var(--text-muted);line-height:1.8;max-width:720px}.article-lead strong{color:var(--teal)}.article-body{display:grid;grid-template-columns:1fr 280px;gap:3rem;padding-top:3rem;padding-bottom:5rem;align-items:start}.article-content{min-width:0}.article-content section{margin-bottom:2.5rem}.article-content h2{font-size:1.3rem;font-weight:700;color:var(--teal);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}.article-content p{font-size:.92rem;color:var(--text-muted);line-height:1.8;margin-bottom:.75rem}.article-content ul{list-style:none;padding:0;margin:.5rem 0 .75rem;display:flex;flex-direction:column;gap:.4rem}.article-content li{font-size:.9rem;color:var(--text-muted);padding-left:1.2rem;position:relative;line-height:1.6}.article-content li::before{content:'›';position:absolute;left:0;color:var(--teal);font-weight:700}.article-content strong{color:var(--text)}.steps{display:flex;flex-direction:column;gap:1rem;margin:1.25rem 0}.step{display:flex;gap:1rem;align-items:flex-start;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem}.step-num{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#0a1421;font-weight:800;font-size:.88rem;display:grid;place-items:center;flex-shrink:0}.step-content strong{display:block;font-size:.92rem;color:var(--text);margin-bottom:.3rem}.step-content p{font-size:.84rem;color:var(--text-muted);margin:0;line-height:1.6}.article-cta{background:linear-gradient(135deg,rgba(77,212,200,.1),rgba(29,78,216,.1));border:1px solid rgba(77,212,200,.25);border-radius:16px;padding:2rem;margin-top:2rem;text-align:center}.cta-inner h2{font-size:1.3rem;font-weight:800;margin-bottom:.5rem}.cta-inner p{color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem}.cta-btn{display:inline-block;background:var(--teal);color:#0a1421;font-weight:800;font-size:.95rem;padding:.9rem 1.8rem;border-radius:10px;text-decoration:none;transition:opacity .15s}.cta-btn:hover{opacity:.85}.article-sidebar{position:sticky;top:80px;display:flex;flex-direction:column;gap:1rem}.sidebar-card{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:1.25rem}.sidebar-card strong{display:block;color:var(--silver);font-size:.88rem;margin-bottom:.75rem}.sidebar-card ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}.sidebar-card li{font-size:.82rem;color:var(--text-muted)}.sidebar-card li::before{display:none}.sidebar-btn{display:block;background:var(--teal);color:#0a1421;font-weight:700;text-align:center;padding:.65rem 1rem;border-radius:8px;text-decoration:none;font-size:.88rem;transition:opacity .15s}.sidebar-btn:hover{opacity:.85}.sidebar-related{display:flex;flex-direction:column;gap:.5rem}.sidebar-related a{color:var(--teal);font-size:.82rem;text-decoration:none}.sidebar-related a:hover{text-decoration:underline}@media(max-width:860px){.article-body{grid-template-columns:1fr}.article-sidebar{position:static}}
+</style>

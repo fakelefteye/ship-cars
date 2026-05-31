@@ -100,6 +100,10 @@ const photos = [
             <span class="included-icon">🛣️</span>
             <span><strong>100 km/jour inclus</strong> dans la location</span>
           </div>
+          <div class="panel-km-sup">
+            <span class="km-sup-icon">📍</span>
+            <span>Km supplémentaires : <strong>0,40 € / km</strong></span>
+          </div>
 
         </header>
 
@@ -330,6 +334,80 @@ const photos = [
               <div class="form-field">
                 <label class="field-label" for="cond2-pays-permis">Pays de délivrance du permis</label>
                 <input type="text" id="cond2-pays-permis" placeholder="France" autocomplete="off" value="France" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tiers payeur -->
+        <div class="cond2-section" style="border-color:rgba(234,179,8,0.4);background:rgba(254,252,232,0.04);">
+          <div class="cond2-header">
+            <div class="cond2-header-left">
+              <span class="cond2-title">💳 La carte bancaire appartient à quelqu'un d'autre</span>
+              <span class="cond2-opt">optionnel</span>
+            </div>
+            <label class="cond2-switch">
+              <input type="checkbox" id="tiers-toggle" />
+              <span class="cond2-slider" style="--slider-color:#ca8a04;"></span>
+              <span class="cond2-switch-label" id="tiers-switch-label">Non</span>
+            </label>
+          </div>
+
+          <div class="cond2-alert" style="border-color:rgba(234,179,8,0.5);background:rgba(254,240,138,0.08);color:var(--text-muted);">
+            💡 <strong>Exemple :</strong> un parent règle pour son enfant, un ami paye pour vous. Le titulaire de la carte recevra un email pour confirmer son accord — sans quoi la location peut être annulée.
+          </div>
+
+          <div class="cond2-fields" id="tiers-fields" style="display:none;">
+            <p class="cond2-note">
+              Le titulaire de la carte doit être joignable par email. Il recevra un lien de confirmation qu'il devra valider. Sa responsabilité financière est engagée solidairement avec le conducteur.
+            </p>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label class="field-label" for="tiers-nom">Nom et prénom du titulaire *</label>
+                <input type="text" id="tiers-nom" placeholder="Marie Martin" autocomplete="off" />
+              </div>
+              <div class="form-field">
+                <label class="field-label" for="tiers-email">Email du titulaire *</label>
+                <input type="email" id="tiers-email" placeholder="marie.martin@email.com" autocomplete="off" />
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label class="field-label" for="tiers-tel">Téléphone du titulaire *</label>
+                <input type="tel" id="tiers-tel" placeholder="06 12 34 56 78" autocomplete="off" />
+              </div>
+            </div>
+            <p class="cond2-note" style="margin-top:.5rem;border-left:3px solid #ca8a04;padding-left:.75rem;color:var(--text-muted);">
+              📷 Deux photos sont <strong>obligatoires</strong> pour valider le dossier du tiers payeur.
+            </p>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label class="field-label">Pièce d'identité du titulaire <span class="consent-required-badge">Obligatoire</span></label>
+                <div class="upload-zone" id="zone-tiers-id" style="height:80px;">
+                  <input type="file" id="tiers-piece-id" accept="image/*,.heic,.heif" class="upload-input" />
+                  <label for="tiers-piece-id" class="upload-label" style="padding:.4rem .75rem;">
+                    <img class="upload-preview-img" id="img-tiers-id" style="display:none;height:52px;" alt="Pièce d'identité" />
+                    <div class="upload-placeholder" id="ph-tiers-id" style="gap:4px;">
+                      <span class="up-icon" style="font-size:.9rem;">🪪</span>
+                      <span class="up-name" style="font-size:.75rem;">CNI / Passeport</span>
+                      <span class="up-hint" style="font-size:.68rem;">Recto de la pièce d'identité</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="field-label">Selfie tenant la pièce d'identité <span class="consent-required-badge">Obligatoire</span></label>
+                <div class="upload-zone" id="zone-tiers-selfie" style="height:80px;">
+                  <input type="file" id="tiers-selfie-id" accept="image/*,.heic,.heif" class="upload-input" />
+                  <label for="tiers-selfie-id" class="upload-label" style="padding:.4rem .75rem;">
+                    <img class="upload-preview-img" id="img-tiers-selfie" style="display:none;height:52px;" alt="Selfie avec pièce d'identité" />
+                    <div class="upload-placeholder" id="ph-tiers-selfie" style="gap:4px;">
+                      <span class="up-icon" style="font-size:.9rem;">🤳</span>
+                      <span class="up-name" style="font-size:.75rem;">Selfie + pièce visible</span>
+                      <span class="up-hint" style="font-size:.68rem;">Personne tenant la CNI face caméra</span>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -601,9 +679,11 @@ const photos = [
         const diffH    = (endMs - startMs) / 3600000;
         const diffDays = Math.max(1, Math.ceil(diffH / 24));
 
-        // Suggestion Getaround pour durée < 3 jours (avant le return de durée min)
+        // Suggestion Getaround uniquement si durée < durée minimale configurée en admin
         const gaSuggest = document.getElementById('getaround-suggest');
-        if (gaSuggest && getaroundUrl) gaSuggest.style.display = diffDays < 3 ? 'flex' : 'none';
+        if (gaSuggest && getaroundUrl) {
+          gaSuggest.style.display = (dureeMinHeures > 0 && diffH < dureeMinHeures) ? 'flex' : 'none';
+        }
 
         // Validation durée minimale
         if (dureeMinHeures > 0 && diffH < dureeMinHeures) {
@@ -708,7 +788,7 @@ const photos = [
     }
 
     // Code promo appliqué
-    let appliedPromo = null; // { code, pourcentage, prix_fixe_override }
+    let appliedPromo = null; // { code, pourcentage, prix_fixe_override, km_inclus_override }
 
     function recalcTotal() {
       const btn = document.getElementById('btn-book');
@@ -753,6 +833,14 @@ const photos = [
       btn.dataset.siege = siegeCheckbox.checked ? '1' : '0';
       btn.dataset.promo = appliedPromo ? appliedPromo.code : '';
       btn.dataset.reduction = reduction.toFixed(2);
+
+      // Mettre à jour l'affichage des km selon km_inclus_override
+      const days = parseInt(btn.dataset.days || '0');
+      if (appliedPromo?.km_inclus_override != null) {
+        document.getElementById('km-included').textContent = `${days * appliedPromo.km_inclus_override} km`;
+      } else if (days > 0) {
+        document.getElementById('km-included').textContent = `${days * 100} km`;
+      }
     }
 
     siegeCheckbox.addEventListener('change', recalcTotal);
@@ -791,9 +879,10 @@ const photos = [
         const data = await res.json();
 
         if (data.valid) {
-          appliedPromo = { code: data.code, pourcentage: data.pourcentage, prix_fixe_override: data.prix_fixe_override ?? null };
+          appliedPromo = { code: data.code, pourcentage: data.pourcentage, prix_fixe_override: data.prix_fixe_override ?? null, km_inclus_override: data.km_inclus_override ?? null };
           if (data.prix_fixe_override !== null && data.prix_fixe_override !== undefined) {
-            promoFeedback.textContent = `✅ Code ${data.code} — tarif fixe ${Number(data.prix_fixe_override).toFixed(2)} €`;
+            const kmMsg = data.km_inclus_override != null ? ` · ${data.km_inclus_override} km/jour` : '';
+            promoFeedback.textContent = `✅ Code ${data.code} — tarif fixe ${Number(data.prix_fixe_override).toFixed(2)} €${kmMsg}`;
           } else {
             promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
           }
@@ -833,9 +922,10 @@ const photos = [
         const data = await res.json();
         promoFeedback.className = 'promo-feedback';
         if (data.valid) {
-          appliedPromo = { code: data.code, pourcentage: data.pourcentage, prix_fixe_override: data.prix_fixe_override ?? null };
+          appliedPromo = { code: data.code, pourcentage: data.pourcentage, prix_fixe_override: data.prix_fixe_override ?? null, km_inclus_override: data.km_inclus_override ?? null };
           if (data.prix_fixe_override !== null && data.prix_fixe_override !== undefined) {
-            promoFeedback.textContent = `✅ Code ${data.code} — tarif fixe ${Number(data.prix_fixe_override).toFixed(2)} €`;
+            const kmMsg = data.km_inclus_override != null ? ` · ${data.km_inclus_override} km/jour` : '';
+            promoFeedback.textContent = `✅ Code ${data.code} — tarif fixe ${Number(data.prix_fixe_override).toFixed(2)} €${kmMsg}`;
           } else {
             promoFeedback.textContent = `✅ Code ${data.code} appliqué (-${data.pourcentage}%)`;
           }
@@ -910,6 +1000,20 @@ const photos = [
   const cond2Hint       = document.getElementById('cond2-hint');
   cond2DateInput?.addEventListener('change', () => checkPermisAge(cond2DateInput, cond2Hint));
 
+  // Toggle tiers payeur
+  const tiersToggle = document.getElementById('tiers-toggle');
+  const tiersFields = document.getElementById('tiers-fields');
+  const tiersLabel  = document.getElementById('tiers-switch-label');
+  tiersToggle?.addEventListener('change', () => {
+    const on = tiersToggle.checked;
+    tiersFields.style.display = on ? 'block' : 'none';
+    tiersLabel.textContent    = on ? 'Oui' : 'Non';
+  });
+
+  // Upload pièce d'identité tiers payeur (CNI + selfie)
+  setupUploadZone('tiers-piece-id',  'img-tiers-id',     'ph-tiers-id',     'zone-tiers-id');
+  setupUploadZone('tiers-selfie-id', 'img-tiers-selfie', 'ph-tiers-selfie', 'zone-tiers-selfie');
+
   const modal = document.getElementById('modal-locataire');
 
   document.getElementById('btn-book').addEventListener('click', () => {
@@ -965,6 +1069,12 @@ const photos = [
     const adresse       = document.getElementById('loc-adresse').value.trim();
     const permis        = document.getElementById('loc-permis').value.trim().toUpperCase();
     const permisDate    = document.getElementById('loc-permis-date').value;
+    // Tiers payeur (optionnel)
+    const tiersActive = document.getElementById('tiers-toggle')?.checked;
+    const tiersNom    = tiersActive ? (document.getElementById('tiers-nom')?.value.trim() || null) : null;
+    const tiersEmail  = tiersActive ? (document.getElementById('tiers-email')?.value.trim() || null) : null;
+    const tiersTel    = tiersActive ? (document.getElementById('tiers-tel')?.value.trim() || null) : null;
+
     // Conducteur supplémentaire (optionnel)
     const cond2Active = document.getElementById('cond2-toggle')?.checked;
     const cond2nom    = cond2Active ? (document.getElementById('cond2-nom').value.trim() || null) : null;
@@ -1003,6 +1113,24 @@ const photos = [
       errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       return;
     }
+    // Validation tiers payeur si toggle activé
+    if (tiersActive) {
+      if (!tiersNom || !tiersEmail) {
+        errEl.innerHTML = '❌ <strong>Tiers payeur :</strong> le nom et l\'email du titulaire de la carte sont obligatoires.';
+        errEl.style.display = 'block';
+        errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+      const tiersIdFile      = document.getElementById('tiers-piece-id')?.files?.[0];
+      const tiersSelfieFile  = document.getElementById('tiers-selfie-id')?.files?.[0];
+      if (!tiersIdFile || !tiersSelfieFile) {
+        errEl.innerHTML = '❌ <strong>Tiers payeur :</strong> la pièce d\'identité ET le selfie tenant la pièce sont obligatoires.';
+        errEl.style.display = 'block';
+        errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+    }
+
     // Vérification conducteur 2 si toggle activé
     if (cond2Active) {
       if (!cond2nom || !cond2naiss || !cond2permis || !cond2date) {
@@ -1069,8 +1197,10 @@ const photos = [
       });
     }
 
-    // 1. Upload des photos de permis (compressées)
+    // 1. Upload des photos de permis (compressées) + pièce d'identité tiers payeur
     let permisUrls = {};
+    let tiersPieceIdUrl  = null;
+    let tiersSelfieIdUrl = null;
     try {
       submit.textContent = 'Compression des photos…';
       const [r, v, s] = await Promise.all([
@@ -1091,6 +1221,28 @@ const photos = [
         permis_verso_url:  uploadData.verso_url,
         permis_selfie_url: uploadData.selfie_url,
       };
+
+      // Upload pièce d'identité + selfie du tiers payeur (obligatoires si actif)
+      if (tiersActive) {
+        const tiersIdFile     = document.getElementById('tiers-piece-id')?.files?.[0];
+        const tiersSelfieFile = document.getElementById('tiers-selfie-id')?.files?.[0];
+        if (tiersIdFile && tiersSelfieFile) {
+          const [tiersIdC, tiersSelfieC] = await Promise.all([
+            compressImage(tiersIdFile),
+            compressImage(tiersSelfieFile),
+          ]);
+          const fdTiers = new FormData();
+          fdTiers.append('recto',  tiersIdC);
+          fdTiers.append('verso',  tiersIdC);
+          fdTiers.append('selfie', tiersSelfieC);
+          const tierRes  = await fetch('/api/reservations/upload-permis', { method: 'POST', body: fdTiers });
+          const tierData = await tierRes.json();
+          if (tierRes.ok) {
+            tiersPieceIdUrl   = tierData.recto_url;
+            tiersSelfieIdUrl  = tierData.selfie_url;
+          }
+        }
+      }
     } catch (err) {
       errEl.textContent = 'Erreur documents : ' + err.message;
       errEl.style.display = 'block';
@@ -1127,6 +1279,11 @@ const photos = [
           conducteur2_permis_numero: cond2permis,
           conducteur2_permis_date:  cond2date,
           accepte_offres_commerciales: accepteOffres,
+          tiers_payeur_nom:           tiersNom,
+          tiers_payeur_email:         tiersEmail,
+          tiers_payeur_telephone:     tiersTel,
+          tiers_payeur_piece_id_url:  tiersPieceIdUrl,
+          tiers_payeur_selfie_id_url: tiersSelfieIdUrl,
           ...permisUrls,
         })
       });
@@ -1270,6 +1427,17 @@ const photos = [
   }
   .panel-included strong { color: var(--teal); font-weight: 600; }
   .panel-included .included-icon { font-size: 1rem; }
+
+  .panel-km-sup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .panel-km-sup .km-sup-icon { font-size: 0.85rem; }
+  .panel-km-sup strong { color: var(--text-muted); font-weight: 600; }
 
   .vehicle-description {
     margin: 0.75rem 0;

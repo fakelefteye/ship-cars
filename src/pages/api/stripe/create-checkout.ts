@@ -15,6 +15,7 @@ export const POST: APIRoute = async ({ request }) => {
     conducteur2_nom, conducteur2_naissance, conducteur2_lieu_naissance, conducteur2_permis_numero, conducteur2_permis_date,
     permis_recto_url, permis_verso_url, permis_selfie_url,
     accepte_offres_commerciales,
+    tiers_payeur_nom, tiers_payeur_email, tiers_payeur_telephone, tiers_payeur_piece_id_url, tiers_payeur_selfie_id_url,
   } = await request.json();
 
     // Base URL pour les redirects Stripe :
@@ -59,6 +60,11 @@ export const POST: APIRoute = async ({ request }) => {
     // Prix final : override si tarif fixe promo, sinon montant client
     const finalMontant = prixFixeOverride !== null ? prixFixeOverride : parseFloat(montant);
 
+    // Génère un token unique pour le consentement du tiers payeur (si applicable)
+    const tiersConsentToken = tiers_payeur_email
+      ? crypto.randomUUID()
+      : null;
+
     // 1. On crée d'abord une réservation "temporaire" dans Supabase
     // On met le statut à 'en_attente_paiement'
     const { data: reservation, error: resError } = await supabase
@@ -88,6 +94,12 @@ export const POST: APIRoute = async ({ request }) => {
         permis_verso_url:         permis_verso_url         || null,
         permis_selfie_url:        permis_selfie_url        || null,
         accepte_offres_commerciales: !!accepte_offres_commerciales,
+        tiers_payeur_nom:           tiers_payeur_nom          || null,
+        tiers_payeur_email:         tiers_payeur_email        || null,
+        tiers_payeur_telephone:     tiers_payeur_telephone    || null,
+        tiers_payeur_piece_id_url:   tiers_payeur_piece_id_url   || null,
+        tiers_payeur_selfie_id_url:  tiers_payeur_selfie_id_url  || null,
+        tiers_payeur_consent_token:  tiersConsentToken,
       })
       .select()
       .single();

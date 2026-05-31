@@ -186,6 +186,17 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
       }
       .nav-admin:hover { color: var(--text-muted); border-color: var(--border-md); background: var(--bg-2); }
 
+      .nav-blog {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-family: 'Exo 2', sans-serif;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        transition: color 0.15s;
+      }
+      .nav-blog:hover { color: var(--teal); }
+
       main { flex: 1; }
 
       .footer {
@@ -307,6 +318,8 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
         Ship<em>Cars</em>
       </a>
       <div class="nav-right">
+        <a href="/blog" class="nav-blog">Blog</a>
+        <a href="/faq" class="nav-blog">FAQ</a>
         <div class="nav-pill">
           <div class="nav-pill-dot"></div>
           Grenoble · Proche gare
@@ -323,6 +336,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
           <a href="/location-voiture-grenoble">Location Grenoble</a>
           <a href="/location-voiture-gare-grenoble">Gare de Grenoble</a>
           <a href="/location-voiture-pas-cher-grenoble">Tarifs</a>
+          <a href="/blog">Blog</a>
           <a href="/faq">FAQ</a>
           <a href="/zones">Zones</a>
           <a href="/cgu">CGU</a>

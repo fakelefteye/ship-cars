@@ -66,17 +66,24 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       ${row('Horaire de fin', fmt(res.date_fin))}
       ${row('Prix de la réservation', Number(res.montant_total).toFixed(2) + ' €')}
       ${row('Distance incluse', diffDays * 100 + ' km')}
-      ${row('Prix additionnel par km', '0,36 €')}
+      ${row('Prix km supplémentaire', '0,40 € TTC / km')}
       ${row('Nom du propriétaire', 'Ship Cars')}
       ${row('Protection', 'Standard')}
+    </table>
+
+    <!-- Section État du véhicule au départ -->
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">État du véhicule au départ</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${veh ? row('Véhicule', `${veh.nom}${veh.modele ? ` — ${veh.modele}` : ''}${veh.annee ? ` (${veh.annee})` : ''}`) : ''}
+      ${veh?.immatriculation ? row('Plaque d\'immatriculation', veh.immatriculation) : ''}
+      ${veh?.carburant ? row('Type de carburant', veh.carburant) : ''}
+      ${veh?.kilometrage_depart != null ? row('Kilométrage au départ', `${Number(veh.kilometrage_depart).toLocaleString('fr-FR')} km`) : ''}
+      ${veh?.carburant_depart ? row('Niveau de carburant au départ', veh.carburant_depart) : ''}
     </table>
 
     <!-- Section Locataire -->
     <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Informations du locataire</div>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-      ${veh ? row('Véhicule', `${veh.nom}${veh.modele ? ` — ${veh.modele}` : ''}${veh.annee ? ` (${veh.annee})` : ''}`) : ''}
-      ${veh?.immatriculation ? row('Plaque d\'immatriculation', veh.immatriculation) : ''}
-      ${veh?.carburant ? row('Carburant', veh.carburant) : ''}
       ${row('Nom du locataire', res.locataire_nom)}
       ${row('Date de naissance', fmtDate(res.locataire_date_naissance))}
       ${res.locataire_lieu_naissance ? row('Lieu de naissance', res.locataire_lieu_naissance) : ''}
@@ -95,9 +102,54 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       ${res.conducteur2_permis_date ? row('Permis obtenu le', fmtDate(res.conducteur2_permis_date)) : ''}
     </table>` : ''}
 
-    <p style="font-size:11px;color:#9ca3af;line-height:1.6;border-top:1px solid #e8eaf0;padding-top:14px;margin-top:8px;">
-      Les informations fournies par le locataire peuvent, le cas échéant, être corrigées en fonction d'éléments découverts ultérieurement.
-      Ce document fait office de contrat de location entre Ship Cars (propriétaire) et le locataire identifié ci-dessus.
+    <!-- Conditions Générales résumées -->
+    <div style="border-top:2px solid #e8eaf0;margin-top:16px;padding-top:16px;">
+      <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;">Rappel des conditions essentielles</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;vertical-align:top;width:42%;font-weight:600;">Kilométrage inclus</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">100 km / jour — dépassement facturé <strong>0,40 € TTC / km</strong></td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Carburant</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Restitution au niveau constaté au départ — frais de remise à niveau si inférieur</td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Caution</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">900 € préautorisée — libérée en l'absence de frais supplémentaires</td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Conducteurs autorisés</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Uniquement les conducteurs déclarés lors de la réservation (permis ≥ 2 ans)</td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Zone de circulation</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Sud-Est France, Suisse (cantons autorisés), Italie (Piémont, Val d'Aoste) — toute sortie déchoit la garantie</td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;font-weight:600;">Assurance</td><td style="padding:5px 8px;font-size:12px;color:#374151;">AXA FRANCE IARD via courtier AON — police flotte n° 11029669304</td></tr>
+      </table>
+      <p style="font-size:12px;color:#374151;line-height:1.7;margin:0 0 10px;">
+        Les Conditions Générales d'Utilisation complètes sont consultables à tout moment à l'adresse : <a href="https://www.shipcars.fr/cgu" style="color:#4dd4c8;">https://www.shipcars.fr/cgu</a>
+      </p>
+    </div>
+
+    <!-- Clause tiers payeur (si applicable) -->
+    ${res.tiers_payeur_nom ? `
+    <div style="background:#fefce8;border:1px solid #fcd34d;border-radius:8px;padding:14px 16px;margin-top:12px;">
+      <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">⚖️ Clause de solidarité financière — Tiers payeur</div>
+      <p style="font-size:12px;color:#374151;line-height:1.7;margin:0 0 8px;">
+        <strong>${res.tiers_payeur_nom}</strong> (${res.tiers_payeur_email || '—'}${res.tiers_payeur_telephone ? ` · ${res.tiers_payeur_telephone}` : ''})
+        a réglé la présente location et s'engage solidairement avec le conducteur
+        <strong>${res.locataire_nom}</strong> au paiement de toutes sommes dues à SHIP CARS au titre de cette location,
+        incluant la caution (900 €), les frais kilométriques supplémentaires (0,40 €/km), les frais de carburant,
+        de nettoyage, les franchises en cas de sinistre et toute amende résultant d'une infraction.
+        ${res.tiers_payeur_consent_at
+          ? `<br><strong style="color:#065f46;">Consentement enregistré le ${new Date(res.tiers_payeur_consent_at).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })} — IP : ${res.tiers_payeur_consent_ip || '—'}</strong>`
+          : '<br><span style="color:#dc2626;font-weight:700;">⚠️ Consentement électronique en attente de validation par le tiers payeur.</span>'
+        }
+      </p>
+      ${(res as any).tiers_payeur_piece_id_url || (res as any).tiers_payeur_selfie_id_url ? `
+      <div style="font-size:11px;color:#92400e;font-weight:600;margin-top:4px;">📷 Documents tiers payeur :</div>
+      <table cellpadding="0" cellspacing="0"><tbody>
+        ${(res as any).tiers_payeur_piece_id_url ? `<tr><td style="padding:3px 0;font-size:12px;color:#374151;">Pièce d'identité :</td><td style="padding:3px 8px;"><a href="${(res as any).tiers_payeur_piece_id_url}" style="color:#2563eb;">Voir</a></td></tr>` : ''}
+        ${(res as any).tiers_payeur_selfie_id_url ? `<tr><td style="padding:3px 0;font-size:12px;color:#374151;">Selfie + pièce :</td><td style="padding:3px 8px;"><a href="${(res as any).tiers_payeur_selfie_id_url}" style="color:#2563eb;">Voir</a></td></tr>` : ''}
+      </tbody></table>` : ''}
+    </div>` : ''}
+
+    <!-- Clause d'acceptation légale -->
+    <div style="background:#f0fdfb;border:1px solid #6ee7b7;border-radius:8px;padding:14px 16px;margin-top:12px;">
+      <p style="font-size:12px;color:#065f46;line-height:1.7;margin:0;font-weight:500;">
+        En procédant au paiement de cette réservation, le Locataire identifié ci-dessus déclare avoir pris connaissance des Conditions Générales d'Utilisation de SHIP CARS et les accepte sans réserve dans leur intégralité. La validation du paiement en ligne vaut acceptation pleine et entière du présent contrat de location et des CGU applicables, conformément aux articles 1125 et suivants du Code civil relatifs à la formation des contrats par voie électronique.
+      </p>
+    </div>
+
+    <p style="font-size:10px;color:#9ca3af;line-height:1.6;border-top:1px solid #e8eaf0;padding-top:12px;margin-top:14px;">
+      Les informations fournies par le locataire sont susceptibles d'être vérifiées. SHIP CARS se réserve le droit de corriger toute inexactitude constatée. Ce document constitue le contrat de location liant SHIP CARS (SIRET 95083648600015) et le locataire identifié ci-dessus.
     </p>
   </div>`;
 }
@@ -411,6 +463,57 @@ export const POST = async ({ request }) => {
           console.log(`✅ Contrat PDF + ${permisAttachments.length} photo(s) permis envoyés au propriétaire : ${OWNER_EMAIL}`);
         } catch (err) {
           console.error('❌ Erreur email propriétaire:', err);
+        }
+
+        // 4c. Email de consentement au tiers payeur (si présent)
+        if (res.tiers_payeur_email && res.tiers_payeur_consent_token) {
+          try {
+            const consentUrl = `${BASE_URL}/tiers-consent/${res.tiers_payeur_consent_token}`;
+            const tiersNom   = res.tiers_payeur_nom || 'Madame, Monsieur';
+            await resend.emails.send({
+              from: `Ship Cars <${FROM_EMAIL}>`,
+              to: res.tiers_payeur_email,
+              subject: `⚠️ Action requise — Confirmation de votre accord de paiement · Ship Cars`,
+              html: `<!DOCTYPE html>
+<html lang="fr">
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+<div style="max-width:640px;margin:32px auto;padding:0 16px;">
+  <div style="background:#0f1e33;border-radius:12px 12px 0 0;padding:24px 32px;text-align:center;">
+    <div style="font-size:24px;font-weight:800;color:#fff;">Ship<span style="color:#4dd4c8;">Cars</span></div>
+    <div style="font-size:13px;color:#a0b0c0;margin-top:4px;">Confirmation requise — Tiers payeur</div>
+  </div>
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:28px 32px;border:1px solid #e8eaf0;border-top:none;">
+    <p style="font-size:15px;color:#1f2937;margin-bottom:8px;">Bonjour ${tiersNom},</p>
+    <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:20px;">
+      Un paiement de <strong>${Number(res.montant_total).toFixed(2)} €</strong> a été effectué sur votre carte bancaire pour une location de véhicule Ship Cars au nom de <strong>${res.locataire_nom || 'votre mandataire'}</strong> :
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8eaf0;border-radius:8px;margin-bottom:24px;">
+      <tr><td style="padding:10px 14px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;width:40%;">Conducteur</td><td style="padding:10px 14px;font-size:13px;color:#1f2937;font-weight:600;border-bottom:1px solid #f3f4f6;">${res.locataire_nom || '—'}</td></tr>
+      <tr><td style="padding:10px 14px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">Départ</td><td style="padding:10px 14px;font-size:13px;color:#1f2937;font-weight:600;border-bottom:1px solid #f3f4f6;">${fmt(res.date_debut)}</td></tr>
+      <tr><td style="padding:10px 14px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">Retour</td><td style="padding:10px 14px;font-size:13px;color:#1f2937;font-weight:600;border-bottom:1px solid #f3f4f6;">${fmt(res.date_fin)}</td></tr>
+      <tr><td style="padding:10px 14px;font-size:13px;color:#6b7280;">Montant payé</td><td style="padding:10px 14px;font-size:13px;color:#1f2937;font-weight:700;">${Number(res.montant_total).toFixed(2)} €</td></tr>
+    </table>
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:14px 16px;margin-bottom:24px;">
+      <p style="font-size:13px;color:#92400e;margin:0;line-height:1.6;">
+        <strong>⚠️ En tant que titulaire de la carte bancaire ayant servi à ce paiement, vous êtes solidairement responsable</strong> avec le conducteur de toutes les sommes dues à Ship Cars au titre de cette location : caution (900 €), frais kilométriques supplémentaires (0,40 €/km), frais de carburant, nettoyage, amendes et franchises en cas de sinistre.
+      </p>
+    </div>
+    <p style="font-size:14px;color:#374151;margin-bottom:20px;">Pour confirmer votre accord et accéder à votre exemplaire du contrat, cliquez sur le bouton ci-dessous. <strong>Sans confirmation de votre part, Ship Cars se réserve le droit de refuser la mise à disposition du véhicule.</strong></p>
+    <div style="text-align:center;margin-bottom:24px;">
+      <a href="${consentUrl}" style="background:#4dd4c8;color:#0a1421;font-weight:700;font-size:15px;padding:14px 32px;border-radius:10px;text-decoration:none;display:inline-block;">✅ Je confirme mon accord</a>
+    </div>
+    <p style="font-size:12px;color:#9ca3af;line-height:1.6;border-top:1px solid #f3f4f6;padding-top:12px;">
+      Si vous n'avez pas autorisé ce paiement ou si vous pensez être victime d'une utilisation frauduleuse de votre carte, <strong>contactez-nous immédiatement</strong> au 06 61 69 11 78 ou à bill.shipcars@gmail.com — et votre banque pour opposition carte.
+    </p>
+  </div>
+</div>
+</body>
+</html>`,
+            });
+            console.log(`✅ Email consentement tiers payeur envoyé : ${res.tiers_payeur_email}`);
+          } catch (err) {
+            console.error('❌ Erreur email tiers payeur:', err);
+          }
         }
       }
     }
