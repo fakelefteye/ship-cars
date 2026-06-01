@@ -93,11 +93,11 @@ const photos = [
           <p class="panel-label">{vehicule.modele} · {vehicule.annee}</p>
           <h1 class="panel-title">{vehicule.nom}</h1>
           <div class="panel-price">
-            <span class="price-amount">{vehicule.prix_journalier_base}€</span>
+            <span class="price-from">à partir de</span>
+            <span class="price-amount">{Math.min(...[vehicule.prix_basse, vehicule.prix_journalier_base].filter((p): p is number => p != null && p > 0))}€</span>
             <span class="price-unit">/ jour</span>
           </div>
           <div class="panel-included">
-            <span class="included-icon">🛣️</span>
             <span><strong>100 km/jour inclus</strong> dans la location</span>
           </div>
           <div class="panel-km-sup">
@@ -1399,6 +1399,17 @@ const photos = [
     display: flex;
     align-items: baseline;
     gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .price-from {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    align-self: flex-end;
+    padding-bottom: 6px;
   }
 
   .price-amount {
