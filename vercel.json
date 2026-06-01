@@ -1,12 +1,6 @@
 {
   "trailingSlash": false,
   "cleanUrls": true,
-  "crons": [
-    {
-      "path": "/api/admin/cleanup-pending",
-      "schedule": "*/15 * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/.git/(.*)",
