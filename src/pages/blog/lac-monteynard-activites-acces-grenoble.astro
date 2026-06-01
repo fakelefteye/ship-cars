@@ -1,0 +1,668 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre    = "Lac de Monteynard-Avignonet : le guide complet — activités, accès depuis Grenoble et bon plan location";
+const slug     = "lac-monteynard-activites-acces-grenoble";
+const date     = "2026-06-01";
+const desc     = "Tout savoir sur le lac de Monteynard depuis Grenoble : comment y aller en voiture ou en bus, se garer pas cher grâce à la reconnaissance de plaque, et profiter du kitesurf, wingfoil, catamaran, passerelles himalayennes, bateau La Mira, VTT électrique, canoë et bien plus.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Ship Cars",
+        "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" }
+      },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` },
+      "about": {
+        "@type": "LakeBodyOfWater",
+        "name": "Lac de Monteynard-Avignonet",
+        "address": { "@type": "PostalAddress", "addressRegion": "Isère", "addressCountry": "FR" }
+      }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+
+    <header class="article-hero lac-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb">
+          <a href="/">Accueil</a> ›
+          <a href="/blog">Blog</a> ›
+          <span>Lac de Monteynard</span>
+        </div>
+        <div class="article-tag-header">
+          <span class="tag">🏞️ Destination</span>
+          <span class="tag tag-green">🏄 Activités nautiques</span>
+          <span class="meta-date">1 juin 2026</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          À seulement <strong>50 km au sud de Grenoble</strong>, le lac de Monteynard-Avignonet est l'un des joyaux naturels de l'Isère.
+          Vents constants, eaux turquoise, passerelles himalayennes vertigineuses et une multitude d'activités nautiques et terrestres en font
+          <strong>la destination incontournable de la région</strong>. Et avec Ship Cars, vous y êtes en moins d'une heure — parfois même sans payer l'entrée du parking.
+        </p>
+      </div>
+    </header>
+
+    <!-- Photo hero -->
+    <div class="photo-hero-bar">
+      <div class="photo-slot large">
+        <img src="/img/blog/monteynard-panorama.jpg" alt="Vue panoramique du lac de Monteynard depuis les hauteurs" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+        <div class="photo-caption">Lac de Monteynard-Avignonet, Isère</div>
+      </div>
+    </div>
+
+    <div class="art-container article-body">
+      <div class="article-content">
+
+        <nav class="sommaire">
+          <strong>Sommaire</strong>
+          <ol>
+            <li><a href="#lac">Le lac de Monteynard en bref</a></li>
+            <li><a href="#acces">Comment aller au lac de Monteynard depuis Grenoble</a></li>
+            <li><a href="#parking">Parking et accès véhicule — le bon plan Ship Cars</a></li>
+            <li><a href="#passerelles">Les passerelles himalayennes</a></li>
+            <li><a href="#bateau">Le bateau La Mira et ses excursions</a></li>
+            <li><a href="#nautique">Activités nautiques : kitesurf, wingfoil, catamaran, e-foil…</a></li>
+            <li><a href="#terre">Activités terrestres : VTT électrique, randonnée, baignade</a></li>
+            <li><a href="#pratique">Infos pratiques</a></li>
+          </ol>
+        </nav>
+
+        <!-- ── LAC ── -->
+        <section id="lac">
+          <h2>Le lac de Monteynard-Avignonet en bref</h2>
+          <p>
+            Le <strong>lac de Monteynard-Avignonet</strong> (aussi appelé <strong>lac du Drac</strong>) est un lac artificiel créé par le barrage hydroélectrique de Monteynard sur la rivière Drac.
+            Situé dans le <strong>Trièves</strong>, à la confluence du Drac et du Ébron, il s'étend sur plus de <strong>1 100 hectares</strong> pour une longueur de 14 km.
+            Avec ses eaux d'un bleu-vert intense encadrées par des falaises calcaires et des forêts denses, le lac de Monteynard est souvent comparé à un petit fjord alpin.
+          </p>
+          <p>
+            Ce qui rend ce lac unique en France, c'est la combinaison exceptionnelle de <strong>paysages grandioses</strong>, de <strong>vents thermiques réguliers et puissants</strong>
+            (idéaux pour les sports de glisse) et d'<strong>infrastructures touristiques</strong> variées.
+            Été comme début d'automne, le lac de Monteynard attire randonneurs, sportifs nautiques, familles et amoureux de la nature.
+          </p>
+
+          <div class="facts-grid">
+            <div class="fact-card"><span class="fact-icon">📍</span><strong>Localisation</strong><span>Trièves, Isère (38)</span></div>
+            <div class="fact-card"><span class="fact-icon">📏</span><strong>Surface</strong><span>1 100 hectares · 14 km de long</span></div>
+            <div class="fact-card"><span class="fact-icon">🌡️</span><strong>Eau en été</strong><span>22–24 °C (surface)</span></div>
+            <div class="fact-card"><span class="fact-icon">💨</span><strong>Vent</strong><span>Thermique régulier — idéal kitesurf & windsurf</span></div>
+            <div class="fact-card"><span class="fact-icon">🚗</span><strong>Distance de Grenoble</strong><span>~50 km — 50 min en voiture</span></div>
+            <div class="fact-card"><span class="fact-icon">🏖️</span><strong>Baignade</strong><span>Autorisée sur plusieurs plages surveillées</span></div>
+          </div>
+        </section>
+
+        <!-- ── ACCÈS ── -->
+        <section id="acces">
+          <h2>Comment aller au lac de Monteynard depuis Grenoble</h2>
+
+          <h3>🚗 En voiture — le trajet le plus pratique</h3>
+          <p>
+            Depuis Grenoble, le <strong>lac de Monteynard en voiture</strong> est à environ <strong>50 km</strong> par la D1075 (direction Corps).
+            Comptez <strong>45 à 55 minutes</strong> selon les conditions. Après Sinard, suivez les panneaux "Lac de Monteynard" ou "Base nautique".
+            La route traverse des paysages magnifiques du Trièves avec vue sur le Vercors et le Dévoluy.
+          </p>
+          <p>
+            C'est clairement <strong>l'option la plus pratique</strong> car le lac est difficile d'accès sans véhicule, notamment pour transporter
+            du matériel sportif (planche, kite, vélo…). Et avec la location Ship Cars, c'est abordable en groupe.
+          </p>
+
+          <div class="cost-calc">
+            <div class="calc-header">💡 Calcul du coût en location partagée</div>
+            <div class="calc-body">
+              <div class="calc-row">
+                <span>Location voiture Ship Cars (journée)</span>
+                <strong>~40 €</strong>
+              </div>
+              <div class="calc-row">
+                <span>÷ 5 personnes dans le véhicule</span>
+                <strong>= 8 € / personne</strong>
+              </div>
+              <div class="calc-row highlight">
+                <span>🎉 Coût total par personne (voiture + parking inclus)</span>
+                <strong>8 € seulement !</strong>
+              </div>
+            </div>
+            <p class="calc-note">Avec 5 personnes dans un de nos véhicules 5 places, <strong>40 € divisé par 5 = 8 € par tête</strong> pour l'aller-retour Grenoble — Lac de Monteynard. Moins cher que le bus en famille !</p>
+          </div>
+
+          <h3>🚌 Aller au lac de Monteynard en bus</h3>
+          <p>
+            Il est possible d'<strong>aller au lac de Monteynard en bus</strong> depuis Grenoble via le réseau <strong>Transisère</strong>.
+            Les lignes desservant le secteur du Trièves permettent d'accéder au village de Monteynard ou à Sinard.
+            La fréquence des bus est cependant limitée (souvent un ou deux passages par jour), ce qui complique les allers-retours à la journée,
+            surtout si vous souhaitez pratiquer des sports nautiques qui nécessitent du matériel.
+          </p>
+          <p>
+            Consultez les horaires sur <strong>transisere.fr</strong> pour les lignes desservant Corps ou Clelles-en-Trièves.
+            Pour une journée sportive ou en famille, la voiture de location reste de loin la solution la plus flexible.
+          </p>
+
+          <h3>🚲 En covoiturage ou navette</h3>
+          <p>
+            Certaines associations sportives du lac organisent des navettes depuis Grenoble en haute saison.
+            Le covoiturage via BlaBlaCar est également une option pour rejoindre les environs, notamment Clelles ou Mens.
+          </p>
+        </section>
+
+        <!-- ── PARKING ── -->
+        <section id="parking">
+          <h2>Parking et accès véhicule — le bon plan Ship Cars</h2>
+
+          <div class="promo-box">
+            <div class="promo-icon">🅿️</div>
+            <div class="promo-content">
+              <strong>Économisez 5 à 6 € d'entrée avec nos véhicules reconnus au lac</strong>
+              <p>
+                Le parking d'accès au lac de Monteynard est payant : comptez environ <strong>5 à 6 € par véhicule</strong>.
+                Bonne nouvelle : deux de nos véhicules sont <strong>déjà enregistrés dans le système de reconnaissance de plaque</strong> du lac.
+                Vous accédez donc <strong>sans payer le ticket de parking</strong> !
+              </p>
+              <p class="promo-warning">
+                ⚠️ <strong>Attention :</strong> le système fonctionne par reconnaissance de plaque, pas par badge.
+                Si l'un de nos véhicules est <em>déjà présent au lac</em> quand vous arrivez (une autre réservation), la barrière ne s'ouvrira pas automatiquement.
+                Vous devrez prendre un ticket à l'entrée comme tout le monde. Ce cas reste rare, mais prévoyez 5–6 € de secours.
+              </p>
+            </div>
+          </div>
+
+          <h3>Nos deux véhicules avec accès reconnu au lac de Monteynard</h3>
+          <div class="vehicles-grid">
+            <a href="/vehicules/45097895-ff7b-4035-beb2-82c0189ae146" class="vehicle-card-lac">
+              <div class="vlac-badge">🅿️ Parking inclus</div>
+              <div class="vlac-info">
+                <strong>Renault Clio 4</strong>
+                <span class="vlac-plate">EK-312-TS</span>
+                <span class="vlac-seats">5 places · Essence</span>
+                <span class="vlac-eco">~40 € la journée ÷ 5 = <strong>8 € / pers.</strong></span>
+              </div>
+              <span class="vlac-cta">Voir les disponibilités →</span>
+            </a>
+            <a href="/vehicules/180a6e3e-6745-4564-9cc2-30dd44091862" class="vehicle-card-lac">
+              <div class="vlac-badge">🅿️ Parking inclus</div>
+              <div class="vlac-info">
+                <strong>Peugeot 208</strong>
+                <span class="vlac-plate">DY-734-CS</span>
+                <span class="vlac-seats">5 places · Essence</span>
+                <span class="vlac-eco">~40 € la journée ÷ 5 = <strong>8 € / pers.</strong></span>
+              </div>
+              <span class="vlac-cta">Voir les disponibilités →</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- ── PHOTOS ── -->
+        <div class="photo-gallery">
+          <div class="photo-slot">
+            <img src="/img/blog/monteynard-passerelles.jpg" alt="Passerelles himalayennes lac de Monteynard vue depuis le lac" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+          </div>
+          <div class="photo-slot">
+            <img src="/img/blog/monteynard-kitesurf.jpg" alt="Kitesurf et wingfoil sur le lac de Monteynard" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+          </div>
+          <div class="photo-slot">
+            <img src="/img/blog/monteynard-bateau.jpg" alt="Bateau La Mira excursion lac de Monteynard" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+          </div>
+        </div>
+
+        <!-- ── PASSERELLES ── -->
+        <section id="passerelles">
+          <h2>Les passerelles himalayennes — la randonnée emblématique</h2>
+
+          <p>
+            Les <strong>passerelles himalayennes du lac de Monteynard</strong> sont l'une des attractions les plus originales de l'Isère.
+            Inspirées des ponts suspendus des montagnes népalaises, ces deux passerelles métalliques surplombent les gorges du Drac et de l'Ébron
+            à des hauteurs vertigineuses, avec le lac à vos pieds.
+          </p>
+
+          <h3>Passerelle du Drac</h3>
+          <p>
+            Longue de <strong>220 mètres</strong>, suspendue à <strong>80 mètres</strong> au-dessus du lac,
+            la passerelle du Drac est accessible depuis le village de <strong>Notre-Dame-de-la-Salette</strong> ou depuis les rives du lac.
+            La randonnée aller-retour depuis les parkings principaux dure <strong>2 à 3 heures</strong>, avec des vues époustouflantes sur le lac et les massifs environnants.
+          </p>
+
+          <h3>Passerelle de l'Ébron</h3>
+          <p>
+            Plus courte mais tout aussi impressionnante, la <strong>passerelle de l'Ébron</strong> enjambe les gorges du même nom.
+            Elle est accessible depuis <strong>Treffort</strong> ou <strong>Saint-Jean-d'Hérans</strong>.
+            Comptez environ <strong>2 heures de marche</strong> aller-retour pour un niveau de difficulté modéré.
+          </p>
+
+          <div class="info-box">
+            <strong>📋 Infos pratiques passerelles himalayennes</strong>
+            <ul>
+              <li>Ouvertes en général de <strong>mai à octobre</strong> (vérifier conditions météo et fermetures)</li>
+              <li>Accès <strong>gratuit</strong> — prévoir de bonnes chaussures de marche</li>
+              <li>Déconseillées aux personnes souffrant de vertige sévère</li>
+              <li>Se combinent parfaitement avec une journée au bord du lac</li>
+              <li>Mots-clés : <em>randonnée lac monteynard, passerelles himalayennes isère, trek lac du drac</em></li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ── BATEAU LA MIRA ── -->
+        <section id="bateau">
+          <h2>Le bateau La Mira — excursions sur le lac de Monteynard</h2>
+
+          <p>
+            Le <strong>bateau La Mira</strong> est l'un des moyens les plus spectaculaires de découvrir le lac de Monteynard.
+            Ces <strong>excursions en bateau sur le lac de Monteynard</strong> permettent de rejoindre les gorges autrement inaccessibles à pied,
+            d'approcher les passerelles himalayennes par l'eau et d'admirer les falaises calcaires depuis une perspective unique.
+          </p>
+
+          <h3>Que propose La Mira ?</h3>
+          <ul>
+            <li><strong>Croisières découverte</strong> — tour du lac avec commentaires sur la faune, la flore et l'histoire du barrage</li>
+            <li><strong>Excursions passerelles</strong> — trajet en bateau jusqu'au pied des passerelles himalayennes, combiné avec la randonnée</li>
+            <li><strong>Navettes</strong> — liaison entre les différents points d'accès du lac pour les randonneurs</li>
+            <li><strong>Sorties pêche</strong> et privatisations pour groupes et événements</li>
+          </ul>
+
+          <div class="info-box">
+            <strong>🚢 Bateau La Mira — infos pratiques</strong>
+            <ul>
+              <li>Départs depuis la <strong>base nautique de Treffort</strong> et de <strong>Saint-Pierre-de-Méaroz</strong></li>
+              <li>Réservation conseillée en haute saison — places limitées</li>
+              <li>Durée des sorties : de 45 min à 2h30 selon la formule</li>
+              <li>Tarifs : de 12 € à 25 € adulte selon la sortie</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ── ACTIVITÉS NAUTIQUES ── -->
+        <section id="nautique">
+          <h2>Activités nautiques : kitesurf, wingfoil, catamaran, e-foil et plus</h2>
+
+          <p>
+            Le lac de Monteynard est renommé pour ses <strong>vents thermiques puissants et réguliers</strong>,
+            soufflant en général du nord en matinée et du sud l'après-midi.
+            Cette particularité en fait <strong>l'un des meilleurs spots de sports de glisse d'eau en France</strong>, accessible depuis Grenoble.
+          </p>
+
+          <div class="activities-grid">
+            <div class="activity-card">
+              <div class="act-emoji">🪁</div>
+              <h3>Kitesurf</h3>
+              <p>
+                Le <strong>kitesurf au lac de Monteynard</strong> est l'activité reine du site. Les vents réguliers offrent des conditions idéales pour les débutants comme les experts.
+                Plusieurs écoles proposent des <strong>stages et cours de kitesurf</strong> sur place, avec location de matériel.
+                Le lac est suffisamment grand pour évoluer librement sans risque de collision.
+              </p>
+            </div>
+            <div class="activity-card">
+              <div class="act-emoji">🏄</div>
+              <h3>Wingfoil & Wing Surf</h3>
+              <p>
+                Le <strong>wingfoil au lac de Monteynard</strong> est l'une des pratiques qui explose ces dernières années.
+                La combinaison d'une aile gonflable tenue à la main et d'un foil sous la planche permet de survoler l'eau dans un silence absolu.
+                Les conditions du lac (vent régulier, eau plate en début de journée) sont parfaites pour apprendre.
+              </p>
+            </div>
+            <div class="activity-card">
+              <div class="act-emoji">⛵</div>
+              <h3>Planche à voile</h3>
+              <p>
+                La <strong>planche à voile au lac de Monteynard</strong> est une tradition. Les vieux de la vieille s'y retrouvent depuis les années 80.
+                Entre le mistral de nord et la brise thermique du sud, le lac offre des conditions variées qui raviront tous les niveaux.
+                Location de matériel disponible à la base nautique.
+              </p>
+            </div>
+            <div class="activity-card">
+              <div class="act-emoji">⛵</div>
+              <h3>Catamaran & Voilier</h3>
+              <p>
+                La navigation à voile est autorisée sur l'ensemble du lac. Des <strong>catamarans et dériveurs</strong> sont disponibles à la location.
+                Avec 14 km de long et des vents portants, les bords de lac sont parfaits pour une navigation sportive ou contemplative selon votre niveau.
+              </p>
+            </div>
+            <div class="activity-card">
+              <div class="act-emoji">⚡</div>
+              <h3>E-foil (foil électrique)</h3>
+              <p>
+                L'<strong>e-foil au lac de Monteynard</strong> est l'activité tendance des dernières saisons.
+                Propulsé par un moteur électrique silencieux et guidé par une télécommande, le rider "vole" au-dessus de l'eau sans vent.
+                Des prestataires locaux proposent des initiations et des sorties guidées sur le lac.
+              </p>
+            </div>
+            <div class="activity-card">
+              <div class="act-emoji">🚣</div>
+              <h3>Canoë-Kayak & Stand Up Paddle</h3>
+              <p>
+                Pour une découverte plus calme du lac, le <strong>canoë-kayak au lac de Monteynard</strong> permet d'explorer les criques et les falaises inaccessibles à pied.
+                En début de matinée, avant que le vent se lève, l'eau est lisse comme un miroir.
+                Le <strong>Stand Up Paddle (SUP)</strong> est également très pratiqué, surtout pour les balades le long des rives.
+              </p>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <strong>🏄 Prestataires nautiques au lac de Monteynard</strong>
+            <ul>
+              <li>Base nautique de <strong>Treffort</strong> — kitesurf, windsurf, catamaran, SUP, cours et locations</li>
+              <li>Base de <strong>Saint-Pierre-de-Méaroz</strong> — kayak, canoë, pédalos, e-foil</li>
+              <li>Plusieurs clubs sportifs assurent des stages week-end et vacances scolaires</li>
+              <li>Réservation fortement conseillée en juillet-août</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ── ACTIVITÉS TERRESTRES ── -->
+        <section id="terre">
+          <h2>Activités terrestres : VTT électrique, randonnée, baignade</h2>
+
+          <h3>🚵 VTT électrique au lac de Monteynard</h3>
+          <p>
+            Le relief du Trièves autour du lac se prête parfaitement au <strong>VTT électrique au lac de Monteynard</strong>.
+            Les sentiers qui surplombent le lac offrent des panoramas extraordinaires et des descentes techniques.
+            Des loueurs de <strong>VTT électriques</strong> sont présents à Mens, Monteynard et aux abords de la base nautique.
+            Comptez une journée pour faire le tour complet du lac à VTT (environ 40 km avec du dénivelé).
+          </p>
+
+          <h3>🥾 Randonnée et trekking</h3>
+          <p>
+            Au-delà des passerelles himalayennes, le lac de Monteynard est entouré d'une multitude de sentiers balisés.
+            Parmi les incontournables :
+          </p>
+          <ul>
+            <li><strong>Le sentier des belvédères</strong> — panoramas à 360° sur le lac, le Vercors et les Écrins</li>
+            <li><strong>La tour de rive gauche</strong> — sentier le long du lac avec passages en forêt et bords de l'eau</li>
+            <li><strong>Le chemin des gorges de l'Ébron</strong> — randonnée sauvage dans les gorges jusqu'à la passerelle</li>
+            <li><strong>Le Pas de l'Aiguille</strong> — pour les randonneurs confirmés, avec vue plongeante sur le lac</li>
+          </ul>
+
+          <h3>🏊 Baignade et plages</h3>
+          <p>
+            La baignade est autorisée sur plusieurs zones du lac. Les principales plages surveillées en été se trouvent :
+          </p>
+          <ul>
+            <li><strong>Plage de Treffort</strong> — la plus grande, avec surveillance en été, buvette, location de matériel</li>
+            <li><strong>Plage de Monteynard</strong> — côté village, plus calme, idéale pour les familles</li>
+            <li><strong>Crique de Saint-Jean-d'Hérans</strong> — sauvage, accessible à pied depuis le parking des passerelles</li>
+          </ul>
+          <p>
+            L'eau atteint <strong>22 à 24 °C</strong> en surface en juillet-août, ce qui en fait une baignade agréable même pour les frileux.
+          </p>
+
+          <h3>🐟 Pêche</h3>
+          <p>
+            Le lac abrite une belle population de <strong>sandre, perche, brochet et black-bass</strong>.
+            La pêche est autorisée avec un permis valide en Isère. Des sorties guidées sont proposées par des guides de pêche locaux.
+          </p>
+
+          <h3>📸 Photographie et astronomie</h3>
+          <p>
+            Éloigné des grandes villes, le ciel du Trièves est exceptionnel la nuit.
+            Le lac offre des reflets magnifiques au lever et coucher du soleil, très prisés des photographes.
+            En automne, les brumes matinales sur le lac donnent des images féeriques.
+          </p>
+        </section>
+
+        <!-- ── PHOTOS gallery 2 ── -->
+        <div class="photo-gallery">
+          <div class="photo-slot">
+            <img src="/img/blog/monteynard-vtt.jpg" alt="VTT électrique sentier lac de Monteynard Trièves" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+          </div>
+          <div class="photo-slot">
+            <img src="/img/blog/monteynard-baignade.jpg" alt="Plage baignade lac de Monteynard été" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+          </div>
+          <div class="photo-slot">
+            <img src="/img/blog/monteynard-efoil.jpg" alt="E-foil électrique lac de Monteynard" onerror="this.parentElement.classList.add('no-img')" loading="lazy" />
+          </div>
+        </div>
+
+        <!-- ── PRATIQUE ── -->
+        <section id="pratique">
+          <h2>Infos pratiques — Lac de Monteynard</h2>
+
+          <div class="facts-grid">
+            <div class="fact-card"><span class="fact-icon">📅</span><strong>Meilleure période</strong><span>Juin à septembre (activités nautiques en juillet-août)</span></div>
+            <div class="fact-card"><span class="fact-icon">🌡️</span><strong>Baignade</strong><span>Juillet-août — 22 à 24 °C en surface</span></div>
+            <div class="fact-card"><span class="fact-icon">💨</span><strong>Kite & Windsurf</strong><span>Mai à octobre — vent thermique quotidien</span></div>
+            <div class="fact-card"><span class="fact-icon">🥾</span><strong>Randonnée</strong><span>Toute l'année (passerelles ouvertes mai-oct)</span></div>
+            <div class="fact-card"><span class="fact-icon">🅿️</span><strong>Parking</strong><span>~5–6 € / véhicule (gratuit avec plaques Ship Cars)</span></div>
+            <div class="fact-card"><span class="fact-icon">🛒</span><strong>Restauration</strong><span>Snacks et buvettes à Treffort en saison</span></div>
+          </div>
+
+          <h3>Ce qu'il faut emporter</h3>
+          <ul>
+            <li>Crème solaire haute protection (réverbération sur l'eau)</li>
+            <li>Combinaison néoprène si activités nautiques tôt le matin</li>
+            <li>Chaussures de randonnée pour les passerelles</li>
+            <li>Pique-nique — peu de restaurants aux abords immédiats</li>
+            <li>5–6 € en espèces ou CB (parking de secours si votre plaque n'est pas reconnue)</li>
+            <li>Réservation des activités nautiques faite en avance</li>
+          </ul>
+
+          <h3>Mots-clés populaires sur le lac de Monteynard</h3>
+          <p class="seo-cloud">
+            lac monteynard activités · lac monteynard kitesurf · lac monteynard wingfoil · lac monteynard randonnée ·
+            lac monteynard passerelles himalayennes · lac monteynard bateau la mira · lac monteynard excursion ·
+            lac monteynard catamaran · lac monteynard e-foil · lac monteynard planche à voile · lac monteynard canoë ·
+            lac monteynard vtt électrique · lac monteynard baignade · lac monteynard parking · lac monteynard camping ·
+            aller lac monteynard depuis grenoble · lac monteynard en bus · lac monteynard trièves ·
+            lac monteynard isère · lac du drac grenoble · randonnée passerelles himalayennes isère
+          </p>
+        </section>
+
+        <!-- ── CTA ── -->
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Réservez votre voiture pour le lac de Monteynard</h2>
+            <p>
+              Nos deux véhicules avec accès reconnu au parking du lac sont disponibles à la réservation en ligne.
+              Partagez le coût à 5 et profitez d'une journée complète au bord de l'eau pour <strong>moins de 10 € par personne</strong>.
+            </p>
+            <div class="cta-vehicles">
+              <a href="/vehicules/45097895-ff7b-4035-beb2-82c0189ae146" class="cta-btn-car">
+                Renault Clio EK-312-TS →
+              </a>
+              <a href="/vehicules/180a6e3e-6745-4564-9cc2-30dd44091862" class="cta-btn-car">
+                Peugeot 208 DY-734-CS →
+              </a>
+            </div>
+            <a href="/#catalogue" class="cta-btn" style="margin-top:.75rem;">Voir tous les véhicules →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── SIDEBAR ── -->
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>🅿️ Parking gratuit</strong>
+          <p style="font-size:.82rem;color:var(--text-muted);margin:.5rem 0 .75rem;">Deux véhicules Ship Cars ont accès reconnu au lac :</p>
+          <a href="/vehicules/45097895-ff7b-4035-beb2-82c0189ae146" class="sidebar-btn" style="margin-bottom:.5rem;">Clio EK-312-TS →</a>
+          <a href="/vehicules/180a6e3e-6745-4564-9cc2-30dd44091862" class="sidebar-btn">Peugeot 208 DY-734-CS →</a>
+        </div>
+        <div class="sidebar-card">
+          <strong>💰 Calcul rapide</strong>
+          <ul>
+            <li>40 € ÷ 5 = <strong>8 € / pers.</strong></li>
+            <li>Parking inclus</li>
+            <li>50 km de Grenoble</li>
+            <li>50 min de trajet</li>
+          </ul>
+        </div>
+        <div class="sidebar-card">
+          <strong>🏄 Activités sur place</strong>
+          <ul>
+            <li>🪁 Kitesurf · Wingfoil</li>
+            <li>⛵ Catamaran · Voilier</li>
+            <li>🏄 Planche à voile</li>
+            <li>⚡ E-foil électrique</li>
+            <li>🚣 Canoë · SUP</li>
+            <li>🚵 VTT électrique</li>
+            <li>🥾 Passerelles himalayennes</li>
+            <li>🚢 Bateau La Mira</li>
+            <li>🏊 Baignade surveillée</li>
+            <li>🐟 Pêche</li>
+          </ul>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/location-voiture-sans-agence-grenoble">Location sans agence Grenoble →</a>
+          <a href="/blog/louer-voiture-carte-bancaire-quelquun-dautre">Louer avec la CB d'un tiers →</a>
+          <a href="/faq">FAQ →</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page { color: var(--text); }
+  .art-container { max-width: 1080px; margin: 0 auto; padding: 0 2rem; }
+
+  /* Hero */
+  .article-hero {
+    background: linear-gradient(135deg, #0a1421, #0f2a1a);
+    padding: 4rem 0 3.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .lac-hero { background: linear-gradient(135deg, #071a2e 0%, #0a2414 50%, #061820 100%); }
+  .article-breadcrumb { font-size: .76rem; color: var(--text-dim); margin-bottom: 1.25rem; }
+  .article-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .article-tag-header { display: flex; align-items: center; gap: .5rem; margin-bottom: 1.25rem; flex-wrap: wrap; font-size: .78rem; }
+  .tag { background: rgba(77,212,200,.12); color: var(--teal); border: 1px solid rgba(77,212,200,.25); padding: 3px 12px; border-radius: 99px; font-weight: 600; }
+  .tag-green { background: rgba(34,197,94,.1); color: #4ade80; border-color: rgba(34,197,94,.25); }
+  .meta-date { color: var(--text-dim); }
+  .article-hero h1 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; line-height: 1.25; letter-spacing: -.02em; margin-bottom: 1.25rem; }
+  .article-lead { font-size: 1.02rem; color: var(--text-muted); line-height: 1.8; max-width: 760px; }
+  .article-lead strong { color: var(--teal); }
+
+  /* Photo hero bar */
+  .photo-hero-bar { background: #000; height: 320px; overflow: hidden; }
+  .photo-slot.large { width: 100%; height: 100%; position: relative; }
+  .photo-slot.large img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+  .photo-slot.large.no-img { background: linear-gradient(135deg, #0a2414, #071a2e); display: flex; align-items: center; justify-content: center; }
+  .photo-caption { position: absolute; bottom: 10px; right: 14px; font-size: .72rem; color: rgba(255,255,255,.6); }
+
+  /* Photo gallery */
+  .photo-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 2rem 0; max-width: 1080px; margin-left: auto; margin-right: auto; padding: 0 2rem; }
+  .photo-slot { height: 200px; overflow: hidden; border-radius: 8px; background: var(--bg-2); }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+  .photo-slot img:hover { transform: scale(1.04); }
+  .photo-slot.no-img { background: linear-gradient(135deg, var(--bg-2), var(--bg-3)); }
+
+  /* Body layout */
+  .article-body { display: grid; grid-template-columns: 1fr 280px; gap: 3rem; padding-top: 3rem; padding-bottom: 5rem; align-items: start; }
+  .article-content { min-width: 0; }
+  .article-content section { margin-bottom: 2.75rem; }
+  .article-content h2 { font-size: 1.25rem; font-weight: 700; color: var(--teal); margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+  .article-content h3 { font-size: .98rem; font-weight: 700; color: var(--silver); margin: 1.25rem 0 .6rem; }
+  .article-content p { font-size: .9rem; color: var(--text-muted); line-height: 1.8; margin-bottom: .75rem; }
+  .article-content ul { list-style: none; padding: 0; margin: .5rem 0 .75rem; display: flex; flex-direction: column; gap: .4rem; }
+  .article-content li { font-size: .88rem; color: var(--text-muted); padding-left: 1.2rem; position: relative; line-height: 1.6; }
+  .article-content li::before { content: '›'; position: absolute; left: 0; color: var(--teal); font-weight: 700; }
+  .article-content strong { color: var(--text); }
+  em { color: var(--text-dim); font-style: italic; }
+
+  /* Sommaire */
+  .sommaire { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; font-size: .88rem; }
+  .sommaire strong { display: block; color: var(--silver); margin-bottom: .75rem; }
+  .sommaire ol { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .sommaire a { color: var(--teal); text-decoration: none; }
+  .sommaire a:hover { text-decoration: underline; }
+
+  /* Facts grid */
+  .facts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin: 1.25rem 0; }
+  .fact-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; }
+  .fact-icon { font-size: 1.2rem; }
+  .fact-card strong { font-size: .82rem; color: var(--teal); }
+  .fact-card span { font-size: .78rem; color: var(--text-muted); }
+
+  /* Cost calc */
+  .cost-calc { background: rgba(77,212,200,.06); border: 1px solid rgba(77,212,200,.25); border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.25rem 0; }
+  .calc-header { font-size: .9rem; font-weight: 700; color: var(--teal); margin-bottom: .9rem; }
+  .calc-body { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .9rem; }
+  .calc-row { display: flex; justify-content: space-between; align-items: center; font-size: .88rem; color: var(--text-muted); padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .calc-row.highlight { border-bottom: none; background: rgba(77,212,200,.08); border-radius: 8px; padding: .6rem .75rem; color: var(--text); font-weight: 600; }
+  .calc-row.highlight strong { color: var(--teal); font-size: 1rem; }
+  .calc-note { font-size: .82rem; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+  /* Promo box */
+  .promo-box { background: rgba(234,179,8,.06); border: 1px solid rgba(234,179,8,.35); border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0 1.5rem; display: flex; gap: 1rem; }
+  .promo-icon { font-size: 2rem; flex-shrink: 0; }
+  .promo-content strong { display: block; font-size: .95rem; color: #ca8a04; margin-bottom: .5rem; }
+  .promo-content p { font-size: .86rem; color: var(--text-muted); line-height: 1.7; margin: 0 0 .5rem; }
+  .promo-warning { background: rgba(220,38,38,.06); border-left: 3px solid #dc2626; padding: .5rem .75rem; border-radius: 0 6px 6px 0; font-size: .82rem !important; color: var(--text-muted) !important; }
+
+  /* Vehicles grid */
+  .vehicles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  .vehicle-card-lac { background: var(--bg-2); border: 1.5px solid rgba(77,212,200,.3); border-radius: 12px; padding: 1.1rem 1.25rem; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: .5rem; transition: border-color .2s, transform .2s; }
+  .vehicle-card-lac:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .vlac-badge { font-size: .72rem; font-weight: 700; background: rgba(77,212,200,.12); color: var(--teal); border: 1px solid rgba(77,212,200,.25); padding: 2px 10px; border-radius: 99px; width: fit-content; }
+  .vlac-info { display: flex; flex-direction: column; gap: .2rem; }
+  .vlac-info strong { font-size: .98rem; color: var(--text); }
+  .vlac-plate { font-size: .78rem; font-weight: 700; font-family: monospace; background: var(--bg-3); color: var(--silver); padding: 2px 8px; border-radius: 4px; width: fit-content; }
+  .vlac-seats { font-size: .78rem; color: var(--text-muted); }
+  .vlac-eco { font-size: .82rem; color: var(--text-muted); }
+  .vlac-eco strong { color: var(--teal); }
+  .vlac-cta { font-size: .82rem; color: var(--teal); font-weight: 600; margin-top: .25rem; }
+
+  /* Activities grid */
+  .activities-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+  .activity-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; }
+  .act-emoji { font-size: 1.5rem; margin-bottom: .5rem; }
+  .activity-card h3 { font-size: .92rem; color: var(--teal); margin: 0 0 .5rem; }
+  .activity-card p { font-size: .82rem; color: var(--text-muted); line-height: 1.65; margin: 0; }
+
+  /* Info box */
+  .info-box { background: rgba(77,212,200,.06); border: 1px solid rgba(77,212,200,.25); border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0 1.25rem; }
+  .info-box strong { display: block; color: var(--teal); margin-bottom: .75rem; font-size: .92rem; }
+  .info-box ul { margin: 0; }
+
+  /* SEO cloud */
+  .seo-cloud { font-size: .78rem; color: var(--text-dim); line-height: 2; font-style: italic; }
+
+  /* CTA */
+  .article-cta { background: linear-gradient(135deg, rgba(77,212,200,.1), rgba(34,197,94,.08)); border: 1px solid rgba(77,212,200,.25); border-radius: 16px; padding: 2rem; margin-top: 2rem; text-align: center; }
+  .cta-inner h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: .5rem; }
+  .cta-inner p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
+  .cta-vehicles { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .cta-btn-car { background: var(--bg-2); border: 1.5px solid var(--teal); color: var(--teal); font-weight: 700; font-size: .88rem; padding: .75rem 1.4rem; border-radius: 10px; text-decoration: none; transition: background .15s; }
+  .cta-btn-car:hover { background: rgba(77,212,200,.12); }
+  .cta-btn { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 800; font-size: .95rem; padding: .9rem 1.8rem; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+  .cta-btn:hover { opacity: .85; }
+
+  /* Sidebar */
+  .article-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 1rem; }
+  .sidebar-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .sidebar-card strong { display: block; color: var(--silver); font-size: .88rem; margin-bottom: .75rem; }
+  .sidebar-card ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
+  .sidebar-card li { font-size: .8rem; color: var(--text-muted); }
+  .sidebar-card li::before { display: none; }
+  .sidebar-btn { display: block; background: var(--teal); color: #0a1421; font-weight: 700; text-align: center; padding: .6rem 1rem; border-radius: 8px; text-decoration: none; font-size: .84rem; transition: opacity .15s; }
+  .sidebar-btn:hover { opacity: .85; }
+  .sidebar-related { display: flex; flex-direction: column; gap: .5rem; }
+  .sidebar-related a { color: var(--teal); font-size: .82rem; text-decoration: none; }
+  .sidebar-related a:hover { text-decoration: underline; }
+
+  @media (max-width: 860px) {
+    .article-body { grid-template-columns: 1fr; }
+    .article-sidebar { position: static; }
+    .facts-grid { grid-template-columns: 1fr 1fr; }
+    .activities-grid { grid-template-columns: 1fr; }
+    .vehicles-grid { grid-template-columns: 1fr; }
+    .photo-gallery { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .facts-grid { grid-template-columns: 1fr; }
+    .photo-gallery { grid-template-columns: 1fr; }
+    .photo-hero-bar { height: 200px; }
+  }
+</style>
