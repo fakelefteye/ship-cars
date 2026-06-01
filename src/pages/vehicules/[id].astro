@@ -410,6 +410,12 @@ const photos = [
                 </div>
               </div>
             </div>
+            <div class="tiers-consent-check" id="tiers-consent-row" style="display:none;">
+              <label class="consent-row consent-required" style="margin-top:.75rem;">
+                <input type="checkbox" id="tiers-consent-check" />
+                <span>Je certifie que <strong id="tiers-nom-display">le titulaire</strong> m'a expressément autorisé(e) à utiliser sa carte bancaire pour cette réservation et a été informé(e) de sa responsabilité solidaire (caution, frais éventuels, amendes). <span class="consent-required-badge">Obligatoire</span></span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -1001,13 +1007,24 @@ const photos = [
   cond2DateInput?.addEventListener('change', () => checkPermisAge(cond2DateInput, cond2Hint));
 
   // Toggle tiers payeur
-  const tiersToggle = document.getElementById('tiers-toggle');
-  const tiersFields = document.getElementById('tiers-fields');
-  const tiersLabel  = document.getElementById('tiers-switch-label');
+  const tiersToggle      = document.getElementById('tiers-toggle');
+  const tiersFields      = document.getElementById('tiers-fields');
+  const tiersLabel       = document.getElementById('tiers-switch-label');
+  const tiersConsentRow  = document.getElementById('tiers-consent-row');
+  const tiersNomDisplay  = document.getElementById('tiers-nom-display');
+  const tiersNomInput    = document.getElementById('tiers-nom');
+
   tiersToggle?.addEventListener('change', () => {
     const on = tiersToggle.checked;
-    tiersFields.style.display = on ? 'block' : 'none';
-    tiersLabel.textContent    = on ? 'Oui' : 'Non';
+    tiersFields.style.display     = on ? 'block' : 'none';
+    tiersConsentRow.style.display = on ? 'block' : 'none';
+    tiersLabel.textContent        = on ? 'Oui' : 'Non';
+  });
+
+  // Met à jour le nom affiché dans la case à cocher au fil de la saisie
+  tiersNomInput?.addEventListener('input', () => {
+    const v = tiersNomInput.value.trim();
+    if (tiersNomDisplay) tiersNomDisplay.textContent = v || 'le titulaire';
   });
 
   // Upload pièce d'identité tiers payeur (CNI + selfie)
@@ -1115,6 +1132,13 @@ const photos = [
     }
     // Validation tiers payeur si toggle activé
     if (tiersActive) {
+      const tiersConsentChecked = document.getElementById('tiers-consent-check')?.checked;
+      if (!tiersConsentChecked) {
+        errEl.innerHTML = '❌ <strong>Tiers payeur :</strong> vous devez cocher la case d\'autorisation du titulaire de la carte.';
+        errEl.style.display = 'block';
+        errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
       if (!tiersNom || !tiersEmail) {
         errEl.innerHTML = '❌ <strong>Tiers payeur :</strong> le nom et l\'email du titulaire de la carte sont obligatoires.';
         errEl.style.display = 'block';

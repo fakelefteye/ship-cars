@@ -148,9 +148,23 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       </p>
     </div>
 
-    <p style="font-size:10px;color:#9ca3af;line-height:1.6;border-top:1px solid #e8eaf0;padding-top:12px;margin-top:14px;">
-      Les informations fournies par le locataire sont susceptibles d'être vérifiées. SHIP CARS se réserve le droit de corriger toute inexactitude constatée. Ce document constitue le contrat de location liant SHIP CARS (SIRET 95083648600015) et le locataire identifié ci-dessus.
-    </p>
+    <!-- Tampon / signature Loueur -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+      <tr>
+        <td style="width:50%;vertical-align:top;padding-right:16px;">
+          <div style="font-size:10px;color:#9ca3af;line-height:1.6;">
+            Les informations fournies par le locataire sont susceptibles d'être vérifiées. SHIP CARS se réserve le droit de corriger toute inexactitude constatée.
+          </div>
+        </td>
+        <td style="width:50%;vertical-align:top;text-align:right;">
+          <div style="font-size:10px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">Pour SHIP CARS — Le Loueur</div>
+          <img src="https://www.shipcars.fr/img/tampon-shipcars.jpg" alt="Tampon Ship Cars" width="160" style="max-width:160px;display:block;margin-left:auto;" onerror="this.style.display='none'" />
+          <div style="font-size:9px;color:#6b7280;margin-top:4px;">
+            SAS · Capital 1 000 € · SIRET 95083648600015<br>RCS Grenoble · APE 77.11A
+          </div>
+        </td>
+      </tr>
+    </table>
   </div>`;
 }
 

@@ -21,6 +21,14 @@ export async function generateContractPdf(
   res: Record<string, any>,
   veh: Record<string, any> | null
 ): Promise<Buffer> {
+  // Pré-chargement du tampon/signature (si le fichier existe sur le serveur)
+  let stampBuffer: Buffer | null = null;
+  try {
+    const baseUrl = process.env.PUBLIC_SITE_URL || 'https://www.shipcars.fr';
+    const r = await fetch(`${baseUrl}/img/tampon-shipcars.jpg`);
+    if (r.ok) stampBuffer = Buffer.from(await r.arrayBuffer());
+  } catch { /* pas de tampon disponible — on utilise le fallback texte */ }
+
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     const doc = new PDFDocument({ margin: 45, size: 'A4', info: { Title: 'Contrat de location Ship Cars' } });
@@ -48,11 +56,14 @@ export async function generateContractPdf(
     const COLOR_BORDER = '#d1d5db';
 
     function sectionHeader(title: string) {
-      doc.moveDown(0.4);
-      doc.rect(COL, doc.y, W, 18).fill(COLOR_BLUE);
+      doc.moveDown(0.5);
+      const barY = doc.y;
+      doc.rect(COL, barY, W, 18).fill(COLOR_BLUE);
       doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(9)
-         .text(title, COL + 6, doc.y - 14, { width: W - 12 });
-      doc.fillColor(COLOR_TEXT).moveDown(0.3);
+         .text(title, COL + 6, barY + 4, { width: W - 12, lineBreak: false });
+      // Force le curseur sous la barre bleue (évite tout chevauchement)
+      doc.y = barY + 22;
+      doc.fillColor(COLOR_TEXT);
     }
 
     function tableRow(label: string, value: string, shade = false) {
@@ -153,7 +164,7 @@ export async function generateContractPdf(
       ['Date / heure de fin',      fmtDateTime(res.date_fin)],
       ['Lieu de mise a disposition','62 rue Felix Esclangon 38000 Grenoble'],
       ['Lieu de restitution',      'Identique au lieu de mise a disposition'],
-      ['Kilometrage inclus',       `${kmInclus} km (puis 0,32 EUR / km supplementaire)`],
+      ['Kilometrage inclus',       `${kmInclus} km (puis 0,40 EUR TTC / km supplementaire)`],
       ['Prix total de la location', `${Number(res.montant_total).toFixed(2)} EUR (hors carburant)`],
       ['Caution / depot de garantie', '900 EUR'],
       ['Franchise applicable',     '1 300 EUR — voir article 6.2'],
@@ -197,7 +208,7 @@ export async function generateContractPdf(
     /* ─── SECTION 7 — FRAIS COMPLEMENTAIRES (résumé) ─────────────── */
     sectionHeader('7. Frais complementaires eventuels');
     const frais: [string, string][] = [
-      ['Kilometrage supp.',       '0,32 EUR / km'],
+      ['Kilometrage supp.',       '0,40 EUR TTC / km'],
       ['Carburant manquant',      '0,60 EUR / litre + ajustement prix reel'],
       ['Retard restitution',      '15 EUR / heure entamee (30 min de tolerance)'],
       ['Caractere non-fumeur',    '30 EUR'],
@@ -207,30 +218,29 @@ export async function generateContractPdf(
     shade = false;
     for (const [l, v] of frais) { tableRow(l, v, shade); shade = !shade; }
 
-    /* ─── SIGNATURES ──────────────────────────────────────────────── */
+    /* ─── ACCEPTATION & TAMPON ────────────────────────────────────── */
     doc.moveDown(0.8);
-    sectionHeader('Signatures');
-    doc.font('Helvetica').fontSize(8).fillColor(COLOR_TEXT)
+    doc.font('Helvetica').fontSize(7.5).fillColor('#065f46')
        .text(
-         'Le Locataire et le Loueur reconnaissent avoir pris connaissance et accepte sans reserve l\'integralite du present contrat.',
+         `En procedant au paiement de cette reservation le ${fmtDate(new Date().toISOString())}, le Locataire declare avoir pris connaissance des CGU de SHIP CARS et les accepte sans reserve. La validation du paiement en ligne vaut acceptation pleine et entiere du present contrat, conformement aux articles 1125 et suivants du Code civil.`,
          COL, doc.y, { width: W }
-       ).moveDown(0.5);
+       ).moveDown(0.6);
 
-    doc.font('Helvetica').fontSize(8).fillColor(COLOR_TEXT)
-       .text(`Fait le : ${fmtDate(new Date().toISOString())}`, COL, doc.y).moveDown(1);
+    // Tampon/signature Loueur
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(COLOR_BLUE)
+       .text('Pour SHIP CARS — Le Loueur', COL, doc.y).moveDown(0.4);
 
-    // Bloc signatures cote à cote
-    const sw = W / 2 - 10;
-    doc.rect(COL, doc.y, sw, 55).strokeColor(COLOR_BORDER).lineWidth(0.5).stroke();
-    doc.font('Helvetica-Bold').fontSize(8).text('Signature du Locataire', COL + 4, doc.y - 50);
-    doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(COLOR_MUTED)
-       .text('Precede de « Lu et approuve »', COL + 4);
-
-    doc.rect(COL + sw + 10, doc.y - 55, sw, 55).strokeColor(COLOR_BORDER).lineWidth(0.5).stroke();
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(COLOR_TEXT)
-       .text('Signature du Loueur (SHIP CARS)', COL + sw + 14, doc.y - 50);
-    doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(COLOR_MUTED)
-       .text('Cachet de l\'entreprise', COL + sw + 14);
+    if (stampBuffer) {
+      doc.image(stampBuffer, COL, doc.y, { width: 160, height: 80, fit: [160, 80] });
+      doc.moveDown(5.5);
+    } else {
+      // Fallback si le fichier n'a pas encore été uploadé
+      doc.font('Helvetica-Oblique').fontSize(8).fillColor(COLOR_MUTED)
+         .text('Lise SHIPPAM — SHIP CARS', COL, doc.y)
+         .text('SAS au capital de 1 000 EUR — SIRET 950 836 486 00015', COL)
+         .text('RCS Grenoble — APE 77.11A', COL);
+      doc.moveDown(0.5);
+    }
 
     /* ─── PIED DE PAGE ────────────────────────────────────────────── */
     doc.moveDown(1.5);
