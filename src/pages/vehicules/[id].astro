@@ -646,16 +646,28 @@ const photos = [
         if (dayElem.classList.contains('flatpickr-disabled')) return;
         if (isPartiallyBlocked(dayElem.dateObj)) {
           dayElem.classList.add('partially-occupied');
-          dayElem.setAttribute('title', 'Journée partiellement réservée — l\'heure sera pré-remplie');
-          // Injection d'un marqueur visible (fiable, indépendant de ::after)
+
+          // Construit le tooltip avec les heures réelles de disponibilité
+          const fmt = (d) => d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          const parts = [];
+          const fromTime = getRecommendedTime(dayElem.dateObj, 'start');
+          const untilTime = getRecommendedTime(dayElem.dateObj, 'end');
+          if (fromTime)  parts.push(`Dispo à partir de ${fmt(fromTime)}`);
+          if (untilTime) parts.push(`Retour avant ${fmt(untilTime)}`);
+          dayElem.setAttribute('title', parts.length ? parts.join(' · ') : 'Journée partiellement disponible');
+
           const marker = document.createElement('span');
           marker.className = 'partial-marker';
           dayElem.appendChild(marker);
         }
       },
       onChange(selectedDates, _dateStr, instance) {
-        // Auto-remplissage de l'heure quand une nouvelle date est ajoutée
-        if (selectedDates.length > previousCount && selectedDates.length <= 2) {
+        // Détecte l'ajout d'une nouvelle date, y compris quand l'utilisateur
+        // recommence une sélection après avoir déjà formé une plage (2 → 1).
+        const isNewStart  = selectedDates.length === 1 && previousCount !== 1;
+        const isNewSecond = selectedDates.length === 2 && selectedDates.length > previousCount;
+
+        if (isNewStart || isNewSecond) {
           const idx = selectedDates.length - 1;
           const addedDate = selectedDates[idx];
           const role = idx === 0 ? 'start' : 'end';
