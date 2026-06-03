@@ -9,7 +9,8 @@ function isAuthorized(request: Request): boolean {
   const secret = import.meta.env.VAPI_SECRET;
   if (!secret) return true;
   const auth = request.headers.get('authorization') ?? '';
-  return auth === `Bearer ${secret}`;
+  // Accepte "Bearer <secret>" ou directement "<secret>"
+  return auth === `Bearer ${secret}` || auth === secret;
 }
 
 function formatDate(iso: string): string {
