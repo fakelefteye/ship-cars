@@ -13,14 +13,6 @@ function isAuthorized(request: Request): boolean {
   return auth === `Bearer ${secret}` || auth === secret;
 }
 
-function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-  } catch {
-    return iso;
-  }
-}
 
 function parseArgs(body: unknown): Record<string, string> {
   if (typeof body !== 'object' || body === null) return {};
@@ -34,12 +26,21 @@ function parseArgs(body: unknown): Record<string, string> {
   return b as Record<string, string>;
 }
 
-async function checkAvailability(dateDebut: string, dateFin: string): Promise<string> {
+interface AvailabilityResult {
+  available: boolean;
+  availableVehicles: string[];
+  unavailableVehicles: string[];
+  dateDebut: string;
+  dateFin: string;
+  error?: string;
+}
+
+async function checkAvailability(dateDebut: string, dateFin: string): Promise<AvailabilityResult> {
   const start = new Date(dateDebut.includes('T') ? dateDebut : dateDebut + 'T00:00:00');
   const end   = new Date(dateFin.includes('T')   ? dateFin   : dateFin   + 'T23:59:59');
 
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    return "Je n'ai pas compris les dates. Pouvez-vous les préciser au format jour/mois/année ?";
+    return { available: false, availableVehicles: [], unavailableVehicles: [], dateDebut, dateFin, error: 'invalid_dates' };
   }
 
   const [
@@ -53,11 +54,11 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<st
   ]);
 
   if (vErr || rErr || iErr) {
-    return `Erreur base de données : ${vErr?.message ?? rErr?.message ?? iErr?.message}`;
+    return { available: false, availableVehicles: [], unavailableVehicles: [], dateDebut, dateFin, error: 'db_error' };
   }
 
   if (!vehicules?.length) {
-    return "Aucun véhicule n'est actuellement actif dans notre flotte.";
+    return { available: false, availableVehicles: [], unavailableVehicles: [], dateDebut, dateFin, error: 'no_vehicles' };
   }
 
   const toDate = (s: string) => new Date(s.includes('T') ? s : s + 'T00:00:00');
@@ -71,47 +72,36 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<st
     allOccupied.filter(r => r.from < end && r.to > start).map(r => r.vehicule_id)
   );
 
-  const available   = vehicules.filter(v => !occupiedIds.has(v.id));
-  const unavailable = vehicules.filter(v =>  occupiedIds.has(v.id));
+  const availableVehicles   = vehicules.filter(v => !occupiedIds.has(v.id)).map(v => v.nom);
+  const unavailableVehicles = vehicules.filter(v =>  occupiedIds.has(v.id)).map(v => v.nom);
 
-  const debutFr = formatDate(dateDebut);
-  const finFr   = formatDate(dateFin);
-
-  if (available.length === 0) {
-    const noms = unavailable.map(v => v.nom).join(', ');
-    return `Désolé, aucun véhicule n'est disponible du ${debutFr} au ${finFr}. ${noms} ${unavailable.length > 1 ? 'sont déjà réservés' : 'est déjà réservé'} sur cette période. Souhaitez-vous que je vérifie d'autres dates ?`;
-  } else if (available.length === vehicules.length) {
-    const noms = available.map(v => v.nom).join(', ');
-    return `Bonne nouvelle ! ${available.length > 1 ? 'Tous nos véhicules sont disponibles' : `${noms} est disponible`} du ${debutFr} au ${finFr}${available.length > 1 ? ` : ${noms}` : ''}. Souhaitez-vous réserver ?`;
-  } else {
-    const dispo   = available.map(v => v.nom).join(', ');
-    const indispo = unavailable.map(v => v.nom).join(', ');
-    return `Du ${debutFr} au ${finFr}, ${available.length > 1 ? 'sont disponibles' : 'est disponible'} : ${dispo}. En revanche, ${indispo} ${unavailable.length > 1 ? 'sont déjà réservés' : 'est déjà réservé'}. Souhaitez-vous réserver l'un des véhicules disponibles ?`;
-  }
+  return {
+    available: availableVehicles.length > 0,
+    availableVehicles,
+    unavailableVehicles,
+    dateDebut,
+    dateFin,
+  };
 }
+
+const json = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
 // GET — test manuel dans le navigateur
 // Ex: /api/vapi/availability?date_debut=2026-06-06&date_fin=2026-06-07
 export const GET: APIRoute = async ({ url }) => {
   const dateDebut = url.searchParams.get('date_debut') ?? '';
   const dateFin   = url.searchParams.get('date_fin')   ?? '';
-
   if (!dateDebut || !dateFin) {
-    return new Response(JSON.stringify({ usage: 'Ajoutez ?date_debut=YYYY-MM-DD&date_fin=YYYY-MM-DD' }), {
-      status: 200, headers: { 'Content-Type': 'application/json' },
-    });
+    return json({ usage: 'Ajoutez ?date_debut=YYYY-MM-DD&date_fin=YYYY-MM-DD' });
   }
-
-  const result = await checkAvailability(dateDebut, dateFin);
-  return new Response(JSON.stringify({ result }), {
-    status: 200, headers: { 'Content-Type': 'application/json' },
-  });
+  return json(await checkAvailability(dateDebut, dateFin));
 };
 
 // POST — appelé par Vapi
 export const POST: APIRoute = async ({ request }) => {
   if (!isAuthorized(request)) {
-    return new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 401 });
+    return json({ error: 'Non autorisé' }, 401);
   }
 
   let args: Record<string, string> = {};
@@ -119,21 +109,22 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     args = parseArgs(body);
   } catch {
-    return new Response(JSON.stringify({ error: 'Corps JSON invalide' }), { status: 400 });
+    return json({ error: 'Corps JSON invalide' }, 400);
   }
 
   const dateDebut = args.date_debut ?? args.dateDebut ?? null;
   const dateFin   = args.date_fin   ?? args.dateFin   ?? null;
 
   if (!dateDebut || !dateFin) {
-    return new Response(JSON.stringify({
-      result: "Je n'ai pas les dates de début et de fin. Pouvez-vous me préciser vos dates de location ?"
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return json({
+      available: false,
+      availableVehicles: [],
+      unavailableVehicles: [],
+      dateDebut: dateDebut ?? '',
+      dateFin: dateFin ?? '',
+      error: 'missing_dates',
+    });
   }
 
-  const result = await checkAvailability(dateDebut, dateFin);
-  return new Response(JSON.stringify({ result }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return json(await checkAvailability(dateDebut, dateFin));
 };
