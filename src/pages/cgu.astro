@@ -256,8 +256,23 @@ import MainLayout from '../layouts/MainLayout.astro';
           <li>Circulation à l'intérieur des zones aéroportuaires</li>
         </ul>
         <p>Tout sinistre survenu lors d'un de ces usages sera intégralement à la charge du Locataire.</p>
-        <h3>11.5 Panne et remorquage</h3>
-        <p>SHIP CARS ne fournit <strong>aucun service d'assistance ni de dépannage inclus</strong> dans la location. Tous les frais de remorquage, dépannage et gardiennage sont intégralement à la charge du Locataire. En cas d'accident avec un tiers, le Locataire doit remplir un constat amiable, contacter SHIP CARS dans les 24h et transmettre le constat signé dans les 5 jours ouvrables.</p>
+        <h3>11.5 Panne, remorquage et assistance</h3>
+        <p>SHIP CARS ne fournit <strong>aucun service d'assistance ni de dépannage inclus</strong> dans la location, quelle que soit la cause de l'immobilisation. Cela comprend notamment, sans être limitatif :</p>
+        <ul>
+          <li>Accident de la circulation (tous types, y compris responsable ou non)</li>
+          <li>Panne mécanique ou électrique (y compris panne de batterie sur véhicule électrique ou hybride rechargeable)</li>
+          <li>Crevaison, pneu à plat ou éclatement de pneumatique</li>
+          <li>Panne de carburant, erreur de carburant ou batterie 12 V déchargée</li>
+          <li>Perte, casse ou blocage des clés dans le véhicule</li>
+        </ul>
+        <p>Tous les frais de remorquage, dépannage, gardiennage et <strong>rapatriement du véhicule et/ou des occupants</strong> sont <strong>intégralement à la charge du Locataire</strong>. En cas d'accident avec un tiers, le Locataire doit remplir un constat amiable, contacter SHIP CARS dans les 24h et transmettre le constat signé dans les 5 jours ouvrables.</p>
+        <div class="assurance-tip">
+          <div class="assurance-tip-icon">💡</div>
+          <div class="assurance-tip-body">
+            <strong>Nous vous recommandons une assurance complémentaire</strong>
+            <p>Pour couvrir l'assistance remorquage, le rapatriement du véhicule et des personnes, les pannes et le <strong>rachat de franchise</strong> en cas de sinistre, nous vous suggérons de souscrire une assurance location spécialisée. Des prestataires comme <a href="https://www.serenitrip.com" target="_blank" rel="noopener noreferrer">Serenitrip</a> proposent ce type de garanties à partir de quelques euros par jour. Renseignez-vous également auprès de votre <strong>banque</strong> : certaines cartes bancaires (Visa Premier, Mastercard Gold…) incluent une assistance rapatriement activable.</p>
+          </div>
+        </div>
       </section>
 
       <section>
@@ -485,6 +500,20 @@ import MainLayout from '../layouts/MainLayout.astro';
     font-style: italic;
     margin-top: 0.5rem;
   }
+
+  .assurance-tip {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-top: 1rem;
+    padding: 0.9rem 1.1rem;
+    background: rgba(77,212,200,0.06);
+    border: 1px solid rgba(77,212,200,0.25);
+    border-radius: var(--radius);
+  }
+  .assurance-tip-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+  .assurance-tip-body strong { font-size: 0.88rem; color: var(--text); display: block; margin-bottom: 0.3rem; }
+  .assurance-tip-body p { font-size: 0.83rem; color: var(--text-muted); line-height: 1.65; margin: 0; }
 
   @media (max-width: 600px) {
     .legal-wrap { padding: 2rem 1.25rem 4rem; }

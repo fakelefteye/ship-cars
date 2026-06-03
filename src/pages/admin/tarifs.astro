@@ -124,6 +124,10 @@ const urlParam = Astro.url.searchParams.get('vehicule') ?? '';
 
       <!-- Calendrier -->
       <div class="cal-zone">
+        <div class="mode-bar">
+          <button id="btn-mode-tarifs" class="mode-btn mode-active">💶 Tarifs</button>
+          <button id="btn-mode-durees" class="mode-btn">⏱ Durées min/max</button>
+        </div>
         <div class="cal-toolbar">
           <button id="btn-prev" class="btn-nav">&#8249;</button>
           <span id="cal-title" class="cal-title"></span>
@@ -139,6 +143,7 @@ const urlParam = Astro.url.searchParams.get('vehicule') ?? '';
           <span class="leg"><span class="ldot custom"></span> Personnalisé</span>
           <span class="leg"><span class="ldot ga"></span> Getaround</span>
           <span class="leg"><span class="ldot blocked"></span> Bloqué</span>
+          <span class="leg"><span class="ldot duree"></span> Durée min/max</span>
         </div>
       </div>
 
@@ -213,6 +218,35 @@ const urlParam = Astro.url.searchParams.get('vehicule') ?? '';
           </form>
         </section>
 
+        <!-- Panel durée (sélection dans calendrier, mode Durées) -->
+        <section id="panel-duree" class="card" style="display:none;">
+          <h2 id="duree-title">⏱ Règle de durée</h2>
+          <p id="duree-range" class="range-label"></p>
+          <div class="field">
+            <label>Libellé <span class="opt">(optionnel)</span></label>
+            <input type="text" id="d-label" placeholder="Ex : Vacances d'été" />
+          </div>
+          <div class="field">
+            <label>Durée minimale (jours)</label>
+            <input type="number" id="d-min" min="1" placeholder="Ex : 6" />
+          </div>
+          <div class="field">
+            <label>Durée maximale <span class="opt">(optionnel)</span></label>
+            <input type="number" id="d-max" min="1" placeholder="Illimité" />
+          </div>
+          <div id="duree-err" class="err" style="display:none;"></div>
+          <div class="btn-row">
+            <button id="btn-save-duree" class="btn-primary">Enregistrer</button>
+            <button id="btn-cancel-duree" class="btn-ghost">Annuler</button>
+          </div>
+        </section>
+
+        <!-- Liste des règles de durée -->
+        <section class="card" id="periodes-list-card" style="display:none;">
+          <h2>📋 Règles de durée</h2>
+          <div id="periodes-list"></div>
+        </section>
+
         <!-- Tarifs personnalisés actifs -->
         <section class="card" id="tarifs-list-card" style="display:none;">
           <h2>📋 Tarifs personnalisés</h2>
@@ -261,6 +295,8 @@ const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin',
 // ─────────────────────────────────────────────────────────────────────────────
 let vehiculeId   = '';
 let zone         = 'B';
+let periodes     = [];
+let mode         = 'tarifs'; // 'tarifs' | 'durees'
 let year         = new Date().getFullYear();
 let month        = new Date().getMonth();
 let prixBasse    = 0, prixMoyenne = 0, prixHaute = 0, prixTresHaute = 0;
@@ -337,21 +373,25 @@ async function loadVehicule(id, basse, moyenne, haute, tresHaute, gaId) {
 
   document.getElementById('sync-zone').style.display = gaId ? 'flex' : 'none';
 
-  const [tRes, bRes, rRes] = await Promise.all([
+  const [tRes, bRes, rRes, pRes] = await Promise.all([
     fetch('/api/admin/tarifs?vehicule_id=' + id, { credentials: 'include' }),
     fetch('/api/admin/block-dates?vehicule_id=' + id, { credentials: 'include' }),
     fetch('/api/admin/regles?vehicule_id=' + id, { credentials: 'include' }),
+    fetch('/api/admin/regles-periodes?vehicule_id=' + id, { credentials: 'include' }),
   ]);
   tarifs   = await tRes.json().catch(() => []);
   blocages = await bRes.json().catch(() => []);
   const regles = await rRes.json().catch(() => ({}));
+  periodes = await pRes.json().catch(() => []);
   if (!Array.isArray(tarifs))   tarifs   = [];
   if (!Array.isArray(blocages)) blocages = [];
+  if (!Array.isArray(periodes)) periodes = [];
 
   applyRegles(regles);
   clearEdit();
   renderCalendar();
   renderTarifsList();
+  renderPeriodesList();
 
   document.getElementById('main-content').style.display = 'block';
   document.getElementById('no-vehicle').style.display   = 'none';
@@ -405,6 +445,7 @@ function renderCalendar() {
     const ferie  = FERIES.has(d);
     const { prix, type, tarif } = getPrix(d);
     const isToday = d === TODAY;
+    const periode = periodes.find(p => d >= p.date_debut && d <= p.date_fin) ?? null;
 
     const inSel = rangeStart && rangeHover &&
       d >= Math.min(rangeStart, rangeHover) && d <= Math.max(rangeStart, rangeHover);
@@ -442,8 +483,17 @@ function renderCalendar() {
       cell.appendChild(dot);
     }
 
+    // Badge durée (mode durées ou indicateur passif)
+    if (periode) {
+      cell.classList.add('day-periode');
+      const pb = document.createElement('span');
+      pb.className = 'day-duree-badge';
+      pb.textContent = periode.duree_min_jours + 'j min';
+      cell.appendChild(pb);
+    }
+
     // Badge prix
-    if (!blocage && prix > 0) {
+    if (!blocage && prix > 0 && mode !== 'durees') {
       const badge = document.createElement('span');
       badge.className = 'day-price-badge';
       badge.textContent = prix + '€';
@@ -480,18 +530,42 @@ function onDayClick(d) {
     rangeStart = d; rangeHover = d;
     document.getElementById('hint-sel').textContent = 'Cliquez une 2ᵉ date pour une plage';
     renderCalendar();
-    openEditPanel(d, d);
+    if (mode === 'durees') openDureePanel(d, d);
+    else openEditPanel(d, d);
   } else if (d === rangeStart) {
     clearEdit();
-    openEditPanel(d, d);
+    if (mode === 'durees') openDureePanel(d, d);
+    else openEditPanel(d, d);
   } else {
     const a = rangeStart < d ? rangeStart : d;
     const b = rangeStart < d ? d : rangeStart;
     rangeStart = null; rangeHover = null;
     document.getElementById('hint-sel').textContent = '';
     renderCalendar();
-    openEditPanel(a, b);
+    if (mode === 'durees') openDureePanel(a, b);
+    else openEditPanel(a, b);
   }
+}
+
+function openDureePanel(debut, fin) {
+  const panel = document.getElementById('panel-duree');
+  const isSingle = debut === fin;
+  document.getElementById('duree-title').textContent = isSingle
+    ? '⏱ Durée du ' + fmtDate(debut)
+    : '⏱ Durée du ' + fmtDate(debut) + ' au ' + fmtDate(fin);
+  document.getElementById('duree-range').textContent = '';
+  // Pré-remplir si une règle existe déjà sur ces dates
+  const existing = periodes.find(p => p.date_debut === debut && p.date_fin === fin);
+  document.getElementById('d-label').value = existing?.label || '';
+  document.getElementById('d-min').value   = existing?.duree_min_jours || '';
+  document.getElementById('d-max').value   = existing?.duree_max_jours || '';
+  document.getElementById('duree-err').style.display = 'none';
+  panel.dataset.debut = debut;
+  panel.dataset.fin   = fin;
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Masquer le panel tarif
+  document.getElementById('panel-edit').style.display = 'none';
 }
 
 function openEditPanel(debut, fin) {
@@ -515,6 +589,7 @@ function clearEdit() {
   rangeStart = null; rangeHover = null;
   document.getElementById('hint-sel').textContent = '';
   document.getElementById('panel-edit').style.display = 'none';
+  document.getElementById('panel-duree').style.display = 'none';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -709,6 +784,91 @@ async function syncGetaround(showFeedback = true) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Durées par période
+// ─────────────────────────────────────────────────────────────────────────────
+function renderPeriodesList() {
+  const card = document.getElementById('periodes-list-card');
+  const list = document.getElementById('periodes-list');
+  if (!list || !card) return;
+  if (!periodes.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  list.innerHTML = periodes.map(p => `
+    <div class="periode-row" data-id="${p.id}">
+      <div class="periode-info">
+        <span class="periode-lbl">${p.label || '—'}</span>
+        <span class="periode-dates">${fmtDate(p.date_debut)} → ${fmtDate(p.date_fin)}</span>
+        <span class="periode-duree">${p.duree_min_jours}j min${p.duree_max_jours ? ' · ' + p.duree_max_jours + 'j max' : ''}</span>
+      </div>
+      <button class="btn-del" data-id="${p.id}">🗑️</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.btn-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Supprimer cette règle de période ?')) return;
+      btn.disabled = true;
+      const res  = await fetch('/api/admin/regles-periodes', {
+        method: 'DELETE', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: btn.dataset.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        periodes = periodes.filter(p => p.id !== btn.dataset.id);
+        renderPeriodesList();
+        renderCalendar();
+      } else {
+        alert('Erreur : ' + (data.error || 'Inconnu'));
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+document.getElementById('btn-save-duree').addEventListener('click', async () => {
+  const panel  = document.getElementById('panel-duree');
+  const errEl  = document.getElementById('duree-err');
+  const btn    = document.getElementById('btn-save-duree');
+  const debut  = panel.dataset.debut;
+  const fin    = panel.dataset.fin;
+  const min    = document.getElementById('d-min').value;
+  const max    = document.getElementById('d-max').value;
+  const label  = document.getElementById('d-label').value.trim();
+
+  if (!min || parseInt(min) < 1) {
+    errEl.textContent = 'Renseignez une durée minimale (en jours).';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = '⏳…';
+
+  try {
+    const res = await fetch('/api/admin/regles-periodes', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vehicule_id: vehiculeId, date_debut: debut, date_fin: fin, duree_min_jours: min, duree_max_jours: max || null, label }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      periodes.push(data.data);
+      clearEdit();
+      renderPeriodesList();
+      renderCalendar();
+    } else {
+      errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+});
+
+document.getElementById('btn-cancel-duree').addEventListener('click', clearEdit);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Événements UI
 // ─────────────────────────────────────────────────────────────────────────────
 document.getElementById('btn-prev').addEventListener('click', () => {
@@ -717,6 +877,18 @@ document.getElementById('btn-prev').addEventListener('click', () => {
 document.getElementById('btn-next').addEventListener('click', () => {
   month++; if (month > 11) { month = 0; year++; } clearEdit(); renderCalendar();
 });
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-mode-tarifs').classList.toggle('mode-active', m === 'tarifs');
+  document.getElementById('btn-mode-durees').classList.toggle('mode-active', m === 'durees');
+  clearEdit();
+  renderCalendar();
+  const hint = document.getElementById('hint-sel');
+  hint.textContent = m === 'durees' ? '⏱ Cliquez des dates pour définir une durée min/max' : '';
+}
+document.getElementById('btn-mode-tarifs').addEventListener('click', () => setMode('tarifs'));
+document.getElementById('btn-mode-durees').addEventListener('click', () => setMode('durees'));
 
 document.getElementById('sel-vehicule').addEventListener('change', function() {
   const opt = this.options[this.selectedIndex];
@@ -959,4 +1131,30 @@ h1 { font-size:1.6rem; font-weight:800; color:#f0f4f8; margin:0; }
 .tarif-prix { font-size:.82rem; color:#c9a84c; font-weight:700; white-space:nowrap; }
 .btn-del { background:transparent; border:1px solid #4a3a3a; color:#f87171; padding:3px 8px; border-radius:5px; font-size:.75rem; cursor:pointer; flex-shrink:0; }
 .btn-del:hover { background:rgba(239,68,68,.1); }
+
+.periode-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #1e2d3d; }
+.periode-row:last-child { border-bottom:none; }
+.periode-info { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.periode-lbl { font-size:.82rem; font-weight:600; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.periode-dates { font-size:.7rem; color:#6b7280; }
+.periode-duree { font-size:.72rem; color:#fb923c; font-weight:700; }
+
+/* ── Mode toggle ── */
+.mode-bar { display:flex; gap:6px; padding:.5rem 0 .4rem; }
+.mode-btn {
+  padding:.45rem 1rem; border-radius:8px; border:1px solid #2a3d50;
+  background:#0f1e33; color:#9ca3af; font-size:.82rem; font-weight:700; cursor:pointer; transition:all .15s;
+}
+.mode-btn.mode-active { background:#c9a84c; color:#0a1421; border-color:#c9a84c; }
+.mode-btn:not(.mode-active):hover { border-color:#4dd4c8; color:#4dd4c8; }
+
+/* ── Période min/max sur cellule calendrier ── */
+.cal-day.day-periode { outline:2px solid #fb923c; outline-offset:-2px; }
+.day-duree-badge {
+  position:absolute; top:4px; right:4px;
+  background:#fb923c; color:#fff;
+  font-size:.6rem; font-weight:800;
+  padding:1px 5px; border-radius:4px; line-height:1.4; white-space:nowrap;
+}
+.ldot.duree { background:#fb923c; }
 </style>

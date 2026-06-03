@@ -15,16 +15,24 @@ if (error || !vehicule) {
 }
 
 // Règles de location (durée min/max, délai, plage dispo)
-const { data: regles } = await supabaseAdmin
-  .from('regles_location')
-  .select('duree_min_heures, duree_max_jours, delai_reservation_heures, plage_disponibilite_jours')
-  .eq('vehicule_id', id)
-  .maybeSingle();
+const [{ data: regles }, { data: reglesPeriodes }] = await Promise.all([
+  supabaseAdmin
+    .from('regles_location')
+    .select('duree_min_heures, duree_max_jours, delai_reservation_heures, plage_disponibilite_jours')
+    .eq('vehicule_id', id)
+    .maybeSingle(),
+  supabaseAdmin
+    .from('regles_periodes')
+    .select('date_debut, date_fin, duree_min_jours, duree_max_jours, label')
+    .eq('vehicule_id', id)
+    .order('date_debut'),
+]);
 
 const dureeMinHeures          = regles?.duree_min_heures          ?? 24;
 const dureeMaxJours           = regles?.duree_max_jours           ?? null;
 const delaiReservationHeures  = regles?.delai_reservation_heures  ?? 0;
 const plageDispo              = regles?.plage_disponibilite_jours ?? 90;
+const periodesDuree           = reglesPeriodes ?? [];
 
 const photos = [
   vehicule.image_url,
@@ -206,6 +214,14 @@ const photos = [
 
           <div class="zone-notice" style="margin-bottom:.75rem;">
             📍 <span>Circulation <strong>limitée à certaines zones</strong> (Sud-Est France, Suisse, Italie frontalière). <a href="/zones" target="_blank">Voir les zones autorisées →</a></span>
+          </div>
+
+          <div class="assistance-notice">
+            <div class="assistance-notice-icon">🛡️</div>
+            <div class="assistance-notice-body">
+              <strong>Assistance &amp; rapatriement non inclus</strong>
+              <span>Remorquage, panne de batterie, crevaison, rapatriement… sont intégralement à votre charge. Pensez à souscrire une <a href="https://www.serenitrip.com" target="_blank" rel="noopener noreferrer">assurance complémentaire (rachat de franchise + assistance)</a> ou vérifiez les garanties de votre carte bancaire.</span>
+            </div>
           </div>
 
           {vehicule.getaround_url && (
@@ -507,6 +523,7 @@ const photos = [
   dureeMaxJours: dureeMaxJours,
   delaiHeures: delaiReservationHeures,
   plageDispo: plageDispo,
+  periodesDuree: periodesDuree,
   getaroundUrl: vehicule.getaround_url ?? null,
 }}>
   async function initCalendar() {
@@ -710,6 +727,33 @@ const photos = [
           summaryEl.style.display = 'none';
           btn.disabled = true;
           return;
+        }
+
+        // Validation règles par période
+        if (Array.isArray(periodesDuree)) {
+          const startStr = start.toISOString().slice(0, 10);
+          const endStr   = end.toISOString().slice(0, 10);
+          for (const p of periodesDuree) {
+            // La réservation chevauche la période si elle commence ou finit dans la plage
+            if (startStr <= p.date_fin && endStr >= p.date_debut) {
+              if (p.duree_min_jours && diffDays < p.duree_min_jours) {
+                const lbl = p.label ? ` (${p.label})` : '';
+                errorEl.textContent = `⚠️ Pendant cette période${lbl}, la durée minimale est de ${p.duree_min_jours} jour(s).`;
+                errorEl.style.display = 'block';
+                summaryEl.style.display = 'none';
+                btn.disabled = true;
+                return;
+              }
+              if (p.duree_max_jours && diffDays > p.duree_max_jours) {
+                const lbl = p.label ? ` (${p.label})` : '';
+                errorEl.textContent = `⚠️ Pendant cette période${lbl}, la durée maximale est de ${p.duree_max_jours} jour(s).`;
+                errorEl.style.display = 'block';
+                summaryEl.style.display = 'none';
+                btn.disabled = true;
+                return;
+              }
+            }
+          }
         }
 
         // Calcul du prix via l'API (tarification dynamique)
@@ -2216,6 +2260,18 @@ const photos = [
   }
   .zone-notice strong { color:var(--teal); }
   .zone-notice a { color:var(--teal); font-weight:600; text-decoration:underline; }
+
+  /* ── Assistance notice ── */
+  .assistance-notice {
+    display:flex; align-items:flex-start; gap:.6rem;
+    background:rgba(234,179,8,.06); border:1px solid rgba(234,179,8,.3);
+    border-radius:8px; padding:.7rem .9rem; font-size:.79rem;
+    color:var(--text-muted); line-height:1.5; margin-bottom:.75rem;
+  }
+  .assistance-notice-icon { flex-shrink:0; font-size:1rem; margin-top:1px; }
+  .assistance-notice-body { display:flex; flex-direction:column; gap:.2rem; }
+  .assistance-notice-body strong { color:var(--text); font-size:.81rem; font-weight:600; }
+  .assistance-notice-body a { color:var(--gold); font-weight:600; text-decoration:underline; text-underline-offset:2px; }
 
   /* ── Conducteur supplémentaire ── */
   .cond2-section {

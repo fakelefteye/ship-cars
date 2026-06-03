@@ -219,10 +219,10 @@ const updated = url.searchParams.get('updated');
       </div>
     </section>
 
-    <!-- ÉTAT DES VÉHICULES (km + carburant) -->
+    <!-- ÉTAT DES VÉHICULES AU DÉPART (km + niveau carburant + photos dommages) -->
     <section class="admin-card">
-      <h2>🚗 État des véhicules au départ</h2>
-      <p class="subtitle">Renseignez le kilométrage compteur et le niveau de carburant avant chaque remise des clés. Ces informations apparaissent dans le contrat envoyé par mail.</p>
+      <h2>🚗 État au départ de la location</h2>
+      <p class="subtitle">À remplir avant chaque remise des clés. Ces informations apparaissent dans le contrat envoyé par mail.</p>
       <div class="etat-list" id="etat-list">
         {vehicules?.map((v) => (
           <div class="etat-row" data-id={v.id}>
@@ -230,19 +230,9 @@ const updated = url.searchParams.get('updated');
               <strong>{v.nom}</strong>
               {v.modele && <span class="etat-modele"> — {v.modele}</span>}
               {v.immatriculation && <span class="etat-immat">{v.immatriculation}</span>}
+              {v.carburant && <span class="etat-carburant-badge">{v.carburant}</span>}
             </div>
             <div class="etat-fields">
-              <div class="etat-field">
-                <label class="etat-label">Type carburant</label>
-                <select class="etat-select-carburant" data-id={v.id}>
-                  <option value="" selected={!v.carburant}>—</option>
-                  <option value="Essence" selected={v.carburant === 'Essence'}>Essence</option>
-                  <option value="Diesel" selected={v.carburant === 'Diesel'}>Diesel</option>
-                  <option value="Hybride" selected={v.carburant === 'Hybride'}>Hybride</option>
-                  <option value="Électrique" selected={v.carburant === 'Électrique'}>Électrique</option>
-                  <option value="GPL" selected={v.carburant === 'GPL'}>GPL</option>
-                </select>
-              </div>
               <div class="etat-field">
                 <label class="etat-label">Km au départ</label>
                 <input type="number" class="etat-input-km" data-id={v.id} value={v.kilometrage_depart ?? ''} placeholder="Ex : 42500" min="0" />
@@ -258,7 +248,25 @@ const updated = url.searchParams.get('updated');
                   <option value="Vide" selected={v.carburant_depart === 'Vide'}>Vide</option>
                 </select>
               </div>
-              <button class="btn-save-etat" data-id={v.id}>💾 Enregistrer</button>
+            </div>
+            <div class="etat-photos">
+              <label class="etat-label">Photos des dommages existants</label>
+              <div class="etat-photos-grid">
+                {[1,2,3].map((n) => {
+                  const url = (v as any)[`dommages_url_${n}`] ?? '';
+                  return (
+                    <div class="etat-photo-slot" data-id={v.id} data-n={n}>
+                      <label class="btn-upload-dmg" for={`dmg-${v.id}-${n}`}>📷 Photo {n}</label>
+                      <input type="file" id={`dmg-${v.id}-${n}`} class="hidden-file-input dmg-file" accept="image/jpeg,image/png,image/webp" data-vehicule-id={v.id} data-slot={n} />
+                      {url && <img src={url} alt={`Dommage ${n}`} class="etat-dmg-preview" />}
+                      {!url && <span class="etat-dmg-empty">Aucune photo</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div class="etat-actions">
+              <button class="btn-save-etat" data-id={v.id}>💾 Enregistrer l'état</button>
             </div>
           </div>
         ))}
@@ -418,6 +426,18 @@ const updated = url.searchParams.get('updated');
           <div class="form-group">
             <label for="description">Description du véhicule <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
             <textarea id="description" name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville et sur l'autoroute. Climatisation, bluetooth, caméra de recul..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="carburant">Type de carburant</label>
+            <select id="carburant" name="carburant">
+              <option value="">— Non renseigné</option>
+              <option value="Essence">Essence</option>
+              <option value="Diesel">Diesel</option>
+              <option value="Hybride">Hybride</option>
+              <option value="Électrique">Électrique</option>
+              <option value="GPL">GPL</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -598,15 +618,14 @@ const updated = url.searchParams.get('updated');
     } catch { alert('Erreur réseau'); btn.disabled = false; }
   });
 
-  // ── État des véhicules (km + carburant) ────────────────────────────
+  // ── État au départ (km + niveau carburant + photos dommages) ──────
   document.querySelectorAll('.btn-save-etat').forEach(function(btn) {
     btn.addEventListener('click', async function() {
       const id = this.getAttribute('data-id');
       const row = this.closest('.etat-row');
-      const km      = row.querySelector('.etat-input-km').value;
-      const niveau  = row.querySelector('.etat-select-niveau').value;
-      const carburant = row.querySelector('.etat-select-carburant').value;
-      const btnEl = this;
+      const km     = row.querySelector('.etat-input-km').value;
+      const niveau = row.querySelector('.etat-select-niveau').value;
+      const btnEl  = this;
       btnEl.disabled = true; btnEl.textContent = '⏳…';
       try {
         const res = await fetch('/api/admin/update-item', {
@@ -617,19 +636,58 @@ const updated = url.searchParams.get('updated');
             type: 'vehicule',
             id,
             kilometrage_depart: km !== '' ? parseInt(km) : null,
-            carburant_depart:   niveau   || null,
-            carburant:          carburant || null,
+            carburant_depart:   niveau || null,
           }),
         });
         if (res.ok || res.status === 303) {
           btnEl.textContent = '✅ Enregistré';
-          setTimeout(() => { btnEl.textContent = '💾 Enregistrer'; btnEl.disabled = false; }, 2500);
+          setTimeout(() => { btnEl.textContent = '💾 Enregistrer l\'état'; btnEl.disabled = false; }, 2500);
         } else {
           const d = await res.json().catch(() => ({}));
           alert('Erreur : ' + (d.error || res.status));
-          btnEl.textContent = '💾 Enregistrer'; btnEl.disabled = false;
+          btnEl.textContent = '💾 Enregistrer l\'état'; btnEl.disabled = false;
         }
-      } catch { alert('Erreur réseau'); btnEl.textContent = '💾 Enregistrer'; btnEl.disabled = false; }
+      } catch { alert('Erreur réseau'); btnEl.textContent = '💾 Enregistrer l\'état'; btnEl.disabled = false; }
+    });
+  });
+
+  // ── Upload photos dommages ──────────────────────────────────────────
+  document.querySelectorAll('.dmg-file').forEach(function(fileInput) {
+    fileInput.addEventListener('change', async function() {
+      const file = this.files && this.files[0];
+      if (!file) return;
+      const vehiculeId = this.getAttribute('data-vehicule-id');
+      const slot       = this.getAttribute('data-slot');
+      const slot_el    = this.closest('.etat-photo-slot');
+      const label      = slot_el.querySelector('.btn-upload-dmg');
+      label.textContent = '⏳…';
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: fd, credentials: 'include' });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.success) { alert('Erreur upload : ' + uploadData.error); label.textContent = '📷 Photo ' + slot; return; }
+        const url = uploadData.url;
+        const saveRes = await fetch('/api/admin/update-item', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ type: 'vehicule', id: vehiculeId, ['dommages_url_' + slot]: url }),
+        });
+        if (saveRes.ok || saveRes.status === 303) {
+          let img = slot_el.querySelector('img');
+          if (!img) {
+            img = document.createElement('img');
+            img.className = 'etat-dmg-preview';
+            const empty = slot_el.querySelector('.etat-dmg-empty');
+            if (empty) empty.remove();
+            slot_el.appendChild(img);
+          }
+          img.src = url;
+          label.textContent = '📷 Photo ' + slot;
+        } else {
+          alert('Erreur sauvegarde photo');
+          label.textContent = '📷 Photo ' + slot;
+        }
+      } catch { alert('Erreur réseau'); label.textContent = '📷 Photo ' + slot; }
     });
   });
 
@@ -1079,6 +1137,18 @@ const updated = url.searchParams.get('updated');
           </div>
 
           <div class="form-group">
+            <label>Type de carburant</label>
+            <select name="carburant">
+              <option value="" ${!item.carburant ? 'selected' : ''}>— Non renseigné</option>
+              <option value="Essence" ${item.carburant === 'Essence' ? 'selected' : ''}>Essence</option>
+              <option value="Diesel" ${item.carburant === 'Diesel' ? 'selected' : ''}>Diesel</option>
+              <option value="Hybride" ${item.carburant === 'Hybride' ? 'selected' : ''}>Hybride</option>
+              <option value="Électrique" ${item.carburant === 'Électrique' ? 'selected' : ''}>Électrique</option>
+              <option value="GPL" ${item.carburant === 'GPL' ? 'selected' : ''}>GPL</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label>Description <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
             <textarea name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description || ''}</textarea>
           </div>
@@ -1444,8 +1514,17 @@ const updated = url.searchParams.get('updated');
   .etat-field { display: flex; flex-direction: column; gap: .3rem; }
   .etat-label { font-size: .72rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
   .etat-input-km { width: 130px; padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .92rem; font-weight: 600; }
-  .etat-select-niveau, .etat-select-carburant { padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .92rem; font-weight: 600; background: #fff; cursor: pointer; }
-  .btn-save-etat { background: #4dd4c8; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; align-self: flex-end; transition: opacity .15s; }
+  .etat-select-niveau { padding: .5rem .75rem; border: 1px solid #ddd; border-radius: 6px; font-size: .92rem; font-weight: 600; background: #fff; cursor: pointer; }
+  .etat-carburant-badge { font-size: .72rem; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 99px; }
+  .etat-photos { display: flex; flex-direction: column; gap: .4rem; }
+  .etat-photos-grid { display: flex; gap: .75rem; flex-wrap: wrap; }
+  .etat-photo-slot { display: flex; flex-direction: column; align-items: center; gap: .35rem; }
+  .btn-upload-dmg { background: #e0f2fe; color: #0369a1; border: 1px dashed #7dd3fc; padding: .4rem .8rem; border-radius: 7px; font-size: .78rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
+  .btn-upload-dmg:hover { background: #bae6fd; }
+  .etat-dmg-preview { width: 90px; height: 65px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+  .etat-dmg-empty { font-size: .68rem; color: #9ca3af; font-style: italic; }
+  .etat-actions { display: flex; }
+  .btn-save-etat { background: #4dd4c8; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
   .btn-save-etat:hover { opacity: .85; }
   .btn-save-etat:disabled { opacity: .5; cursor: not-allowed; }
 

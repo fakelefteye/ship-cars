@@ -82,6 +82,15 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       if ('carburant_depart' in data) {
         updatePayload.carburant_depart = data.carburant_depart?.toString() || null;
       }
+      if ('dommages_url_1' in data) {
+        updatePayload.dommages_url_1 = data.dommages_url_1?.toString() || null;
+      }
+      if ('dommages_url_2' in data) {
+        updatePayload.dommages_url_2 = data.dommages_url_2?.toString() || null;
+      }
+      if ('dommages_url_3' in data) {
+        updatePayload.dommages_url_3 = data.dommages_url_3?.toString() || null;
+      }
       const { error } = await supabaseAdmin.from('vehicules').update(updatePayload).eq('id', id);
 
       if (error) throw error;
