@@ -26,10 +26,15 @@ function parseArgs(body: unknown): Record<string, string> {
   return b as Record<string, string>;
 }
 
+interface VehicleInfo {
+  nom: string;
+  modele: string;
+}
+
 interface AvailabilityResult {
   available: boolean;
-  availableVehicles: string[];
-  unavailableVehicles: string[];
+  availableVehicles: VehicleInfo[];
+  unavailableVehicles: VehicleInfo[];
   dateDebut: string;
   dateFin: string;
   error?: string;
@@ -48,7 +53,7 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<Av
     { data: reservations, error: rErr },
     { data: indisponibilites, error: iErr },
   ] = await Promise.all([
-    supabase.from('vehicules').select('id, nom').eq('disponible_resa', true),
+    supabase.from('vehicules').select('id, nom, modele').eq('disponible_resa', true),
     supabase.from('reservations').select('vehicule_id, date_debut, date_fin').in('statut', ['paye', 'confirmee', 'en_attente_paiement']),
     supabase.from('indisponibilites').select('vehicule_id, date_debut, date_fin'),
   ]);
@@ -61,6 +66,7 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<Av
     return { available: false, availableVehicles: [], unavailableVehicles: [], dateDebut, dateFin, error: 'no_vehicles' };
   }
 
+
   const toDate = (s: string) => new Date(s.includes('T') ? s : s + 'T00:00:00');
 
   const allOccupied = [
@@ -72,8 +78,8 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<Av
     allOccupied.filter(r => r.from < end && r.to > start).map(r => r.vehicule_id)
   );
 
-  const availableVehicles   = vehicules.filter(v => !occupiedIds.has(v.id)).map(v => v.nom);
-  const unavailableVehicles = vehicules.filter(v =>  occupiedIds.has(v.id)).map(v => v.nom);
+  const availableVehicles   = vehicules.filter(v => !occupiedIds.has(v.id)).map(v => ({ nom: v.nom, modele: v.modele ?? '' }));
+  const unavailableVehicles = vehicules.filter(v =>  occupiedIds.has(v.id)).map(v => ({ nom: v.nom, modele: v.modele ?? '' }));
 
   return {
     available: availableVehicles.length > 0,
