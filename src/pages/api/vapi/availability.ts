@@ -29,6 +29,7 @@ function parseArgs(body: unknown): Record<string, string> {
 interface VehicleInfo {
   nom: string;
   modele: string;
+  prixParJour: number;
 }
 
 interface AvailabilityResult {
@@ -53,7 +54,7 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<Av
     { data: reservations, error: rErr },
     { data: indisponibilites, error: iErr },
   ] = await Promise.all([
-    supabase.from('vehicules').select('id, nom, modele').eq('disponible_resa', true),
+    supabase.from('vehicules').select('id, nom, modele, prix_journalier_base, prix_basse').eq('disponible_resa', true),
     supabase.from('reservations').select('vehicule_id, date_debut, date_fin').in('statut', ['paye', 'confirmee', 'en_attente_paiement']),
     supabase.from('indisponibilites').select('vehicule_id, date_debut, date_fin'),
   ]);
@@ -78,8 +79,14 @@ async function checkAvailability(dateDebut: string, dateFin: string): Promise<Av
     allOccupied.filter(r => r.from < end && r.to > start).map(r => r.vehicule_id)
   );
 
-  const availableVehicles   = vehicules.filter(v => !occupiedIds.has(v.id)).map(v => ({ nom: v.nom, modele: v.modele ?? '' }));
-  const unavailableVehicles = vehicules.filter(v =>  occupiedIds.has(v.id)).map(v => ({ nom: v.nom, modele: v.modele ?? '' }));
+  const toVehicleInfo = (v: typeof vehicules[0]) => ({
+    nom: v.nom,
+    modele: v.modele ?? '',
+    prixParJour: Math.min(v.prix_basse ?? v.prix_journalier_base ?? 0, v.prix_journalier_base ?? 0),
+  });
+
+  const availableVehicles   = vehicules.filter(v => !occupiedIds.has(v.id)).map(toVehicleInfo);
+  const unavailableVehicles = vehicules.filter(v =>  occupiedIds.has(v.id)).map(toVehicleInfo);
 
   return {
     available: availableVehicles.length > 0,
