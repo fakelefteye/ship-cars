@@ -125,17 +125,13 @@ export const POST: APIRoute = async ({ request }) => {
   const dateDebut = args.date_debut ?? args.dateDebut ?? null;
   const dateFin   = args.date_fin   ?? args.dateFin   ?? null;
 
-  // DEBUG temporaire — à retirer après diagnostic
-  const debugInfo = `[DEBUG] body keys: ${Object.keys(args).join(',')} | date_debut=${dateDebut} | date_fin=${dateFin}`;
-  console.log(debugInfo);
-
   if (!dateDebut || !dateFin) {
     return new Response(JSON.stringify({
-      result: `Je n'ai pas les dates. Voici ce que j'ai reçu : ${debugInfo}`
+      result: "Je n'ai pas les dates de début et de fin. Pouvez-vous me préciser vos dates de location ?"
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const result = `${debugInfo} | ${await checkAvailability(dateDebut, dateFin)}`;
+  const result = await checkAvailability(dateDebut, dateFin);
   return new Response(JSON.stringify({ result }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
