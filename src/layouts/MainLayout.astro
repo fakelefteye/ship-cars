@@ -1,5 +1,4 @@
 ---
-import Analytics from '@vercel/analytics/astro';
 const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.props;
 ---
 
@@ -14,11 +13,14 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     <title>{title}</title>
     <slot name="head" />
     <!-- Google Tag Manager -->
-    <script is:inline>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    <script is:inline>(function(){
+    if(document.cookie.indexOf('admin_auth=true')!==-1)return;
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-NLLG4BH3');</script>
+    })(window,document,'script','dataLayer','GTM-NLLG4BH3');
+    })();</script>
     <!-- End Google Tag Manager -->
     <!-- Contentsquare / Hotjar -->
     <script is:inline src="https://t.contentsquare.net/uxa/e9cbb3baea7f6.js"></script>
@@ -312,7 +314,7 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     </style>
   </head>
   <body>
-    <!-- Google Tag Manager (noscript) -->
+    <!-- Google Tag Manager (noscript) — ignoré si admin_auth cookie présent -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NLLG4BH3"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
@@ -334,7 +336,14 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     </nav>
 
     <main><slot /></main>
-    <Analytics />
+    <!-- Vercel Analytics — chargement conditionnel (ignoré si admin_auth cookie présent) -->
+    <script is:inline>(function(){
+      if(document.cookie.indexOf('admin_auth=true')!==-1)return;
+      window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};
+      var s=document.createElement('script');
+      s.defer=true;s.src='/_vercel/insights/script.js';
+      document.head.appendChild(s);
+    })();</script>
 
     <footer class="footer">
       <div class="footer-top">
