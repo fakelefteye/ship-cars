@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
 import { blockDates } from '../../../lib/getaround';
+import { getReglage } from '../../../lib/reglages';
 // pdfkit en import dynamique — un crash pdf ne tue pas tout le webhook
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
@@ -28,7 +29,7 @@ function fmtDate(d: string | null | undefined): string {
   return new Date(d).toLocaleDateString('fr-FR');
 }
 
-function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | null): string {
+function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0,40 € TTC / km', prixLitre = '1,80 €/L'): string {
   const contractNum = res.id
     ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase()
     : '—';
@@ -66,7 +67,7 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       ${row('Horaire de fin', fmt(res.date_fin))}
       ${row('Prix de la réservation', Number(res.montant_total).toFixed(2) + ' €')}
       ${row('Distance incluse', diffDays * 100 + ' km')}
-      ${row('Prix km supplémentaire', '0,40 € TTC / km')}
+      ${row('Prix km supplémentaire', prixKm)}
       ${row('Nom du propriétaire', 'Ship Cars')}
       ${row('Protection', 'Standard')}
     </table>
@@ -78,8 +79,25 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
       ${veh?.immatriculation ? row('Plaque d\'immatriculation', veh.immatriculation) : ''}
       ${veh?.carburant ? row('Type de carburant', veh.carburant) : ''}
       ${veh?.kilometrage_depart != null ? row('Kilométrage au départ', `${Number(veh.kilometrage_depart).toLocaleString('fr-FR')} km`) : ''}
-      ${veh?.carburant_depart ? row('Niveau de carburant au départ', veh.carburant_depart) : ''}
+      ${(() => {
+        const pct = veh?.carburant_depart_pct;
+        if (pct == null) return veh?.carburant_depart ? row('Niveau de carburant au départ', veh.carburant_depart) : '';
+        const litres = veh?.reservoir_litres ? ` — environ ${Math.round(pct / 100 * veh.reservoir_litres)} L sur ${veh.reservoir_litres} L` : '';
+        return row('Niveau de carburant au départ', `${pct}%${litres}`);
+      })()}
     </table>
+    ${(veh?.dommages_url_1 || veh?.dommages_url_2 || veh?.dommages_url_3) ? `
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Photos des dommages préexistants</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr><td style="padding:8px 0;font-size:13px;color:#374151;">
+        <em style="color:#6b7280;font-size:12px;">Ces photos ont été prises avant la remise des clés et documentent l'état du véhicule au départ.</em>
+      </td></tr>
+      <tr><td style="padding:4px 0;">
+        ${[veh?.dommages_url_1, veh?.dommages_url_2, veh?.dommages_url_3].filter(Boolean).map((url, i) =>
+          `<a href="${url}" style="display:inline-block;margin-right:12px;font-size:12px;color:#4dd4c8;">📷 Photo ${i + 1}</a>`
+        ).join('')}
+      </td></tr>
+    </table>` : ''}
 
     <!-- Section Locataire -->
     <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Informations du locataire</div>
@@ -106,8 +124,8 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
     <div style="border-top:2px solid #e8eaf0;margin-top:16px;padding-top:16px;">
       <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;">Rappel des conditions essentielles</div>
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
-        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;vertical-align:top;width:42%;font-weight:600;">Kilométrage inclus</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">100 km / jour — dépassement facturé <strong>0,40 € TTC / km</strong></td></tr>
-        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Carburant</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Restitution au niveau constaté au départ — frais de remise à niveau si inférieur</td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;vertical-align:top;width:42%;font-weight:600;">Kilométrage inclus</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">100 km / jour — dépassement facturé <strong>${prixKm}</strong></td></tr>
+        <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Carburant</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Restitution au niveau constaté au départ — remise à niveau facturée <strong>${prixLitre}</strong> si niveau inférieur</td></tr>
         <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Caution</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">900 € préautorisée — libérée en l'absence de frais supplémentaires</td></tr>
         <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Conducteurs autorisés</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Uniquement les conducteurs déclarés lors de la réservation (permis ≥ 2 ans)</td></tr>
         <tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;font-weight:600;">Zone de circulation</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">Sud-Est France, Suisse (cantons autorisés), Italie (Piémont, Val d'Aoste) — toute sortie déchoit la garantie</td></tr>
@@ -126,7 +144,7 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
         <strong>${res.tiers_payeur_nom}</strong> (${res.tiers_payeur_email || '—'}${res.tiers_payeur_telephone ? ` · ${res.tiers_payeur_telephone}` : ''})
         a réglé la présente location et s'engage solidairement avec le conducteur
         <strong>${res.locataire_nom}</strong> au paiement de toutes sommes dues à SHIP CARS au titre de cette location,
-        incluant la caution (900 €), les frais kilométriques supplémentaires (0,40 €/km), les frais de carburant,
+        incluant la caution (900 €), les frais kilométriques supplémentaires (${prixKm}), les frais de carburant,
         de nettoyage, les franchises en cas de sinistre et toute amende résultant d'une infraction.
         ${res.tiers_payeur_consent_at
           ? `<br><strong style="color:#065f46;">Consentement enregistré le ${new Date(res.tiers_payeur_consent_at).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })} — IP : ${res.tiers_payeur_consent_ip || '—'}</strong>`
@@ -398,7 +416,11 @@ export const POST = async ({ request }) => {
 
       if (res) {
         const veh = res.vehicules ?? null;
-        const contractHtml = buildContractHtml(res, veh);
+        const prixKmRaw     = await getReglage('prix_km_supplementaire');
+        const prixLitreRaw  = await getReglage('prix_litre_carburant');
+        const prixKm    = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' € TTC / km';
+        const prixLitre = parseFloat(prixLitreRaw).toFixed(2).replace('.', ',') + ' €/L';
+        const contractHtml = buildContractHtml(res, veh, prixKm, prixLitre);
         const contractNum = res.id
           ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase()
           : reservationId;
@@ -509,7 +531,7 @@ export const POST = async ({ request }) => {
     </table>
     <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:14px 16px;margin-bottom:24px;">
       <p style="font-size:13px;color:#92400e;margin:0;line-height:1.6;">
-        <strong>⚠️ En tant que titulaire de la carte bancaire ayant servi à ce paiement, vous êtes solidairement responsable</strong> avec le conducteur de toutes les sommes dues à Ship Cars au titre de cette location : caution (900 €), frais kilométriques supplémentaires (0,40 €/km), frais de carburant, nettoyage, amendes et franchises en cas de sinistre.
+        <strong>⚠️ En tant que titulaire de la carte bancaire ayant servi à ce paiement, vous êtes solidairement responsable</strong> avec le conducteur de toutes les sommes dues à Ship Cars au titre de cette location : caution (900 €), frais kilométriques supplémentaires (${prixKm}), frais de carburant, nettoyage, amendes et franchises en cas de sinistre.
       </p>
     </div>
     <p style="font-size:14px;color:#374151;margin-bottom:20px;">Pour confirmer votre accord et accéder à votre exemplaire du contrat, cliquez sur le bouton ci-dessous. <strong>Sans confirmation de votre part, Ship Cars se réserve le droit de refuser la mise à disposition du véhicule.</strong></p>

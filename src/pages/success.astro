@@ -3,6 +3,7 @@ export const prerender = false;
 import MainLayout from '../layouts/MainLayout.astro';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '../lib/supabase';
+import { getReglage, formatPrixKm } from '../lib/reglages';
 
 const sessionId = Astro.url.searchParams.get('session_id');
 let reservation: Record<string, any> | null = null;
@@ -54,6 +55,10 @@ const contractNum = reservation?.id
   : '—';
 
 const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
+const prixKmRaw    = await getReglage('prix_km_supplementaire');
+const prixKmLabel  = formatPrixKm(prixKmRaw);
+const prixLitreRaw = await getReglage('prix_litre_carburant');
+const prixLitreLabel = parseFloat(prixLitreRaw).toFixed(2).replace('.', ',') + ' €/L';
 ---
 
 <MainLayout title="Récépissé de réservation — Ship Cars">
@@ -92,7 +97,8 @@ const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
               <tr><td>Horaire de fin</td><td>{fmt(reservation.date_fin)}</td></tr>
               <tr><td>Prix de la réservation</td><td>{Number(reservation.montant_total).toFixed(2)} €</td></tr>
               <tr><td>Distance incluse</td><td>{diffDays * 100} km</td></tr>
-              <tr><td>Prix additionnel par km</td><td>0,36 €</td></tr>
+              <tr><td>Prix additionnel par km</td><td>{prixKmLabel}</td></tr>
+              <tr><td>Remise à niveau carburant</td><td>{prixLitreLabel}</td></tr>
               <tr><td>Nom du propriétaire</td><td>Ship Cars</td></tr>
               <tr><td>Protection</td><td>Standard</td></tr>
             </tbody>
@@ -108,6 +114,12 @@ const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
               )}
               {vehicule?.immatriculation && <tr><td>Plaque d'immatriculation</td><td>{vehicule.immatriculation}</td></tr>}
               {vehicule?.carburant && <tr><td>Type de carburant</td><td>{vehicule.carburant}</td></tr>}
+              {vehicule?.kilometrage_depart != null && <tr><td>Kilométrage au départ</td><td>{Number(vehicule.kilometrage_depart).toLocaleString('fr-FR')} km</td></tr>}
+              {vehicule?.carburant_depart_pct != null ? (
+                <tr><td>Niveau carburant au départ</td><td>{vehicule.carburant_depart_pct}%{vehicule.reservoir_litres ? ` — environ ${Math.round(vehicule.carburant_depart_pct / 100 * vehicule.reservoir_litres)} L sur ${vehicule.reservoir_litres} L` : ''}</td></tr>
+              ) : vehicule?.carburant_depart ? (
+                <tr><td>Niveau carburant au départ</td><td>{vehicule.carburant_depart}</td></tr>
+              ) : null}
               {reservation.locataire_nom && <tr><td>Nom du locataire</td><td>{reservation.locataire_nom}</td></tr>}
               {reservation.locataire_date_naissance && <tr><td>Date de naissance</td><td>{fmtDate(reservation.locataire_date_naissance)}</td></tr>}
               {reservation.locataire_lieu_naissance && <tr><td>Lieu de naissance</td><td>{reservation.locataire_lieu_naissance}</td></tr>}
@@ -118,6 +130,20 @@ const cautionDejaAutorisee = reservation?.caution_statut === 'autorisee';
             </tbody>
           </table>
         </section>
+
+        {(vehicule?.dommages_url_1 || vehicule?.dommages_url_2 || vehicule?.dommages_url_3) && (
+          <section class="contract-section">
+            <h2 class="contract-section-title">Photos des dommages préexistants</h2>
+            <p style="font-size:.82rem;color:#6b7280;margin-bottom:.75rem;">Ces photos ont été prises avant la remise des clés et documentent l'état du véhicule au départ de la location.</p>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+              {[vehicule.dommages_url_1, vehicule.dommages_url_2, vehicule.dommages_url_3].filter(Boolean).map((url, i) => (
+                <a href={url} target="_blank" rel="noopener" style="display:block;">
+                  <img src={url} alt={`Dommage existant ${i+1}`} style="height:110px;width:auto;border-radius:8px;border:1px solid #e2e8f0;object-fit:cover;" loading="lazy" />
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         <p class="contract-disclaimer">
           Ce document est un récépissé de réservation confirmant votre paiement. Il ne constitue pas un contrat de location.

@@ -99,6 +99,12 @@ const { data: mfData } = await supabaseAdmin.from('app_config').select('value').
 const mardiFlashActif = mfData?.value === 'true';
 const { data: dmData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'derniere_minute_actif').single();
 const derniereMinuteActif = dmData?.value === 'true';
+const { data: kmData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'prix_km_supplementaire').single();
+const prixKmActuel = kmData?.value ?? '0.40';
+const { data: litreData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'prix_litre_carburant').single();
+const prixLitreActuel = litreData?.value ?? '1.80';
+const { data: wkData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'forcer_2j_weekend').single();
+const forcer2jWeekendActif = wkData?.value === 'true';
 
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
@@ -185,11 +191,96 @@ const updated = url.searchParams.get('updated');
         </button>
       </div>
 
+      <!-- WEEK-END MINIMUM 2 JOURS -->
+      <div class={`maint-card ${forcer2jWeekendActif ? 'wk-on' : ''}`} id="wk-card" style="margin-top:.75rem;">
+        <div class="maint-left">
+          <div class="wk-dot" id="wk-dot" style={forcer2jWeekendActif ? 'background:#7c3aed;box-shadow:0 0 0 4px rgba(124,58,237,.2);' : ''}></div>
+          <div>
+            <strong id="wk-label">{forcer2jWeekendActif ? '📅 Week-end : 2 jours minimum ACTIF' : '📅 Week-end : 2 jours minimum désactivé'}</strong>
+            <p id="wk-desc">{forcer2jWeekendActif
+              ? 'Toute réservation incluant un samedi ou dimanche doit durer au moins 2 jours.'
+              : 'Les locations d\'1 jour incluant un week-end sont autorisées.'
+            }</p>
+          </div>
+        </div>
+        <button id="btn-wk" class={forcer2jWeekendActif ? 'wk-btn-off' : 'wk-btn-on'} data-current={String(forcer2jWeekendActif)}>
+          {forcer2jWeekendActif ? '⏹️ Désactiver' : '📅 Activer 2j week-end'}
+        </button>
+      </div>
+
+      <!-- PARAMÈTRES TARIFAIRES -->
+      <div class="maint-card" id="km-card" style="margin-top:.75rem;">
+        <div class="maint-left">
+          <div>
+            <strong>⚡ Prix km supplémentaire</strong>
+            <p id="km-desc">Facturé au-delà du forfait inclus (100 km/jour). Modifie le récépissé, le contrat et les emails.</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <input type="number" id="km-input" min="0.01" max="9.99" step="0.01"
+            value={prixKmActuel}
+            style="width:80px;padding:.45rem .6rem;border:1px solid #ccc;border-radius:7px;font-size:.95rem;font-weight:700;text-align:center;" />
+          <span style="color:#6b7280;font-size:.9rem;">€ / km</span>
+          <button id="btn-km" style="background:#4dd4c8;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;">
+            💾 Enregistrer
+          </button>
+        </div>
+      </div>
+      <div id="km-feedback" style="display:none;margin-top:.4rem;font-size:.83rem;color:#059669;font-weight:600;"></div>
+
+      <!-- Prix litre carburant -->
+      <div class="maint-card" style="margin-top:.75rem;">
+        <div class="maint-left">
+          <div>
+            <strong>⛽ Prix du litre de carburant</strong>
+            <p id="litre-desc">Facturé en cas de restitution sous le niveau de départ. Modifie le contrat, le récépissé et les CGU.</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <input type="number" id="litre-input" min="0.01" max="9.99" step="0.01"
+            value={prixLitreActuel}
+            style="width:80px;padding:.45rem .6rem;border:1px solid #ccc;border-radius:7px;font-size:.95rem;font-weight:700;text-align:center;" />
+          <span style="color:#6b7280;font-size:.9rem;">€ / L</span>
+          <button id="btn-litre" style="background:#f59e0b;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;">
+            💾 Enregistrer
+          </button>
+        </div>
+      </div>
+      <div id="litre-feedback" style="display:none;margin-top:.4rem;font-size:.83rem;font-weight:600;"></div>
+
       {success && <p class="success-msg">✅ L'élément a été ajouté avec succès !</p>}
       {deleted && <p class="success-msg">✅ L'élément a été supprimé avec succès !</p>}
       {updated && <p class="success-msg">✅ L'élément a été modifié avec succès !</p>}
     </header>
     
+    <!-- REMBOURSEMENT -->
+    <section class="admin-card" id="section-rembourser">
+      <h2>💸 Rembourser une réservation</h2>
+      <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem;">
+        Saisir l'ID de réservation (UUID) pour déclencher le remboursement Stripe, annuler la location et libérer le créneau Getaround. Le payeur reçoit automatiquement un email de confirmation.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:.75rem;max-width:560px;">
+        <div style="display:flex;flex-direction:column;gap:.3rem;">
+          <label style="font-size:.8rem;font-weight:600;color:#374151;">ID de réservation *</label>
+          <input type="text" id="rembours-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            style="padding:.55rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;font-family:monospace;" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;">
+          <label style="font-size:.8rem;font-weight:600;color:#374151;">Motif (optionnel)</label>
+          <input type="text" id="rembours-motif" placeholder="Ex : annulation client, indisponibilité véhicule…"
+            style="padding:.55rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.88rem;" />
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+          <button id="btn-rembourser"
+            style="background:#dc2626;color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">
+            💸 Rembourser &amp; annuler
+          </button>
+          <div id="rembours-feedback" style="display:none;font-size:.85rem;font-weight:600;"></div>
+        </div>
+        <div id="rembours-result" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:.85rem 1rem;font-size:.83rem;line-height:1.7;"></div>
+      </div>
+    </section>
+
     <!-- LISTE DES VÉHICULES -->
     <section class="admin-card">
       <h2>🚗 Véhicules ({vehicules?.length || 0})</h2>
@@ -238,14 +329,18 @@ const updated = url.searchParams.get('updated');
                 <input type="number" class="etat-input-km" data-id={v.id} value={v.kilometrage_depart ?? ''} placeholder="Ex : 42500" min="0" />
               </div>
               <div class="etat-field">
-                <label class="etat-label">Niveau carburant</label>
-                <select class="etat-select-niveau" data-id={v.id}>
-                  <option value="" selected={!v.carburant_depart}>—</option>
-                  <option value="Plein" selected={v.carburant_depart === 'Plein'}>Plein</option>
-                  <option value="3/4" selected={v.carburant_depart === '3/4'}>3/4</option>
-                  <option value="1/2" selected={v.carburant_depart === '1/2'}>1/2</option>
-                  <option value="1/4" selected={v.carburant_depart === '1/4'}>1/4</option>
-                  <option value="Vide" selected={v.carburant_depart === 'Vide'}>Vide</option>
+                <label class="etat-label">Niveau carburant (%)
+                  {v.reservoir_litres && <span class="etat-litre-hint" data-reservoir={v.reservoir_litres}></span>}
+                </label>
+                <select class="etat-select-niveau" data-id={v.id} data-reservoir={v.reservoir_litres ?? ''}>
+                  <option value="" selected={(v as any).carburant_depart_pct == null && !v.carburant_depart}>—</option>
+                  <option value="100" selected={(v as any).carburant_depart_pct === 100}>100% (Plein)</option>
+                  <option value="90"  selected={(v as any).carburant_depart_pct === 90}>90%</option>
+                  <option value="75"  selected={(v as any).carburant_depart_pct === 75}>75% (3/4)</option>
+                  <option value="50"  selected={(v as any).carburant_depart_pct === 50}>50% (1/2)</option>
+                  <option value="25"  selected={(v as any).carburant_depart_pct === 25}>25% (1/4)</option>
+                  <option value="10"  selected={(v as any).carburant_depart_pct === 10}>10%</option>
+                  <option value="0"   selected={(v as any).carburant_depart_pct === 0}>0% (Vide)</option>
                 </select>
               </div>
             </div>
@@ -438,6 +533,11 @@ const updated = url.searchParams.get('updated');
               <option value="Électrique">Électrique</option>
               <option value="GPL">GPL</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label for="reservoir_litres">Capacité du réservoir (litres) <span style="font-weight:400;color:#6b7280;">— pour calcul carburant manquant</span></label>
+            <input type="number" id="reservoir_litres" name="reservoir_litres" min="1" max="200" step="1" placeholder="Ex : 45" />
           </div>
 
           <div class="form-group">
@@ -635,8 +735,8 @@ const updated = url.searchParams.get('updated');
           body: JSON.stringify({
             type: 'vehicule',
             id,
-            kilometrage_depart: km !== '' ? parseInt(km) : null,
-            carburant_depart:   niveau || null,
+            kilometrage_depart:   km !== '' ? parseInt(km) : null,
+            carburant_depart_pct: niveau !== '' ? parseInt(niveau) : null,
           }),
         });
         if (res.ok || res.status === 303) {
@@ -756,6 +856,157 @@ const updated = url.searchParams.get('updated');
         btn.disabled = false;
       } else { alert('Erreur : ' + (data.error || 'inconnue')); btn.disabled = false; }
     } catch { alert('Erreur réseau'); btn.disabled = false; }
+  });
+
+  // ── Week-end 2 jours minimum ────────────────────────────────────────
+  document.getElementById('btn-wk')?.addEventListener('click', async function() {
+    const btn  = this as HTMLButtonElement;
+    const cur  = btn.dataset.current === 'true';
+    const next = !cur;
+    btn.disabled = true; btn.textContent = '⏳ En cours…';
+    try {
+      const res  = await fetch('/api/admin/reglages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', body: JSON.stringify({ forcer_2j_weekend: next ? 'true' : 'false' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const card  = document.getElementById('wk-card');
+        const label = document.getElementById('wk-label');
+        const desc  = document.getElementById('wk-desc');
+        const dot   = document.getElementById('wk-dot');
+        if (next) {
+          card?.classList.add('wk-on');
+          if (dot) { dot.style.background = '#2563eb'; dot.style.boxShadow = '0 0 0 4px rgba(37,99,235,.2)'; }
+          if (label) label.textContent = '📅 Week-end : 2 jours minimum ACTIF';
+          if (desc)  desc.textContent  = 'Toute réservation incluant un samedi ou dimanche doit durer au moins 2 jours.';
+          btn.textContent = '⏹️ Désactiver';
+          btn.className   = 'wk-btn-off';
+        } else {
+          card?.classList.remove('wk-on');
+          if (dot) { dot.style.background = '#9ca3af'; dot.style.boxShadow = 'none'; }
+          if (label) label.textContent = '📅 Week-end : 2 jours minimum désactivé';
+          if (desc)  desc.textContent  = 'Les locations d\'1 jour incluant un week-end sont autorisées.';
+          btn.textContent = '📅 Activer 2j week-end';
+          btn.className   = 'wk-btn-on';
+        }
+        btn.dataset.current = String(next);
+        btn.disabled = false;
+      } else { alert('Erreur : ' + (data.error || 'inconnue')); btn.disabled = false; }
+    } catch { alert('Erreur réseau'); btn.disabled = false; }
+  });
+
+  // ── Prix km supplémentaire ──────────────────────────────────────────
+  document.getElementById('btn-km')?.addEventListener('click', async function() {
+    const btn = this as HTMLButtonElement;
+    const input = document.getElementById('km-input') as HTMLInputElement;
+    const feedback = document.getElementById('km-feedback') as HTMLElement;
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) { alert('Valeur invalide'); return; }
+    btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+    try {
+      const res = await fetch('/api/admin/reglages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', body: JSON.stringify({ prix_km_supplementaire: val.toFixed(2) }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        feedback.textContent = `✅ Prix enregistré : ${val.toFixed(2).replace('.', ',')} €/km`;
+        feedback.style.display = 'block';
+        feedback.style.color = '#059669';
+        setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+      } else {
+        feedback.textContent = '❌ Erreur : ' + (data.error || 'inconnue');
+        feedback.style.display = 'block';
+        feedback.style.color = '#dc2626';
+      }
+    } catch {
+      feedback.textContent = '❌ Erreur réseau';
+      feedback.style.display = 'block';
+      feedback.style.color = '#dc2626';
+    }
+    btn.disabled = false; btn.textContent = '💾 Enregistrer';
+  });
+
+  // ── Prix litre carburant ────────────────────────────────────────────
+  document.getElementById('btn-litre')?.addEventListener('click', async function() {
+    const btn = this as HTMLButtonElement;
+    const input = document.getElementById('litre-input') as HTMLInputElement;
+    const feedback = document.getElementById('litre-feedback') as HTMLElement;
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) { alert('Valeur invalide'); return; }
+    btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+    try {
+      const res = await fetch('/api/admin/reglages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', body: JSON.stringify({ prix_litre_carburant: val.toFixed(2) }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        feedback.textContent = `✅ Prix enregistré : ${val.toFixed(2).replace('.', ',')} €/L`;
+        feedback.style.display = 'block'; feedback.style.color = '#059669';
+        setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+      } else {
+        feedback.textContent = '❌ Erreur : ' + (data.error || 'inconnue');
+        feedback.style.display = 'block'; feedback.style.color = '#dc2626';
+      }
+    } catch { feedback.textContent = '❌ Erreur réseau'; feedback.style.display = 'block'; feedback.style.color = '#dc2626'; }
+    btn.disabled = false; btn.textContent = '💾 Enregistrer';
+  });
+
+  // ── Remboursement réservation ───────────────────────────────────────
+  document.getElementById('btn-rembourser')?.addEventListener('click', async function() {
+    const btn      = this as HTMLButtonElement;
+    const idInput  = document.getElementById('rembours-id') as HTMLInputElement;
+    const motifEl  = document.getElementById('rembours-motif') as HTMLInputElement;
+    const feedback = document.getElementById('rembours-feedback') as HTMLElement;
+    const result   = document.getElementById('rembours-result') as HTMLElement;
+
+    const reservationId = idInput.value.trim();
+    if (!reservationId) { alert('Veuillez saisir un ID de réservation'); return; }
+
+    const confirmed = confirm(
+      `⚠️ Confirmer le remboursement de la réservation ?\n\n${reservationId}\n\nCette action est irréversible. Le montant sera remboursé sur la carte du payeur, la location sera annulée et le créneau libéré sur Getaround.`
+    );
+    if (!confirmed) return;
+
+    btn.disabled = true; btn.textContent = '⏳ Traitement…';
+    feedback.style.display = 'none';
+    result.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/admin/rembourser', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reservation_id: reservationId, motif: motifEl.value.trim() || undefined }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        feedback.textContent = '✅ Remboursement traité avec succès';
+        feedback.style.color = '#059669';
+        feedback.style.display = 'block';
+        result.innerHTML = [
+          `<strong>✅ Réservation annulée</strong>`,
+          `Montant remboursé : <strong>${data.montant_rembourse ? data.montant_rembourse.toFixed(2) + ' €' : '—'}</strong>`,
+          data.refund_id ? `Réf. Stripe : <code>${data.refund_id}</code>` : '⚠️ Aucun remboursement Stripe (introuvable)',
+          `Getaround libéré : ${data.getaround_unblocked ? '✅ Oui' : '⚠️ Non (vérifier manuellement)'}`,
+          `Email payeur : ${data.email_envoye ? '✅ Envoyé' : '⚠️ Non envoyé (email inconnu)'}`,
+        ].join('<br>');
+        result.style.display = 'block';
+        idInput.value = '';
+        motifEl.value = '';
+      } else {
+        feedback.textContent = '❌ Erreur : ' + (data.error || 'inconnue');
+        feedback.style.color = '#dc2626';
+        feedback.style.display = 'block';
+      }
+    } catch {
+      feedback.textContent = '❌ Erreur réseau';
+      feedback.style.color = '#dc2626';
+      feedback.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = '💸 Rembourser & annuler';
   });
 
   // Script JavaScript pour l'administration
@@ -1149,6 +1400,11 @@ const updated = url.searchParams.get('updated');
           </div>
 
           <div class="form-group">
+            <label>Capacité du réservoir (litres) <span style="font-weight:400;color:#6b7280;">— pour calcul carburant manquant</span></label>
+            <input type="number" name="reservoir_litres" min="1" max="200" step="1" placeholder="Ex : 45" value="${item.reservoir_litres || ''}">
+          </div>
+
+          <div class="form-group">
             <label>Description <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
             <textarea name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description || ''}</textarea>
           </div>
@@ -1374,6 +1630,14 @@ const updated = url.searchParams.get('updated');
   .dm-btn-off { background:#6b7280; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
   .dm-btn-off:hover { opacity:.85; }
   .dm-btn-on:disabled, .dm-btn-off:disabled { opacity:.5; cursor:not-allowed; }
+  /* Week-end 2j card */
+  .wk-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; background:#9ca3af; }
+  .wk-card.wk-on { border-color:#7c3aed; background:#f5f3ff; }
+  .wk-btn-on { background:#7c3aed; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .wk-btn-on:hover { opacity:.85; }
+  .wk-btn-off { background:#6b7280; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+  .wk-btn-off:hover { opacity:.85; }
+  .wk-btn-on:disabled, .wk-btn-off:disabled { opacity:.5; cursor:not-allowed; }
 
   .admin-container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
   .admin-header { margin-bottom: 2rem; }

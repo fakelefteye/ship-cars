@@ -1,0 +1,520 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre    = "CB pas au nom du conducteur : Ship Cars l'accepte — voici comment";
+const slug     = "carte-bancaire-pas-au-nom-du-conducteur";
+const date     = "2026-06-04";
+const readTime = "4 min";
+const desc     = "Votre carte bleue n'est pas au nom du locataire ou du conducteur ? Ship Cars vérifie l'identité pendant le paiement et accepte cette situation. Processus, documents, FAQ.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Ship Cars",
+        "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" }
+      },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+
+    <header class="article-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb">
+          <a href="/">Accueil</a> ›
+          <a href="/blog">Blog</a> ›
+          <span>CB pas au nom du conducteur</span>
+        </div>
+        <div class="article-tag-header">
+          <span class="tag">💳 Paiement</span>
+          <span class="meta-date">4 juin 2026</span>
+          <span class="meta-read">· {readTime} de lecture</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          La carte bleue présentée n'est pas au nom de la personne qui conduit le véhicule ?
+          Chez <strong>Ship Cars, ce n'est pas un problème</strong> : nous vérifions l'identité du titulaire
+          de la carte pendant le processus de paiement, en ligne, sans contrainte.
+        </p>
+      </div>
+    </header>
+
+    <div class="art-container article-body">
+
+      <div class="article-content">
+
+        <nav class="sommaire">
+          <strong>Sommaire</strong>
+          <ol>
+            <li><a href="#situations">Dans quelles situations la CB n'est pas au nom du conducteur ?</a></li>
+            <li><a href="#processus">Comment Ship Cars vérifie l'identité pendant le paiement ?</a></li>
+            <li><a href="#agences">Quelle agence accepte une CB pas au nom du locataire ?</a></li>
+            <li><a href="#faq">Questions fréquentes</a></li>
+          </ol>
+        </nav>
+
+        <section id="situations">
+          <h2>Dans quelles situations la CB n'est pas au nom du conducteur ?</h2>
+          <p>
+            C'est plus courant qu'on ne le pense. Voici les cas que nous rencontrons régulièrement :
+          </p>
+
+          <div class="situations-grid">
+            <div class="situation-card">
+              <div class="sit-icon">👫</div>
+              <strong>Couple ou famille</strong>
+              <p>La carte est au nom du conjoint, partenaire ou parent — le conducteur utilise le compte joint ou la carte de l'autre.</p>
+            </div>
+            <div class="situation-card">
+              <div class="sit-icon">🏢</div>
+              <strong>Carte entreprise</strong>
+              <p>L'employeur paye la location via une carte corporate au nom de la société ou d'un responsable, pas du conducteur.</p>
+            </div>
+            <div class="situation-card">
+              <div class="sit-icon">👨‍👩‍👦</div>
+              <strong>Parent qui paye pour un enfant</strong>
+              <p>Un parent règle la location de son fils ou de sa fille étudiant, stagiaire ou en déplacement.</p>
+            </div>
+            <div class="situation-card">
+              <div class="sit-icon">🤝</div>
+              <strong>Ami ou proche</strong>
+              <p>Un proche prend en charge les frais de location à titre de coup de main ou de cadeau.</p>
+            </div>
+          </div>
+
+          <p>
+            Dans tous ces cas, <strong>la personne dont le nom figure sur la carte n'est pas celle qui conduit</strong>.
+            Les agences classiques bloquent souvent à cette étape. Chez Ship Cars, une procédure simple permet de gérer ça proprement.
+          </p>
+        </section>
+
+        <section id="processus">
+          <h2>Comment Ship Cars vérifie l'identité pendant le paiement ?</h2>
+          <p>
+            Tout se passe en ligne, sans déplacement. Voici ce qui se passe concrètement lorsque
+            la carte bancaire n'est pas au nom du conducteur :
+          </p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <strong>Le conducteur réserve normalement</strong>
+                <p>Il choisit son véhicule, ses dates, fournit son permis de conduire et ses informations personnelles.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <strong>Il indique que la CB appartient à quelqu'un d'autre</strong>
+                <p>Un champ dédié apparaît pour renseigner le nom, l'email et le numéro du titulaire de la carte.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <strong>La pièce d'identité du titulaire de la carte est uploadée</strong>
+                <p>Photo recto de la carte d'identité ou du passeport + selfie tenant la pièce d'identité face caméra. Cette étape prouve que la personne qui paye est bien le vrai titulaire.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <strong>Paiement Stripe avec validation 3D Secure</strong>
+                <p>La banque confirme l'opération par SMS ou application bancaire. C'est une authentification forte imposée par la directive européenne DSP2.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-content">
+                <strong>Le titulaire reçoit un email de consentement et accepte</strong>
+                <p>Un lien unique est envoyé à son adresse email. Son clic constitue une signature électronique légalement valide (art. 1366 Code civil).</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">6</div>
+              <div class="step-content">
+                <strong>La location se déroule normalement</strong>
+                <p>Le conducteur reçoit son contrat. Le véhicule s'ouvre à distance à l'heure prévue.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <strong>📋 Ce qui est vérifié sur la carte d'identité du titulaire de la CB</strong>
+            <ul>
+              <li>✅ Photo recto de la <strong>carte d'identité ou du passeport</strong></li>
+              <li>✅ <strong>Selfie tenant la pièce d'identité</strong> face caméra — preuve que c'est bien lui</li>
+              <li>✅ <strong>Validation 3D Secure</strong> par la banque au moment du paiement</li>
+              <li>✅ <strong>Clic de consentement</strong> sur le lien reçu par email</li>
+            </ul>
+          </div>
+
+          <p>
+            Ce processus garantit que <strong>personne ne peut utiliser une carte bancaire sans l'accord explicite de son titulaire</strong>.
+            Il protège à la fois le conducteur, le titulaire de la CB et Ship Cars.
+          </p>
+        </section>
+
+        <section id="agences">
+          <h2>Quelle agence de location accepte une CB pas au nom du locataire ?</h2>
+          <p>
+            C'est la question que beaucoup posent sur Google — et la réponse est souvent décevante.
+            La majorité des agences classiques (Europcar, Hertz, Enterprise, etc.) exigent que
+            <strong>la carte bancaire soit au nom du conducteur principal</strong>, sans exception.
+          </p>
+
+          <div class="compare-table">
+            <div class="compare-header">
+              <div></div>
+              <div class="col-label">Agences classiques</div>
+              <div class="col-label col-shipcars">Ship Cars</div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-item">CB au nom du conducteur obligatoire</div>
+              <div class="col-val bad">✗ Oui</div>
+              <div class="col-val good">✓ Non</div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-item">CB d'un tiers acceptée</div>
+              <div class="col-val bad">✗ Refusé</div>
+              <div class="col-val good">✓ Accepté</div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-item">Vérification d'identité du titulaire</div>
+              <div class="col-val neutral">— Non applicable</div>
+              <div class="col-val good">✓ En ligne</div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-item">Présence physique du titulaire requise</div>
+              <div class="col-val bad">✗ Parfois oui</div>
+              <div class="col-val good">✓ Non</div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-item">Frais supplémentaires</div>
+              <div class="col-val bad">✗ Souvent</div>
+              <div class="col-val good">✓ Aucun</div>
+            </div>
+          </div>
+
+          <p>
+            Ship Cars est une agence <strong>100 % digitale à Grenoble</strong>.
+            Notre processus a été conçu dès le départ pour gérer les cas où le titulaire de la carte
+            et le conducteur sont deux personnes différentes — de manière sécurisée, légale et sans friction.
+          </p>
+        </section>
+
+        <section id="faq">
+          <h2>Questions fréquentes</h2>
+
+          <details class="faq-item-blog">
+            <summary>« CB pas au nom du locataire » — est-ce vraiment accepté chez Ship Cars ?</summary>
+            <p>Oui, c'est officiellement accepté. Ship Cars a intégré un processus dédié : la pièce d'identité du titulaire de la carte est vérifiée en ligne pendant la réservation, et son consentement est recueilli par email. Aucun frais supplémentaire.</p>
+          </details>
+
+          <details class="faq-item-blog">
+            <summary>Quelle agence accepte une carte bleue pas au nom du conducteur ?</summary>
+            <p>Les grandes chaînes classiques refusent généralement cette situation. Ship Cars, agence digitale à Grenoble, est spécifiquement équipée pour l'accepter avec un processus de vérification d'identité en ligne (pièce d'identité + selfie + 3D Secure + consentement email).</p>
+          </details>
+
+          <details class="faq-item-blog">
+            <summary>Puis-je louer avec la carte bleue de mon conjoint ou de ma conjointe ?</summary>
+            <p>Oui. Votre conjoint(e) devra fournir une photo de sa pièce d'identité, un selfie tenant cette pièce d'identité, valider le paiement par 3D Secure depuis son application bancaire, et cliquer sur le lien de consentement reçu par email. Aucune présence physique n'est requise.</p>
+          </details>
+
+          <details class="faq-item-blog">
+            <summary>Mon employeur paye avec la carte entreprise — est-ce possible ?</summary>
+            <p>Oui. Que ce soit une carte au nom de la société ou au nom d'un responsable, le processus est le même : la personne habilitée à utiliser la carte fournit sa pièce d'identité et valide le paiement. L'entreprise peut ensuite conserver la confirmation de paiement Stripe pour sa comptabilité.</p>
+          </details>
+
+          <details class="faq-item-blog">
+            <summary>Est-ce que Ship Cars accepte une carte au nom d'un parent pour que leur enfant conduise ?</summary>
+            <p>Oui, c'est un cas fréquent. Le parent uploade sa pièce d'identité et son selfie, valide le paiement depuis son téléphone, et clique sur le lien de consentement. L'enfant conduit normalement avec son propre permis de conduire.</p>
+          </details>
+
+          <details class="faq-item-blog">
+            <summary>La caution est-elle prélevée sur la carte du titulaire ?</summary>
+            <p>Oui. La caution de 900 € est pré-autorisée sur la carte utilisée pour le paiement (celle du titulaire, pas nécessairement celle du conducteur). Elle est libérée automatiquement après la location s'il n'y a pas de frais supplémentaires.</p>
+          </details>
+
+          <details class="faq-item-blog">
+            <summary>Peut-on louer une voiture avec une carte Visa ou Mastercard qui n'est pas à mon nom ?</summary>
+            <p>Oui, quel que soit le réseau (Visa, Mastercard, American Express…), dès lors que le titulaire de la carte valide le paiement par 3D Secure et fournit sa pièce d'identité, la location est acceptée chez Ship Cars.</p>
+          </details>
+        </section>
+
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Réservez votre véhicule à Grenoble</h2>
+            <p>La carte bancaire peut être au nom de n'importe quel tiers. Le processus de vérification d'identité est intégré directement dans la réservation en ligne.</p>
+            <a href="/#catalogue" class="cta-btn">Voir les véhicules disponibles →</a>
+            <a href="/faq" class="cta-faq">Questions fréquentes</a>
+          </div>
+        </div>
+
+      </div>
+
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>En résumé</strong>
+          <ul>
+            <li>✅ CB d'un tiers acceptée</li>
+            <li>✅ Vérification d'identité en ligne</li>
+            <li>✅ Pièce d'identité + selfie requis</li>
+            <li>✅ Validation 3D Secure</li>
+            <li>✅ Consentement par email</li>
+            <li>✅ Aucun frais supplémentaire</li>
+            <li>✅ 100 % en ligne, sans déplacement</li>
+          </ul>
+          <a href="/#catalogue" class="sidebar-btn">Réserver →</a>
+        </div>
+        <div class="sidebar-card sidebar-contact">
+          <strong>Une question ?</strong>
+          <p>Contactez-nous avant de réserver.</p>
+          <a href="https://wa.me/33661691178" target="_blank" rel="noopener" class="sidebar-wa">WhatsApp — 06 61 69 11 78</a>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/louer-voiture-carte-bancaire-quelquun-dautre">CB de quelqu'un d'autre : guide complet →</a>
+          <a href="/blog/location-voiture-sans-agence-grenoble">Location sans agence à Grenoble →</a>
+          <a href="/faq">FAQ complète →</a>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page { color: var(--text); }
+  .art-container { max-width: 1060px; margin: 0 auto; padding: 0 2rem; }
+
+  .article-hero {
+    background: linear-gradient(135deg, #0a1421, #0f1e33);
+    padding: 4rem 0 3.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .article-breadcrumb { font-size: .76rem; color: var(--text-dim); margin-bottom: 1.25rem; }
+  .article-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .article-breadcrumb span { color: var(--text-dim); }
+
+  .article-tag-header {
+    display: flex; align-items: center; gap: .5rem;
+    margin-bottom: 1.25rem; flex-wrap: wrap; font-size: .78rem;
+  }
+  .tag {
+    background: rgba(77,212,200,.12); color: var(--teal);
+    border: 1px solid rgba(77,212,200,.25);
+    padding: 3px 12px; border-radius: 99px; font-weight: 600;
+  }
+  .meta-date, .meta-read { color: var(--text-dim); }
+
+  .article-hero h1 {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 800; line-height: 1.25;
+    letter-spacing: -.02em; margin-bottom: 1.25rem;
+  }
+  .article-lead {
+    font-size: 1.05rem; color: var(--text-muted);
+    line-height: 1.8; max-width: 720px;
+  }
+  .article-lead strong { color: var(--teal); }
+
+  .article-body {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 3rem;
+    padding-top: 3rem;
+    padding-bottom: 5rem;
+    align-items: start;
+  }
+
+  .article-content { min-width: 0; }
+
+  .sommaire {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem; font-size: .88rem;
+  }
+  .sommaire strong { display: block; color: var(--silver); margin-bottom: .75rem; font-size: .9rem; }
+  .sommaire ol { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .sommaire a { color: var(--teal); text-decoration: none; }
+  .sommaire a:hover { text-decoration: underline; }
+
+  .article-content section { margin-bottom: 2.75rem; }
+
+  .article-content h2 {
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--teal); margin-bottom: 1rem;
+    padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  }
+  .article-content h3 {
+    font-size: 1rem; font-weight: 700;
+    color: var(--silver); margin: 1.25rem 0 .6rem;
+  }
+  .article-content p {
+    font-size: .92rem; color: var(--text-muted);
+    line-height: 1.8; margin-bottom: .75rem;
+  }
+  .article-content ul {
+    list-style: none; padding: 0; margin: .5rem 0 .75rem;
+    display: flex; flex-direction: column; gap: .4rem;
+  }
+  .article-content li {
+    font-size: .9rem; color: var(--text-muted);
+    padding-left: 1.2rem; position: relative; line-height: 1.6;
+  }
+  .article-content li::before {
+    content: '›'; position: absolute; left: 0;
+    color: var(--teal); font-weight: 700;
+  }
+  .article-content strong { color: var(--text); }
+
+  /* Situations grid */
+  .situations-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin: 1.25rem 0;
+  }
+  .situation-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.1rem 1.25rem;
+  }
+  .sit-icon { font-size: 1.6rem; margin-bottom: .5rem; }
+  .situation-card strong { display: block; font-size: .92rem; color: var(--text); margin-bottom: .4rem; }
+  .situation-card p { font-size: .84rem; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 1rem; margin: 1.25rem 0; }
+  .step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.25rem;
+  }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--teal); color: #0a1421;
+    font-weight: 800; font-size: .88rem;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .step-content strong { display: block; font-size: .92rem; color: var(--text); margin-bottom: .3rem; }
+  .step-content p { font-size: .84rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+
+  /* Info box */
+  .info-box {
+    background: rgba(77,212,200,.06); border: 1px solid rgba(77,212,200,.25);
+    border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1rem 0 1.25rem;
+  }
+  .info-box strong { display: block; color: var(--teal); margin-bottom: .75rem; font-size: .92rem; }
+  .info-box ul { margin: 0; }
+  .info-box li { color: var(--text-muted); font-size: .88rem; }
+  .info-box li::before { content: none; }
+
+  /* Compare table */
+  .compare-table {
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin: 1.25rem 0; font-size: .85rem;
+  }
+  .compare-header {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    background: var(--bg-2); padding: .75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .col-label { color: var(--silver); font-weight: 700; text-align: center; font-size: .82rem; }
+  .col-label.col-shipcars { color: var(--teal); }
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: .65rem 1rem; border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-item { color: var(--text-muted); font-size: .84rem; }
+  .col-val { text-align: center; font-weight: 600; font-size: .84rem; }
+  .col-val.good { color: var(--teal); }
+  .col-val.bad { color: #f87171; }
+  .col-val.neutral { color: var(--text-dim); }
+
+  /* FAQ blog */
+  .faq-item-blog {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: .9rem 1.2rem;
+    margin-bottom: .5rem; font-size: .88rem;
+  }
+  .faq-item-blog summary {
+    font-weight: 600; cursor: pointer; color: var(--text);
+    list-style: none; display: flex; justify-content: space-between;
+  }
+  .faq-item-blog summary::-webkit-details-marker { display: none; }
+  .faq-item-blog summary::after { content: '+'; color: var(--teal); font-size: 1.2rem; font-weight: 300; }
+  .faq-item-blog[open] summary::after { content: '−'; }
+  .faq-item-blog p { margin-top: .75rem; color: var(--text-muted); line-height: 1.7; font-size: .86rem; }
+
+  /* CTA */
+  .article-cta {
+    background: linear-gradient(135deg, rgba(77,212,200,.1), rgba(29,78,216,.1));
+    border: 1px solid rgba(77,212,200,.25);
+    border-radius: 16px; padding: 2rem;
+    margin-top: 2rem; text-align: center;
+  }
+  .cta-inner h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .5rem; }
+  .cta-inner p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
+  .cta-btn {
+    display: inline-block; background: var(--teal); color: #0a1421;
+    font-weight: 800; font-size: .95rem; padding: .9rem 1.8rem;
+    border-radius: 10px; text-decoration: none; transition: opacity .15s;
+    margin-bottom: .75rem;
+  }
+  .cta-btn:hover { opacity: .85; }
+  .cta-faq {
+    display: block; color: var(--teal); text-decoration: none;
+    font-size: .85rem; margin-top: .5rem;
+  }
+
+  /* Sidebar */
+  .article-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 1rem; }
+
+  .sidebar-card {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem;
+  }
+  .sidebar-card strong { display: block; color: var(--silver); font-size: .88rem; margin-bottom: .75rem; }
+  .sidebar-card ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+  .sidebar-card li { font-size: .82rem; color: var(--text-muted); }
+  .sidebar-card li::before { display: none; }
+  .sidebar-btn {
+    display: block; background: var(--teal); color: #0a1421;
+    font-weight: 700; text-align: center; padding: .65rem 1rem;
+    border-radius: 8px; text-decoration: none; font-size: .88rem;
+    transition: opacity .15s;
+  }
+  .sidebar-btn:hover { opacity: .85; }
+  .sidebar-contact p { font-size: .82rem; color: var(--text-muted); margin-bottom: .75rem; }
+  .sidebar-wa {
+    display: block; background: #25d366; color: #fff;
+    font-weight: 700; text-align: center; padding: .6rem 1rem;
+    border-radius: 8px; text-decoration: none; font-size: .82rem;
+  }
+  .sidebar-related { display: flex; flex-direction: column; gap: .5rem; }
+  .sidebar-related a { color: var(--teal); font-size: .82rem; text-decoration: none; }
+  .sidebar-related a:hover { text-decoration: underline; }
+
+  @media (max-width: 860px) {
+    .article-body { grid-template-columns: 1fr; }
+    .article-sidebar { position: static; }
+    .situations-grid { grid-template-columns: 1fr; }
+    .compare-header, .compare-row { grid-template-columns: 1.2fr .9fr .9fr; }
+  }
+</style>

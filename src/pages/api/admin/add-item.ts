@@ -52,6 +52,7 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         immatriculation: formData.get('immatriculation')?.toString().toUpperCase() || null,
         description:     formData.get('description')?.toString() || null,
         carburant:       formData.get('carburant')?.toString() || null,
+        reservoir_litres: formData.get('reservoir_litres') ? parseInt(formData.get('reservoir_litres') as string) : null,
       });
 
       if (error) throw error;

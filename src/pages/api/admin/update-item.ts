@@ -82,6 +82,21 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       if ('carburant_depart' in data) {
         updatePayload.carburant_depart = data.carburant_depart?.toString() || null;
       }
+      if ('carburant_depart_pct' in data) {
+        const pct = data.carburant_depart_pct !== null && data.carburant_depart_pct !== undefined && data.carburant_depart_pct !== ''
+          ? parseInt(data.carburant_depart_pct as string)
+          : null;
+        updatePayload.carburant_depart_pct = pct;
+        // Sync texte lisible pour rétrocompat
+        if (pct !== null) {
+          updatePayload.carburant_depart = pct >= 100 ? 'Plein' : pct >= 75 ? '3/4' : pct >= 50 ? '1/2' : pct >= 25 ? '1/4' : 'Vide';
+        }
+      }
+      if ('reservoir_litres' in data) {
+        updatePayload.reservoir_litres = data.reservoir_litres !== null && data.reservoir_litres !== undefined && data.reservoir_litres !== ''
+          ? parseInt(data.reservoir_litres as string)
+          : null;
+      }
       if ('dommages_url_1' in data) {
         updatePayload.dommages_url_1 = data.dommages_url_1?.toString() || null;
       }
