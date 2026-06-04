@@ -12,6 +12,18 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     <meta name="description" content="Ship Cars — Location de véhicules à Grenoble, proche de la gare. Réservation en ligne, paiement sécurisé." />
     <title>{title}</title>
     <slot name="head" />
+    <!-- Google Analytics 4 — ignoré si admin_auth cookie présent -->
+    <script is:inline>(function(){
+      if(document.cookie.indexOf('admin_auth=true')!==-1)return;
+      var s=document.createElement('script');
+      s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-4P3J85NM6H';
+      document.head.appendChild(s);
+      window.dataLayer=window.dataLayer||[];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js',new Date());
+      gtag('config','G-4P3J85NM6H');
+    })();</script>
+    <!-- End Google Analytics 4 -->
     <!-- Google Tag Manager -->
     <script is:inline>(function(){
     if(document.cookie.indexOf('admin_auth=true')!==-1)return;
