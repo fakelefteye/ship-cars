@@ -1,8 +1,15 @@
 ---
-const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.props;
+import LanguageSwitcher from '../components/LanguageSwitcher.astro';
+import { nav as navT, footer as footerT, type Lang } from '../i18n/translations';
+const { title = "Ship Cars — Location de véhicules à Grenoble", lang = 'fr' } = Astro.props as { title?: string; lang?: Lang };
+const n = navT[lang as Lang] ?? navT.fr;
+const f = footerT[lang as Lang] ?? footerT.fr;
+const homeHref = lang === 'fr' ? '/' : `/${lang}/`;
+const faqHref  = lang === 'fr' ? '/faq' : `/${lang}/faq`;
+const blogHref = '/blog';
 ---
 
-<html lang="fr">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -331,19 +338,20 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <nav class="nav">
-      <a href="/" class="nav-logo">
+      <a href={homeHref} class="nav-logo">
         <div class="nav-logo-mark">
           <img src="/logo_ship_cars.png" alt="Ship Cars" />
         </div>
         Ship<em>Cars</em>
       </a>
       <div class="nav-right">
-        <a href="/blog" class="nav-blog">Blog</a>
-        <a href="/faq" class="nav-blog">FAQ</a>
+        <a href={blogHref} class="nav-blog">{n.blog}</a>
+        <a href={faqHref} class="nav-blog">{n.faq}</a>
         <div class="nav-pill">
           <div class="nav-pill-dot"></div>
-          Grenoble · Proche gare
+          {n.tagline}
         </div>
+        <LanguageSwitcher />
       </div>
     </nav>
 
@@ -361,18 +369,13 @@ const { title = "Ship Cars — Location de véhicules à Grenoble" } = Astro.pro
       <div class="footer-top">
         <div class="footer-brand">Ship<em>Cars</em></div>
         <div class="footer-links">
-          <a href="/location-voiture-grenoble">Location Grenoble</a>
-          <a href="/location-voiture-gare-grenoble">Gare de Grenoble</a>
-          <a href="/location-voiture-pas-cher-grenoble">Tarifs</a>
-          <a href="/blog">Blog</a>
-          <a href="/faq">FAQ</a>
-          <a href="/zones">Zones</a>
-          <a href="/cgu">CGU</a>
-          <a href="/confidentialite">Confidentialité</a>
+          {f.links.map((l: { label: string; href: string }) => (
+            <a href={l.href}>{l.label}</a>
+          ))}
         </div>
         <div class="footer-info">
-          © 2026 Ship Cars · Grenoble, proche de la gare<br>
-          Paiement sécurisé via Stripe · Caution par empreinte bancaire
+          {f.info}<br>
+          {f.stripe}
         </div>
       </div>
 

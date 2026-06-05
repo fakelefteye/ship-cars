@@ -1,0 +1,323 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import CardVehicule from '../CardVehicule.astro';
+import { supabaseAdmin } from '../../lib/supabase';
+import { isMaintenanceMode } from '../../lib/maintenance';
+import { home, type Lang } from '../../i18n/translations';
+
+const { lang = 'fr' } = Astro.props as { lang?: Lang };
+const t = home[lang] ?? home.fr;
+
+const [{ data: vehicules }, maintenance, mardiConfig, derniereMinuteConfig] = await Promise.all([
+  supabaseAdmin.from('vehicules').select('*').eq('disponible_resa', true),
+  isMaintenanceMode(),
+  supabaseAdmin.from('app_config').select('value').eq('key', 'mardi_flash_actif').single(),
+  supabaseAdmin.from('app_config').select('value').eq('key', 'derniere_minute_actif').single(),
+]);
+
+const mardiFlashActif = mardiConfig?.data?.value === 'true';
+const derniereMinuteActif = derniereMinuteConfig?.data?.value === 'true';
+const catalogueHref = lang === 'fr' ? '/#catalogue' : `/${lang}/#catalogue`;
+const zonesHref = '/zones';
+const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === 'it' ? 'it' : 'fr';
+---
+
+<MainLayout title={t.meta.title} lang={lang}>
+
+  {maintenance && (
+    <div class="maintenance-banner">
+      <div class="maintenance-inner">
+        <span class="maintenance-icon">🔧</span>
+        <div>
+          <strong>{t.maintenance.title}</strong>
+          <span>{t.maintenance.msg} <a href="https://wa.me/33661691178" target="_blank" rel="noopener">06 61 69 11 78</a></span>
+        </div>
+        <a href="https://wa.me/33661691178" target="_blank" rel="noopener" class="maintenance-wa">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          {t.maintenance.wa}
+        </a>
+      </div>
+    </div>
+  )}
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-glow hero-glow-1"></div>
+      <div class="hero-glow hero-glow-2"></div>
+    </div>
+    <div class="container hero-inner">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        {t.hero.badge}
+      </div>
+      <h1 class="hero-title">
+        {t.hero.title}<br>
+        <em>{t.hero.subtitle}</em>
+      </h1>
+      <p class="hero-sub">
+        <strong>{t.hero.address}</strong> {t.hero.addressSub}<br>
+        <Fragment set:html={t.hero.desc} />
+      </p>
+      <div class="hero-unlock-strip">
+        <div class="unlock-step">
+          <span class="unlock-num">1</span>
+          <span>{t.hero.step1}</span>
+        </div>
+        <svg class="unlock-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="unlock-step">
+          <span class="unlock-num">2</span>
+          <span>{t.hero.step2}</span>
+        </div>
+        <svg class="unlock-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="unlock-step unlock-step--highlight">
+          <span class="unlock-num">3</span>
+          <span>{t.hero.step3}</span>
+        </div>
+      </div>
+      <div class="hero-cta">
+        <a href="#catalogue" class="btn-primary">{t.hero.cta}</a>
+        <div class="hero-stats">
+          <div class="stat"><strong>{t.hero.stat1}</strong><span>{t.hero.stat1sub}</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><strong>{t.hero.stat2}</strong><span>{t.hero.stat2sub}</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><strong>{t.hero.stat3}</strong><span>{t.hero.stat3sub}</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARDI FLASH -->
+  {mardiFlashActif && !maintenance && (
+    <section class="flash-section">
+      <div class="container flash-inner">
+        <div class="flash-badge">{t.flash.badge}</div>
+        <div class="flash-content">
+          <div class="flash-text">
+            <h2 class="flash-title">{t.flash.title}</h2>
+            <p class="flash-desc">{t.flash.desc}</p>
+          </div>
+          <div class="flash-code-block">
+            <span class="flash-code-label">{t.flash.codeLabel}</span>
+            <span class="flash-code">MARDI</span>
+          </div>
+          <a href="#catalogue" class="flash-btn">{t.flash.btn}</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- DERNIÈRE MINUTE -->
+  {derniereMinuteActif && !maintenance && (
+    <section class="flash-section dm-section">
+      <div class="container flash-inner">
+        <div class="flash-badge">{t.lastMinute.badge}</div>
+        <div class="flash-content">
+          <div class="flash-text">
+            <h2 class="flash-title">{t.lastMinute.title}</h2>
+            <p class="flash-desc">{t.lastMinute.desc}</p>
+          </div>
+          <div class="flash-code-block">
+            <span class="flash-code-label">{t.lastMinute.codeLabel}</span>
+            <span class="flash-code">MINUTE</span>
+          </div>
+          <a href="#catalogue" class="flash-btn">{t.lastMinute.btn}</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- CATALOGUE -->
+  <section id="catalogue" class="catalogue">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">{t.catalogue.label}</div>
+        <h2 class="section-title">{t.catalogue.title}</h2>
+        <p class="section-sub">{t.catalogue.sub}</p>
+        <div class="info-row">
+          <div class="info-chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {t.catalogue.chip1}
+          </div>
+          <div class="info-chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            {t.catalogue.chip2}
+          </div>
+          <div class="info-chip info-chip--zone">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>{t.catalogue.chip3} <a href={zonesHref}>{t.catalogue.chip3link}</a></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="date-filter">
+        <div class="df-picker" id="df-trigger" role="button" tabindex="0">
+          <div class="df-pill">
+            <span class="df-pill-icon">🚗</span>
+            <div class="df-pill-content">
+              <span class="df-label">{t.catalogue.dateStart}</span>
+              <span class="df-value" id="df-start">{t.catalogue.datePick}</span>
+            </div>
+          </div>
+          <div class="df-sep">→</div>
+          <div class="df-pill">
+            <span class="df-pill-icon">🔙</span>
+            <div class="df-pill-content">
+              <span class="df-label">{t.catalogue.dateEnd}</span>
+              <span class="df-value" id="df-end">{t.catalogue.datePick}</span>
+            </div>
+          </div>
+        </div>
+        <button id="df-reset" class="df-reset" style="display:none" type="button">{t.catalogue.clear}</button>
+        <input type="text" id="df-range" class="df-hidden" readonly aria-hidden="true" />
+        <div id="df-result" class="df-result" style="display:none">
+          <span id="df-count"></span>
+        </div>
+      </div>
+
+      <div class="grid-cars" id="grid-cars">
+        {vehicules?.map((car) => {
+          const prixMin = Math.min(
+            ...[car.prix_basse, car.prix_moyenne, car.prix_journalier_base]
+              .filter((p) => p != null && p > 0).map(Number)
+          );
+          return (
+            <CardVehicule
+              id={car.id}
+              nom={car.nom}
+              modele={car.modele}
+              prix={prixMin || car.prix_journalier_base}
+              image={car.image_url || '/img/default-car.jpg'}
+              lang={lang}
+            />
+          );
+        })}
+        {(!vehicules || vehicules.length === 0) && (
+          <div class="empty-state">
+            <div class="empty-icon">🚗</div>
+            <p>{t.catalogue.empty}</p>
+            <small>{t.catalogue.emptySub}</small>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- AVANTAGES -->
+  <section class="why">
+    <div class="container">
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-icon-wrap">🚉</div>
+          <h3>{t.why.title1}</h3>
+          <p>{t.why.desc1}</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon-wrap">💳</div>
+          <h3>{t.why.title2}</h3>
+          <p>{t.why.desc2}</p>
+        </div>
+        <div class="why-card why-card--accent">
+          <div class="why-icon-wrap">🔓</div>
+          <h3>{t.why.title3}</h3>
+          <p>{t.why.desc3}</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon-wrap">🛡️</div>
+          <h3>{t.why.title4}</h3>
+          <p>{t.why.desc4}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</MainLayout>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{lang !== 'en' && <script is:inline src={`https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/${flatpickrLocale}.js`}></script>}
+
+<script is:inline define:vars={{ flatpickrLocale }}>
+(function () {
+  function fmt(d) {
+    const locale = flatpickrLocale;
+    const date = d.toLocaleDateString(locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : 'en-GB', { day: '2-digit', month: 'short' });
+    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return date + ' · ' + time;
+  }
+
+  const trigger  = document.getElementById('df-trigger');
+  const startEl  = document.getElementById('df-start');
+  const endEl    = document.getElementById('df-end');
+  const resetBtn = document.getElementById('df-reset');
+  const resultEl = document.getElementById('df-result');
+  const countEl  = document.getElementById('df-count');
+
+  function clearFilter() {
+    document.querySelectorAll('.car-card').forEach(c => {
+      c.style.display = '';
+      c.dataset.hidden = '';
+    });
+    if (resultEl) resultEl.style.display = 'none';
+    if (resetBtn) resetBtn.style.display = 'none';
+  }
+
+  if (trigger) {
+    const fp = flatpickr(document.getElementById('df-range'), {
+      mode: 'range',
+      enableTime: true,
+      time_24hr: true,
+      minuteIncrement: 30,
+      minDate: 'today',
+      locale: flatpickrLocale !== 'en' ? flatpickrLocale : undefined,
+      onChange: function(selectedDates) {
+        if (selectedDates.length === 2) {
+          const [s, e] = selectedDates;
+          if (startEl) startEl.textContent = fmt(s);
+          if (endEl) endEl.textContent = fmt(e);
+          if (resetBtn) resetBtn.style.display = '';
+          filterCars(s, e);
+        } else if (selectedDates.length === 1) {
+          if (startEl) startEl.textContent = fmt(selectedDates[0]);
+        }
+      },
+      onReady: function(_, __, instance) {
+        trigger.addEventListener('click', () => instance.open());
+        trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') instance.open(); });
+      }
+    });
+
+    if (resetBtn) resetBtn.addEventListener('click', function() {
+      fp.clear();
+      const datePick = startEl ? startEl.dataset.placeholder || startEl.textContent : '';
+      if (startEl) startEl.textContent = startEl.dataset.original || '';
+      if (endEl) endEl.textContent = endEl.dataset.original || '';
+      clearFilter();
+    });
+  }
+
+  function filterCars(start, end) {
+    fetch('/api/reservations/occupied-dates-range?start=' + encodeURIComponent(start.toISOString()) + '&end=' + encodeURIComponent(end.toISOString()))
+      .then(r => r.json())
+      .then(data => {
+        const occupied = data.occupied_vehicule_ids || [];
+        let visible = 0;
+        document.querySelectorAll('.car-card').forEach(card => {
+          const vid = card.dataset.vehiculeId;
+          if (occupied.includes(vid)) {
+            card.style.display = 'none';
+            card.dataset.hidden = '1';
+          } else {
+            card.style.display = '';
+            card.dataset.hidden = '';
+            visible++;
+          }
+        });
+        if (countEl) countEl.textContent = visible + (visible === 1 ? ' véhicule disponible' : ' véhicules disponibles');
+        if (resultEl) resultEl.style.display = '';
+      })
+      .catch(() => {});
+  }
+})();
+</script>
