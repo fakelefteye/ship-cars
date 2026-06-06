@@ -236,13 +236,15 @@ const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === '
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 <script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-{lang !== 'en' && <script is:inline src={`https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/${flatpickrLocale}.js`}></script>}
+<script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+{lang === 'es' && <script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>}
+{lang === 'it' && <script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/it.js"></script>}
 
 <script is:inline define:vars={{ flatpickrLocale }}>
 (function () {
   function fmt(d) {
-    const locale = flatpickrLocale;
-    const date = d.toLocaleDateString(locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : 'en-GB', { day: '2-digit', month: 'short' });
+    const bcp = flatpickrLocale === 'es' ? 'es-ES' : flatpickrLocale === 'it' ? 'it-IT' : flatpickrLocale === 'en' ? 'en-GB' : 'fr-FR';
+    const date = d.toLocaleDateString(bcp, { day: '2-digit', month: 'short' });
     const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     return date + ' · ' + time;
   }
@@ -255,69 +257,183 @@ const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === '
   const countEl  = document.getElementById('df-count');
 
   function clearFilter() {
-    document.querySelectorAll('.car-card').forEach(c => {
+    startEl.textContent = startEl.dataset.placeholder || '';
+    endEl.textContent   = endEl.dataset.placeholder || '';
+    startEl.classList.remove('filled');
+    endEl.classList.remove('filled');
+    trigger.classList.remove('has-selection');
+    resetBtn.style.display = 'none';
+    resultEl.style.display = 'none';
+    document.querySelectorAll('.card[data-vehicule-id]').forEach(c => {
+      c.classList.remove('card--unavailable');
       c.style.display = '';
-      c.dataset.hidden = '';
     });
-    if (resultEl) resultEl.style.display = 'none';
-    if (resetBtn) resetBtn.style.display = 'none';
+    fp.clear();
   }
+
+  async function applyFilter(start, end) {
+    const debut = start.toISOString();
+    const fin   = end.toISOString();
+    try {
+      const res  = await fetch('/api/reservations/available-vehicles?debut=' + encodeURIComponent(debut) + '&fin=' + encodeURIComponent(fin));
+      const data = await res.json();
+      const unavailable = new Set(data.unavailable ?? []);
+      const available   = data.available ?? [];
+      document.querySelectorAll('.card[data-vehicule-id]').forEach(card => {
+        const id = card.getAttribute('data-vehicule-id');
+        if (unavailable.has(id)) {
+          card.classList.add('card--unavailable');
+        } else {
+          card.classList.remove('card--unavailable');
+        }
+        card.style.display = '';
+      });
+      const n = available.length;
+      countEl.textContent = n === 0
+        ? 'Aucun véhicule disponible sur ces dates'
+        : n + ' véhicule' + (n > 1 ? 's' : '') + ' disponible' + (n > 1 ? 's' : '') + ' sur ces dates';
+      resultEl.style.display = 'flex';
+      resultEl.className = 'df-result ' + (n === 0 ? 'df-result--none' : 'df-result--ok');
+    } catch (e) {
+      console.error('[filtre dispo]', e);
+    }
+  }
+
+  // Sauvegarde le placeholder initial
+  if (startEl) startEl.dataset.placeholder = startEl.textContent;
+  if (endEl)   endEl.dataset.placeholder   = endEl.textContent;
+
+  const fp = flatpickr('#df-range', {
+    mode: 'range',
+    enableTime: true,
+    time_24hr: true,
+    minuteIncrement: 30,
+    minDate: 'today',
+    dateFormat: 'Y-m-d H:i',
+    locale: flatpickrLocale !== 'en' ? flatpickrLocale : undefined,
+    clickOpens: false,
+    onChange(dates) {
+      if (dates[0]) { startEl.textContent = fmt(dates[0]); startEl.classList.add('filled'); }
+      if (dates[1]) {
+        endEl.textContent = fmt(dates[1]);
+        endEl.classList.add('filled');
+        trigger.classList.add('has-selection');
+        resetBtn.style.display = 'inline-flex';
+        applyFilter(dates[0], dates[1]);
+      }
+    },
+  });
 
   if (trigger) {
-    const fp = flatpickr(document.getElementById('df-range'), {
-      mode: 'range',
-      enableTime: true,
-      time_24hr: true,
-      minuteIncrement: 30,
-      minDate: 'today',
-      locale: flatpickrLocale !== 'en' ? flatpickrLocale : undefined,
-      onChange: function(selectedDates) {
-        if (selectedDates.length === 2) {
-          const [s, e] = selectedDates;
-          if (startEl) startEl.textContent = fmt(s);
-          if (endEl) endEl.textContent = fmt(e);
-          if (resetBtn) resetBtn.style.display = '';
-          filterCars(s, e);
-        } else if (selectedDates.length === 1) {
-          if (startEl) startEl.textContent = fmt(selectedDates[0]);
-        }
-      },
-      onReady: function(_, __, instance) {
-        trigger.addEventListener('click', () => instance.open());
-        trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') instance.open(); });
-      }
-    });
-
-    if (resetBtn) resetBtn.addEventListener('click', function() {
-      fp.clear();
-      const datePick = startEl ? startEl.dataset.placeholder || startEl.textContent : '';
-      if (startEl) startEl.textContent = startEl.dataset.original || '';
-      if (endEl) endEl.textContent = endEl.dataset.original || '';
-      clearFilter();
-    });
+    trigger.addEventListener('click', () => fp.open());
+    trigger.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fp.open(); } });
   }
-
-  function filterCars(start, end) {
-    fetch('/api/reservations/occupied-dates-range?start=' + encodeURIComponent(start.toISOString()) + '&end=' + encodeURIComponent(end.toISOString()))
-      .then(r => r.json())
-      .then(data => {
-        const occupied = data.occupied_vehicule_ids || [];
-        let visible = 0;
-        document.querySelectorAll('.car-card').forEach(card => {
-          const vid = card.dataset.vehiculeId;
-          if (occupied.includes(vid)) {
-            card.style.display = 'none';
-            card.dataset.hidden = '1';
-          } else {
-            card.style.display = '';
-            card.dataset.hidden = '';
-            visible++;
-          }
-        });
-        if (countEl) countEl.textContent = visible + (visible === 1 ? ' véhicule disponible' : ' véhicules disponibles');
-        if (resultEl) resultEl.style.display = '';
-      })
-      .catch(() => {});
-  }
+  if (resetBtn) resetBtn.addEventListener('click', clearFilter);
 })();
 </script>
+
+<style>
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 6rem 0 5rem;
+    background: linear-gradient(160deg, #0d1f35 0%, #0a1421 50%, #071219 100%);
+  }
+  .hero-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .hero-glow { position: absolute; border-radius: 50%; filter: blur(90px); }
+  .hero-glow-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(77,212,200,0.18) 0%, transparent 65%); top: -150px; left: -100px; }
+  .hero-glow-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(29,78,216,0.15) 0%, transparent 65%); bottom: -100px; right: 0; }
+  .hero-inner { position: relative; z-index: 1; max-width: 1000px; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--teal); background: rgba(77,212,200,0.12); border: 1px solid rgba(77,212,200,0.3); padding: 6px 14px; border-radius: 99px; margin-bottom: 2rem; letter-spacing: 0.03em; font-family: 'Exo 2', sans-serif; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px rgba(77,212,200,0.8); animation: blink 2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  .hero-title { font-family: 'Exo 2', sans-serif; font-size: clamp(2.5rem, 5.5vw, 4.5rem); font-weight: 800; line-height: 1.06; letter-spacing: -0.02em; color: #fff; margin-bottom: 1.5rem; }
+  .hero-title em { font-style: normal; color: var(--teal); }
+  .hero-sub { font-size: 1rem; color: #a0b4c8; line-height: 1.8; max-width: 780px; margin-bottom: 1.5rem; font-weight: 300; }
+  .hero-sub strong { color: #cbd5e1; font-weight: 600; }
+  .hero-unlock-strip { display: flex; align-items: center; gap: 0.75rem; flex-wrap: nowrap; margin-bottom: 2rem; padding: 0.85rem 1.25rem; background: rgba(77,212,200,0.07); border: 1px solid rgba(77,212,200,0.2); border-radius: var(--radius); width: fit-content; }
+  .unlock-step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #a0b4c8; font-family: 'Exo 2', sans-serif; font-weight: 500; }
+  .unlock-step--highlight { color: var(--teal); font-weight: 700; }
+  .unlock-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: rgba(77,212,200,0.15); border: 1px solid rgba(77,212,200,0.3); border-radius: 50%; font-size: 0.72rem; font-weight: 700; color: var(--teal); flex-shrink: 0; }
+  .unlock-arrow { color: rgba(77,212,200,0.4); flex-shrink: 0; }
+  .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 2rem; }
+  .btn-primary { display: inline-block; background: var(--teal); color: #0a1421; font-family: 'Exo 2', sans-serif; font-weight: 700; font-size: 0.95rem; padding: 14px 28px; border-radius: var(--radius); text-decoration: none; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(77,212,200,0.3); }
+  .btn-primary:hover { background: var(--teal-bright); transform: translateY(-1px); box-shadow: 0 6px 28px rgba(77,212,200,0.45); }
+  .hero-stats { display: flex; align-items: center; gap: 1.5rem; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat strong { font-family: 'Exo 2', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; }
+  .stat span { font-size: 0.72rem; color: #6b8499; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-divider { width: 1px; height: 28px; background: rgba(77,212,200,0.2); }
+
+  /* ── FLASH ── */
+  .flash-section { background: linear-gradient(135deg, #f97316, #f59e0b); padding: 1.25rem 0; }
+  .flash-inner { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .flash-badge { background: rgba(0,0,0,.2); color: #fff; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 4px 12px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+  .flash-content { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; flex: 1; }
+  .flash-text { flex: 1; }
+  .flash-title { font-family: 'Exo 2', sans-serif; font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 .2rem; }
+  .flash-desc { font-size: .82rem; color: rgba(255,255,255,.9); margin: 0; }
+  .flash-code-block { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.15); border: 2px solid rgba(255,255,255,.35); border-radius: 10px; padding: .5rem 1.25rem; flex-shrink: 0; }
+  .flash-code-label { font-size: .65rem; color: rgba(255,255,255,.8); text-transform: uppercase; letter-spacing: .08em; }
+  .flash-code { font-family: 'Courier New', monospace; font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: .1em; }
+  .flash-btn { background: #fff; color: #f97316; font-weight: 700; font-size: .88rem; padding: .65rem 1.4rem; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: transform .15s, box-shadow .15s; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+  .flash-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+  .dm-section { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+
+  /* ── CATALOGUE ── */
+  .catalogue { padding: 5rem 0; background: #f8fafc; }
+  .section-header { margin-bottom: 2.5rem; }
+  .section-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal); margin-bottom: 0.6rem; font-family: 'Exo 2', sans-serif; display: block; }
+  .section-title { font-family: 'Exo 2', sans-serif; font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 700; letter-spacing: -0.02em; color: #0f1e33; margin-bottom: 0.6rem; }
+  .section-sub { font-size: 0.92rem; color: #5a6e82; font-weight: 300; max-width: 520px; }
+  .info-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .info-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: #374151; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 5px 12px; }
+  .info-chip svg { color: var(--teal); flex-shrink: 0; }
+  .info-chip--zone a { color: var(--teal); font-weight: 600; text-decoration: none; }
+  .info-chip--zone a:hover { text-decoration: underline; }
+  .date-filter { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+  .df-picker { display: flex; align-items: center; gap: 0; background: #f8fafc; border: 1.5px solid #e5e7eb; border-radius: 10px; cursor: pointer; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; flex: 1; min-width: 280px; }
+  .df-picker:hover, .df-picker:focus-visible, .df-picker.has-selection { border-color: #4dd4c8; box-shadow: 0 0 0 3px rgba(77,212,200,0.12); outline: none; }
+  .df-pill { display: flex; align-items: center; gap: 10px; padding: 0.75rem 1rem; flex: 1; }
+  .df-pill + .df-pill { border-left: 1px solid #e5e7eb; }
+  .df-pill-icon { font-size: 1rem; flex-shrink: 0; }
+  .df-pill-content { display: flex; flex-direction: column; gap: 1px; }
+  .df-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; font-weight: 700; font-family: 'Exo 2', sans-serif; }
+  .df-value { font-size: 0.88rem; color: #9ca3af; font-family: 'Exo 2', sans-serif; font-weight: 500; }
+  .df-value.filled { color: #0f1e33; font-weight: 700; }
+  .df-sep { padding: 0 0.5rem; color: #d1d5db; font-size: 0.85rem; flex-shrink: 0; }
+  .df-hidden { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+  .df-reset { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px solid #e5e7eb; color: #6b7280; font-size: 0.8rem; font-family: 'Exo 2', sans-serif; font-weight: 600; padding: 0.5rem 0.9rem; border-radius: 8px; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .df-reset:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+  .df-result { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; font-family: 'Exo 2', sans-serif; padding: 0.45rem 0.9rem; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  .df-result--ok  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .df-result--none { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .grid-cars { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 5rem 2rem; color: #6b7280; }
+  .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state small { display: block; margin-top: 0.5rem; color: #9ca3af; font-size: 0.85rem; }
+
+  /* ── WHY ── */
+  .why { padding: 4rem 0 5rem; background: #fff; }
+  .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+  .why-card { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 14px; padding: 2rem 1.75rem; transition: border-color .2s, box-shadow .2s, transform .2s; }
+  .why-card:hover { border-color: rgba(77,212,200,.4); box-shadow: 0 6px 24px rgba(0,0,0,.07); transform: translateY(-2px); }
+  .why-icon-wrap { font-size: 1.8rem; margin-bottom: 1rem; display: block; }
+  .why-card h3 { font-family: 'Exo 2', sans-serif; font-size: 1rem; font-weight: 700; color: #0f1e33; margin-bottom: 0.5rem; }
+  .why-card p { font-size: .85rem; color: #5a6e82; line-height: 1.65; font-weight: 300; }
+  .why-card--accent { background: linear-gradient(135deg, #f0fdfb 0%, #e6faf8 100%); border-color: rgba(77,212,200,0.45); box-shadow: 0 4px 20px rgba(77,212,200,0.12); }
+  .why-card--accent h3 { color: #0e6b61; }
+  .why-card--accent:hover { border-color: rgba(77,212,200,0.7); box-shadow: 0 8px 28px rgba(77,212,200,0.2); }
+
+  @media (max-width: 700px) {
+    .hero { padding: 4rem 0 3rem; }
+    .hero-cta { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    .grid-cars { grid-template-columns: 1fr; }
+    .flash-inner { gap: 1rem; }
+    .flash-content { flex-direction: column; align-items: flex-start; }
+    .date-filter { flex-direction: column; align-items: stretch; }
+    .df-picker { min-width: unset; }
+    .df-result { justify-content: center; }
+  }
+</style>
