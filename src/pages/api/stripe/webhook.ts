@@ -3,7 +3,7 @@ export const prerender = false;
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
-import { blockDates } from '../../../lib/getaround';
+import { blockDates, unblockDates } from '../../../lib/getaround';
 import { getReglage } from '../../../lib/reglages';
 // pdfkit en import dynamique — un crash pdf ne tue pas tout le webhook
 
@@ -551,6 +551,123 @@ export const POST = async ({ request }) => {
             console.error('❌ Erreur email tiers payeur:', err);
           }
         }
+      }
+    }
+  }
+
+  // ── Remboursement depuis le dashboard Stripe ──────────────────────────────
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as any;
+    const piId = typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id;
+
+    if (!piId) {
+      console.warn('⚠️ charge.refunded sans payment_intent — ignoré');
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // Retrouve la session de checkout via le payment_intent
+    let reservationId: string | null = null;
+    try {
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: piId, limit: 1 });
+      reservationId = sessions.data[0]?.metadata?.reservation_id ?? null;
+    } catch (err: any) {
+      console.error('❌ Erreur recherche session:', err.message);
+    }
+
+    if (!reservationId) {
+      console.warn(`⚠️ Aucune réservation trouvée pour PI ${piId}`);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // Récupère la réservation
+    const { data: res } = await supabase
+      .from('reservations')
+      .select('*, vehicules(getaround_id, nom)')
+      .eq('id', reservationId)
+      .single();
+
+    if (!res) {
+      console.warn(`⚠️ Réservation ${reservationId} introuvable en base`);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // Ne pas retraiter si déjà annulée
+    if (res.statut === 'annulee') {
+      console.log(`ℹ️ Réservation ${reservationId} déjà annulée — rien à faire`);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    const montantRembourse = (charge.amount_refunded ?? 0) / 100;
+    const refundId = charge.refunds?.data?.[0]?.id ?? null;
+    const contractNum = reservationId.replace(/-/g, '').slice(0, 8).toUpperCase();
+
+    console.log(`💸 Remboursement Stripe détecté — résa ${contractNum} — ${montantRembourse} €`);
+
+    // 1. Marque comme annulée
+    await supabase
+      .from('reservations')
+      .update({
+        statut: 'annulee',
+        rembourse_at: new Date().toISOString(),
+        stripe_refund_id: refundId,
+        montant_rembourse: montantRembourse,
+      })
+      .eq('id', reservationId);
+
+    // 2. Libère le créneau Getaround
+    const carId = (res.vehicules as any)?.getaround_id;
+    if (carId && res.date_debut && res.date_fin) {
+      const ok = await unblockDates(String(carId), res.date_debut, res.date_fin);
+      console.log(`🔓 Getaround unblock: ${ok}`);
+    }
+
+    // 3. Email d'annulation au payeur
+    const payeurEmail = res.tiers_payeur_email || res.email_client;
+    const payeurNom   = res.tiers_payeur_nom   || res.locataire_nom || 'Client';
+
+    if (payeurEmail) {
+      try {
+        await resend.emails.send({
+          from: `Ship Cars <${FROM_EMAIL}>`,
+          to: payeurEmail,
+          subject: `✅ Remboursement confirmé — Réservation SC-${contractNum}`,
+          html: `<!DOCTYPE html>
+<html lang="fr">
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+<div style="max-width:640px;margin:32px auto;padding:0 16px;">
+  <div style="background:#0f1e33;border-radius:12px 12px 0 0;padding:24px 32px;text-align:center;">
+    <div style="font-size:24px;font-weight:800;color:#fff;">Ship<span style="color:#4dd4c8;">Cars</span></div>
+    <div style="font-size:13px;color:#a0b0c0;margin-top:4px;">Confirmation de remboursement</div>
+  </div>
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:28px 32px;border:1px solid #e8eaf0;border-top:none;">
+    <p style="font-size:15px;color:#1f2937;margin-bottom:8px;">Bonjour ${payeurNom},</p>
+    <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:24px;">
+      Votre location a été annulée et un <strong>remboursement de ${montantRembourse.toFixed(2)} €</strong> a été initié sur votre carte bancaire.
+    </p>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:18px 20px;margin-bottom:24px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:40%;">Réservation</td><td style="padding:6px 0;font-size:13px;color:#1f2937;font-weight:600;">N° SC-${contractNum}</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Conducteur</td><td style="padding:6px 0;font-size:13px;color:#1f2937;font-weight:600;">${res.locataire_nom || '—'}</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Départ prévu</td><td style="padding:6px 0;font-size:13px;color:#1f2937;font-weight:600;">${fmt(res.date_debut)}</td></tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Montant remboursé</td><td style="padding:6px 0;font-size:15px;color:#065f46;font-weight:800;">${montantRembourse.toFixed(2)} €</td></tr>
+        ${refundId ? `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Réf. remboursement</td><td style="padding:6px 0;font-size:12px;color:#6b7280;">${refundId}</td></tr>` : ''}
+      </table>
+    </div>
+    <p style="font-size:13px;color:#6b7280;line-height:1.7;">
+      Le délai de crédit est généralement de <strong>5 à 10 jours ouvrés</strong> selon votre banque.<br><br>
+      Pour toute question : <strong>06 61 69 11 78</strong><br><br>
+      <strong style="color:#0f1e33;">L'équipe Ship Cars</strong>
+    </p>
+  </div>
+</div>
+</body>
+</html>`,
+        });
+        console.log(`✅ Email remboursement envoyé à : ${payeurEmail}`);
+      } catch (err) {
+        console.error('❌ Erreur email remboursement:', err);
       }
     }
   }
