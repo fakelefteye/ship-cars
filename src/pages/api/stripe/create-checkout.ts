@@ -9,6 +9,11 @@ const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    // Langue du client — lue depuis le cookie shipcars_lang ou le body
+    const cookieHeader = request.headers.get('cookie') || '';
+    const cookieLangMatch = cookieHeader.match(/shipcars_lang=([a-z]{2})/);
+    const cookieLang = cookieLangMatch ? cookieLangMatch[1] : 'fr';
+
     const {
     vehicule_id, vehicule_nom, date_debut, date_fin, montant, siege_auto, promo_code, reduction,
     email_client, locataire_nom, locataire_date_naissance, locataire_lieu_naissance, locataire_permis_numero, locataire_permis_date, locataire_adresse,
@@ -100,6 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
         tiers_payeur_piece_id_url:   tiers_payeur_piece_id_url   || null,
         tiers_payeur_selfie_id_url:  tiers_payeur_selfie_id_url  || null,
         tiers_payeur_consent_token:  tiersConsentToken,
+        lang: ['en','es','it'].includes(cookieLang) ? cookieLang : 'fr',
       })
       .select()
       .single();

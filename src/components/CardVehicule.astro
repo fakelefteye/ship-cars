@@ -1,20 +1,31 @@
 ---
-const { id, nom, modele, prix, image } = Astro.props;
+import type { Lang } from '../i18n/translations';
+const { id, nom, modele, prix, image, lang = 'fr' } = Astro.props as {
+  id: string; nom: string; modele: string; prix: number; image: string; lang?: Lang;
+};
+const href = lang === 'fr' ? `/vehicules/${id}` : `/${lang}/vehicules/${id}`;
+const labels: Record<Lang, { from: string; perDay: string; included: string; see: string }> = {
+  fr: { from: 'à partir de', perDay: '/jour', included: '100 km/jour inclus', see: 'Voir les dispo' },
+  en: { from: 'from',        perDay: '/day',  included: '100 km/day incl.',  see: 'Check availability' },
+  es: { from: 'desde',       perDay: '/día',  included: '100 km/día incl.',  see: 'Ver disponibilidad' },
+  it: { from: 'da',          perDay: '/giorno', included: '100 km/giorno incl.', see: 'Verifica disponibilità' },
+};
+const l = labels[lang];
 ---
 
-<a href={`/vehicules/${id}`} class="card" data-vehicule-id={id}>
+<a href={href} class="card" data-vehicule-id={id} data-unavailable={labels[lang].see === labels.fr.see ? 'Indisponible' : lang === 'en' ? 'Unavailable' : lang === 'es' ? 'No disponible' : 'Non disponibile'}>
   <div class="card-img-wrap">
     <img src={image} alt={`${nom} ${modele}`} loading="lazy" />
-    <div class="card-price-badge"><span class="card-from">à partir de</span>{prix}€<span>/jour</span></div>
+    <div class="card-price-badge"><span class="card-from">{l.from}</span>{prix}€<span>{l.perDay}</span></div>
   </div>
   <div class="card-body">
     <div class="card-info">
       <h3 class="card-nom">{nom}</h3>
       <p class="card-modele">{modele}</p>
-      <p class="card-included">100 km/jour inclus</p>
+      <p class="card-included">{l.included}</p>
     </div>
     <div class="card-cta">
-      <span class="card-btn">Voir les dispo</span>
+      <span class="card-btn">{l.see}</span>
       <span class="card-arrow">→</span>
     </div>
   </div>
@@ -154,7 +165,7 @@ const { id, nom, modele, prix, image } = Astro.props;
     position: relative;
   }
   .card--unavailable::after {
-    content: 'Indisponible';
+    content: attr(data-unavailable);
     position: absolute;
     top: 12px; left: 12px;
     background: rgba(220,38,38,0.88);

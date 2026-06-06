@@ -2,6 +2,11 @@
 import MainLayout from '../../layouts/MainLayout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
 import { isMaintenanceMode } from '../../lib/maintenance';
+import { veh, type Lang } from '../../i18n/translations';
+
+const rawLang = Astro.cookies.get('shipcars_lang')?.value ?? 'fr';
+const lang: Lang = ['en','es','it'].includes(rawLang) ? rawLang as Lang : 'fr';
+const tv = veh[lang];
 
 const { id } = Astro.params;
 
@@ -45,15 +50,15 @@ const photos = [
 ].filter(url => url !== null && url !== "");
 ---
 
-<MainLayout title={`${vehicule.nom} — Ship Cars`}>
+<MainLayout title={`${vehicule.nom} — Ship Cars`} lang={lang}>
 
   {maintenance && (
     <div class="maintenance-banner">
       <div class="maintenance-inner">
         <span class="maintenance-icon">🔧</span>
         <div>
-          <strong>Site en maintenance</strong>
-          <span>Pour les disponibilités, appelez ou envoyez un message WhatsApp au <a href="https://wa.me/33661691178" target="_blank" rel="noopener">06 61 69 11 78</a></span>
+          <strong>{tv.maintenanceTitle}</strong>
+          <span>{tv.maintenanceMsg} <a href="https://wa.me/33661691178" target="_blank" rel="noopener">06 61 69 11 78</a></span>
         </div>
         <a href="https://wa.me/33661691178" target="_blank" rel="noopener" class="maintenance-wa">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -65,7 +70,7 @@ const photos = [
 
   <div class="container detail-container">
 
-    <a href="/" class="back-link">← Retour au catalogue</a>
+    <a href={lang === 'fr' ? '/' : `/${lang}/`} class="back-link">{tv.back}</a>
 
     <div class="detail-grid">
 
@@ -103,12 +108,12 @@ const photos = [
           <p class="panel-label">{vehicule.modele} · {vehicule.annee}</p>
           <h1 class="panel-title">{vehicule.nom}</h1>
           <div class="panel-price">
-            <span class="price-from">à partir de</span>
+            <span class="price-from">{tv.from}</span>
             <span class="price-amount">{Math.min(...[vehicule.prix_basse, vehicule.prix_journalier_base].filter((p): p is number => p != null && p > 0))}€</span>
-            <span class="price-unit">/ jour</span>
+            <span class="price-unit">{tv.perDay}</span>
           </div>
           <div class="panel-included">
-            <span><strong>100 km/jour inclus</strong> dans la location</span>
+            <span>{tv.included}</span>
           </div>
           <div class="panel-km-sup">
             <span class="km-sup-icon">📍</span>
@@ -120,37 +125,37 @@ const photos = [
         <div class="panel-divider"></div>
 
         <div class="resa-section">
-          <h2 class="resa-title">📅 Réserver ce véhicule</h2>
+          <h2 class="resa-title">{tv.bookTitle}</h2>
 
           <div class="form-group">
-            <label class="form-label">Départ et retour</label>
+            <label class="form-label">{tv.pickupReturn}</label>
             <div class="date-trigger" id="date-trigger" role="button" tabindex="0">
               <div class="date-pill">
                 <span class="date-pill-icon">🚗</span>
                 <div class="date-pill-content">
-                  <span class="date-pill-label">Départ</span>
-                  <span class="date-pill-value" id="start-display">Choisir une date</span>
+                  <span class="date-pill-label">{tv.pickup}</span>
+                  <span class="date-pill-value" id="start-display">{tv.chooseDate}</span>
                 </div>
               </div>
-              <div class="date-pill-sep">retour</div>
+              <div class="date-pill-sep">{tv.return.toLowerCase()}</div>
               <div class="date-pill">
                 <span class="date-pill-icon">🔙</span>
                 <div class="date-pill-content">
-                  <span class="date-pill-label">Retour</span>
-                  <span class="date-pill-value" id="end-display">Choisir une date</span>
+                  <span class="date-pill-label">{tv.return}</span>
+                  <span class="date-pill-value" id="end-display">{tv.chooseDate}</span>
                 </div>
               </div>
             </div>
             <input type="text" id="date-range" class="hidden-picker-input" readonly aria-hidden="true" />
             <div class="calendar-legend">
-              <span class="legend-item"><span class="legend-dot available"></span>Disponible</span>
-              <span class="legend-item"><span class="legend-dot partial"></span>Partiellement</span>
-              <span class="legend-item"><span class="legend-dot occupied"></span>Occupé</span>
+              <span class="legend-item"><span class="legend-dot available"></span>{tv.available}</span>
+              <span class="legend-item"><span class="legend-dot partial"></span>{tv.partial}</span>
+              <span class="legend-item"><span class="legend-dot occupied"></span>{tv.occupied}</span>
             </div>
           </div>
 
-          <div id="conflict-error" class="conflict-error" style="display:none;">
-            ⚠️ Créneau en conflit avec une réservation existante. Veuillez ajuster vos horaires.
+          <div id="conflict-error" class="conflict-error" style="display:none;" data-msg={tv.errConflict}>
+            {tv.errConflict}
           </div>
 
           <!-- Option siège auto -->
@@ -160,8 +165,8 @@ const photos = [
               <div class="option-header">
                 <span class="option-icon">👶</span>
                 <div class="option-text">
-                  <span class="option-title">Siège auto enfant</span>
-                  <span class="option-desc" id="siege-status">Sélectionnez vos dates pour vérifier la disponibilité</span>
+                  <span class="option-title">{tv.seatTitle}</span>
+                  <span class="option-desc" id="siege-status">{tv.seatHint}</span>
                 </div>
                 <span class="option-price" id="siege-price"></span>
               </div>
@@ -170,63 +175,52 @@ const photos = [
 
           <!-- Code promo -->
           <div class="promo-input-group" id="promo-group" style="display:none;">
-            <label class="form-label" for="promo-code-input">Code promo (optionnel)</label>
+            <label class="form-label" for="promo-code-input">{tv.promoLabel}</label>
             <div class="promo-input-row">
               <input type="text" id="promo-code-input" placeholder="Ex: GNB10" autocomplete="off" />
-              <button type="button" id="promo-apply-btn" class="btn-promo-apply">Appliquer</button>
+              <button type="button" id="promo-apply-btn" class="btn-promo-apply">{tv.promoApply}</button>
             </div>
             <p class="promo-feedback" id="promo-feedback"></p>
           </div>
 
           <div id="resa-summary" style="display:none;">
             <div class="summary-box">
-              <div class="summary-row">
-                <span>Durée</span>
-                <strong id="duration-text">—</strong>
-              </div>
-              <div class="summary-row">
-                <span>Location</span>
-                <strong id="location-amount">—</strong>
-              </div>
-              <div class="summary-row" id="siege-row" style="display:none;">
-                <span>Siège auto</span>
-                <strong id="siege-amount">—</strong>
-              </div>
+              <div class="summary-row"><span>{tv.duration}</span><strong id="duration-text">—</strong></div>
+              <div class="summary-row"><span>{tv.rental}</span><strong id="location-amount">—</strong></div>
+              <div class="summary-row" id="siege-row" style="display:none;"><span>{tv.seat}</span><strong id="siege-amount">—</strong></div>
               <div class="summary-row promo-row" id="promo-row" style="display:none;">
-                <span>Code promo <em id="promo-row-code"></em></span>
+                <span>{tv.promoLabel.split(' ')[0]} <em id="promo-row-code"></em></span>
                 <strong id="promo-amount">—</strong>
               </div>
               <div class="summary-row included-row">
-                <span>Kilométrage</span>
-                <strong><span id="km-included">—</span> inclus</strong>
+                <span>{tv.mileage}</span>
+                <strong><span id="km-included">—</span> {tv.included2}</strong>
               </div>
-              <div class="summary-row">
-                <span>Total</span>
-                <strong class="summary-total" id="total-amount">—</strong>
-              </div>
+              <div class="summary-row"><span>{tv.total}</span><strong class="summary-total" id="total-amount">—</strong></div>
             </div>
             <div class="caution-notice">
               <div class="caution-icon">🔒</div>
               <div>
-                <strong>Caution : 900 € — pré-autorisée</strong>
-                <p>Aucune somme débitée sur votre compte. <a href="/faq#cat-2" target="_blank" class="caution-faq-link">Qu'est-ce qu'une pré-autorisation&nbsp;?&nbsp;→</a></p>
+                <strong>{tv.deposit}</strong>
+                <p>{tv.depositNote} <a href={lang === 'fr' ? '/faq#cat-2' : `/${lang}/faq#cat-2`} target="_blank" class="caution-faq-link">{tv.depositFaq}&nbsp;→</a></p>
               </div>
             </div>
           </div>
 
           <div class="zone-notice" style="margin-bottom:.75rem;">
-            📍 <span>Circulation <strong>limitée à certaines zones</strong> (Sud-Est France, Suisse, Italie frontalière). <a href="/zones" target="_blank">Voir les zones autorisées →</a></span>
+            📍 <span><Fragment set:html={tv.zone} /> <a href="/zones" target="_blank">{tv.zoneLink}</a></span>
           </div>
 
           <div class="assistance-notice">
             <div class="assistance-notice-icon">🛡️</div>
             <div class="assistance-notice-body">
-              <strong>Protection complémentaire recommandée</strong>
-              <span>Pour couvrir le <strong>rachat de franchise</strong> en cas de sinistre et bénéficier d'une assistance étendue, souscrivez une assurance location spécialisée — souvent quelques euros/jour seulement :
+              <strong>{tv.insuranceTitle}</strong>
+              <span><Fragment set:html={tv.insuranceText} />
                 <a href="https://www.serenitrip.com" target="_blank" rel="noopener noreferrer">Serenitrip</a>,
                 <a href="https://www.carinsurent.com" target="_blank" rel="noopener noreferrer">Carinsurent</a>
-                ou <a href="https://www.rentalcover.com" target="_blank" rel="noopener noreferrer">Rental Cover</a>.
-                Vérifiez aussi les garanties de votre carte bancaire (Visa Premier, Mastercard Gold…).
+                {lang === 'fr' ? 'ou' : lang === 'en' ? 'or' : lang === 'es' ? 'o' : 'o'}
+                <a href="https://www.rentalcover.com" target="_blank" rel="noopener noreferrer">Rental Cover</a>.
+                {tv.insuranceBankNote}
               </span>
             </div>
           </div>
@@ -245,9 +239,9 @@ const photos = [
           )}
 
           <button id="btn-book" class="btn-book" disabled>
-            Payer la location
+            {tv.bookBtn}
           </button>
-          <p class="secure-note">🔒 Paiement sécurisé via Stripe</p>
+          <p class="secure-note">🔒 {lang === 'en' ? 'Secure payment via Stripe' : lang === 'es' ? 'Pago seguro con Stripe' : lang === 'it' ? 'Pagamento sicuro con Stripe' : 'Paiement sécurisé via Stripe'}</p>
         </div>
 
       </aside>
@@ -533,6 +527,20 @@ const photos = [
   periodesDuree: periodesDuree,
   getaroundUrl: vehicule.getaround_url ?? null,
   forcer2jWeekend: forcer2jWeekend,
+  vehLang: lang,
+  tvErrMinDuration: tv.errMinDuration,
+  tvErrMaxDuration: tv.errMaxDuration,
+  tvErrWeekend: tv.errWeekend,
+  tvErrPeriod: tv.errPeriod,
+  tvErrPeriodMax: tv.errPeriodMax,
+  tvErrDay: tv.errDay,
+  tvErrHour: tv.errHour,
+  tvErrConflict: tv.errConflict,
+  tvPromoApply: tv.promoApply,
+  tvPromoInvalid: tv.promoInvalid,
+  tvPromoOk: tv.promoOk,
+  tvChooseDate: tv.chooseDate,
+  tvSeatHint: tv.seatHint,
 }}>
   async function initCalendar() {
     let reservations = [];
@@ -731,9 +739,9 @@ const photos = [
         // Validation durée minimale
         if (dureeMinHeures > 0 && diffH < dureeMinHeures) {
           const minLabel = dureeMinHeures >= 24
-            ? Math.round(dureeMinHeures / 24) + ' jour(s)'
-            : dureeMinHeures + ' heure(s)';
-          errorEl.textContent = `⚠️ Durée minimale de location : ${minLabel}.`;
+            ? Math.round(dureeMinHeures / 24) + ' ' + tvErrDay
+            : dureeMinHeures + ' ' + tvErrHour;
+          errorEl.textContent = `⚠️ ${tvErrMinDuration} : ${minLabel}.`;
           errorEl.style.display = 'block';
           summaryEl.style.display = 'none';
           btn.disabled = true;
@@ -742,7 +750,7 @@ const photos = [
 
         // Validation durée maximale
         if (dureeMaxJours && diffDays > dureeMaxJours) {
-          errorEl.textContent = `⚠️ Durée maximale de location : ${dureeMaxJours} jour(s).`;
+          errorEl.textContent = `⚠️ ${tvErrMaxDuration} : ${dureeMaxJours} ${tvErrDay}.`;
           errorEl.style.display = 'block';
           summaryEl.style.display = 'none';
           btn.disabled = true;
@@ -754,11 +762,10 @@ const photos = [
           const startStr = start.toISOString().slice(0, 10);
           const endStr   = end.toISOString().slice(0, 10);
           for (const p of periodesDuree) {
-            // La réservation chevauche la période si elle commence ou finit dans la plage
             if (startStr <= p.date_fin && endStr >= p.date_debut) {
               if (p.duree_min_jours && diffDays < p.duree_min_jours) {
                 const lbl = p.label ? ` (${p.label})` : '';
-                errorEl.textContent = `⚠️ Pendant cette période${lbl}, la durée minimale est de ${p.duree_min_jours} jour(s).`;
+                errorEl.textContent = `⚠️ ${tvErrPeriod}${lbl} : ${p.duree_min_jours} ${tvErrDay}.`;
                 errorEl.style.display = 'block';
                 summaryEl.style.display = 'none';
                 btn.disabled = true;
@@ -766,7 +773,7 @@ const photos = [
               }
               if (p.duree_max_jours && diffDays > p.duree_max_jours) {
                 const lbl = p.label ? ` (${p.label})` : '';
-                errorEl.textContent = `⚠️ Pendant cette période${lbl}, la durée maximale est de ${p.duree_max_jours} jour(s).`;
+                errorEl.textContent = `⚠️ ${tvErrPeriodMax}${lbl} : ${p.duree_max_jours} ${tvErrDay}.`;
                 errorEl.style.display = 'block';
                 summaryEl.style.display = 'none';
                 btn.disabled = true;
@@ -778,14 +785,13 @@ const photos = [
 
         // Validation 2 jours minimum week-end
         if (forcer2jWeekend && diffDays < 2) {
-          // Vérifie si la plage contient un samedi (6) ou dimanche (0)
           let hasWeekend = false;
           for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
             const dow = d.getDay();
             if (dow === 0 || dow === 6) { hasWeekend = true; break; }
           }
           if (hasWeekend) {
-            errorEl.textContent = '⚠️ Les locations incluant un week-end sont de 2 jours minimum.';
+            errorEl.textContent = '⚠️ ' + tvErrWeekend;
             errorEl.style.display = 'block';
             summaryEl.style.display = 'none';
             btn.disabled = true;
@@ -944,7 +950,7 @@ const photos = [
       if (!code) {
         appliedPromo = null;
         promoFeedback.textContent = '';
-        promoBtn.textContent = 'Appliquer';
+        promoBtn.textContent = tvPromoApply;
         recalcTotal();
         return;
       }
@@ -979,13 +985,13 @@ const photos = [
           appliedPromo = null;
           promoFeedback.textContent = `❌ ${data.reason || 'Code invalide'}`;
           promoFeedback.classList.add('ko');
-          promoBtn.textContent = 'Appliquer';
+          promoBtn.textContent = tvPromoApply;
         }
       } catch (e) {
         appliedPromo = null;
         promoFeedback.textContent = '❌ Erreur réseau';
         promoFeedback.classList.add('ko');
-        promoBtn.textContent = 'Appliquer';
+        promoBtn.textContent = tvPromoApply;
       } finally {
         promoBtn.disabled = false;
         recalcTotal();
@@ -1021,7 +1027,7 @@ const photos = [
           appliedPromo = null;
           promoFeedback.textContent = `⚠️ ${data.reason || 'Code non applicable sur ces dates'}`;
           promoFeedback.classList.add('ko');
-          promoBtn.textContent = 'Appliquer';
+          promoBtn.textContent = tvPromoApply;
         }
       } catch (e) {
         // silencieux en cas d'erreur réseau
@@ -1034,7 +1040,7 @@ const photos = [
         appliedPromo = null;
         promoInput.value = '';
         promoFeedback.textContent = '';
-        promoBtn.textContent = 'Appliquer';
+        promoBtn.textContent = tvPromoApply;
         recalcTotal();
       } else {
         applyPromo();

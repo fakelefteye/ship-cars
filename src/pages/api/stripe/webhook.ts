@@ -186,34 +186,159 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
   </div>`;
 }
 
+function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0.40 € / km', prixLitre = '1.80 €/L'): string {
+  const contractNum = res.id ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase() : '—';
+  const diffDays = Math.max(1, Math.ceil((new Date(res.date_fin).getTime() - new Date(res.date_debut).getTime()) / 86400000));
+  const fmtEn = (d: string | null | undefined) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+  };
+  const fmtDateEn = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString('en-GB') : '—';
+  const row = (label: string, value: string | null | undefined) =>
+    value ? `<tr><td style="padding:10px 8px;font-weight:600;color:#1f2937;width:42%;border-bottom:1px solid #f3f4f6;font-size:14px;vertical-align:top;">${label}</td><td style="padding:10px 8px;color:#374151;border-bottom:1px solid #f3f4f6;font-size:14px;vertical-align:top;">${value}</td></tr>` : '';
+  const smallRow = (label: string, value: string | null | undefined) =>
+    value ? `<tr><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;vertical-align:top;width:42%;font-weight:600;">${label}</td><td style="padding:5px 8px;font-size:12px;color:#374151;border-bottom:1px solid #f3f4f6;">${value}</td></tr>` : '';
+
+  const fuelDisplay = (() => {
+    const pct = veh?.carburant_depart_pct;
+    if (pct == null) return veh?.carburant_depart ?? null;
+    const litres = veh?.reservoir_litres ? ` — approx. ${Math.round(pct / 100 * veh.reservoir_litres)} L of ${veh.reservoir_litres} L` : '';
+    return `${pct}%${litres}`;
+  })();
+
+  const damagePhotos = [veh?.dommages_url_1, veh?.dommages_url_2, veh?.dommages_url_3].filter(Boolean);
+
+  return `
+  <div style="background:#fff;color:#1a1a2e;border-radius:12px;padding:32px;max-width:700px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:2px solid #e8eaf0;padding-bottom:20px;margin-bottom:28px;">
+      <tr>
+        <td><span style="font-size:22px;font-weight:800;color:#0f1e33;">Ship<span style="color:#4dd4c8;">Cars</span></span></td>
+        <td align="right">
+          <div style="font-size:13px;font-weight:700;color:#1a1a2e;">Rental Contract</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:3px;">No. SC-${contractNum}</div>
+        </td>
+      </tr>
+    </table>
+
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Booking</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${row('Booking date', fmtEn(res.created_at))}
+      ${row('Start time', fmtEn(res.date_debut))}
+      ${row('End time', fmtEn(res.date_fin))}
+      ${row('Rental price', Number(res.montant_total).toFixed(2) + ' €')}
+      ${row('Included mileage', diffDays * 100 + ' km')}
+      ${row('Extra km rate', prixKm)}
+      ${row('Owner', 'Ship Cars')}
+      ${row('Protection', 'Standard')}
+    </table>
+
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Vehicle condition at pick-up</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${veh ? row('Vehicle', `${veh.nom}${veh.modele ? ` — ${veh.modele}` : ''}${veh.annee ? ` (${veh.annee})` : ''}`) : ''}
+      ${veh?.immatriculation ? row('Registration plate', veh.immatriculation) : ''}
+      ${veh?.carburant ? row('Fuel type', veh.carburant) : ''}
+      ${veh?.kilometrage_depart != null ? row('Mileage at pick-up', `${Number(veh.kilometrage_depart).toLocaleString('en-GB')} km`) : ''}
+      ${fuelDisplay ? row('Fuel level at pick-up', fuelDisplay) : ''}
+    </table>
+    ${damagePhotos.length ? `
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Pre-existing damage photos</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr><td style="padding:8px 0;font-size:13px;color:#374151;"><em style="color:#6b7280;font-size:12px;">Photos taken before key handover, documenting vehicle condition at pick-up.</em></td></tr>
+      <tr><td style="padding:4px 0;">${damagePhotos.map((url, i) => `<a href="${url}" style="display:inline-block;margin-right:12px;font-size:12px;color:#4dd4c8;">📷 Photo ${i + 1}</a>`).join('')}</td></tr>
+    </table>` : ''}
+
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Driver information</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${row('Full name', res.locataire_nom)}
+      ${row('Date of birth', fmtDateEn(res.locataire_date_naissance))}
+      ${res.locataire_lieu_naissance ? row('Place of birth', res.locataire_lieu_naissance) : ''}
+      ${row('Driving licence no.', res.locataire_permis_numero)}
+      ${row('Licence obtained', fmtDateEn(res.locataire_permis_date))}
+      ${row('Address', res.locataire_adresse)}
+      ${row('Email', res.email_client)}
+    </table>
+    ${res.conducteur2_nom ? `
+    <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Additional driver</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${row('Full name', res.conducteur2_nom)}
+      ${res.conducteur2_naissance ? row('Date of birth', fmtDateEn(res.conducteur2_naissance)) : ''}
+      ${res.conducteur2_permis_numero ? row('Driving licence no.', res.conducteur2_permis_numero) : ''}
+      ${res.conducteur2_permis_date ? row('Licence obtained', fmtDateEn(res.conducteur2_permis_date)) : ''}
+    </table>` : ''}
+
+    <div style="border-top:2px solid #e8eaf0;margin-top:16px;padding-top:16px;">
+      <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;">Key rental conditions</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        ${smallRow('Included mileage', `100 km / day — extra km charged at <strong>${prixKm}</strong>`)}
+        ${smallRow('Fuel', `Return at departure level — top-up charged at <strong>${prixLitre}</strong> if lower`)}
+        ${smallRow('Deposit', '€900 pre-authorised — released if no extra charges')}
+        ${smallRow('Authorised drivers', 'Only drivers declared at booking (licence ≥ 2 years)')}
+        ${smallRow('Coverage zone', 'South-East France, Switzerland (authorised cantons), Italy (Piedmont, Aosta) — leaving the zone voids the guarantee')}
+        ${smallRow('Insurance', 'AXA FRANCE IARD via AON — fleet policy no. 11029669304')}
+      </table>
+      <p style="font-size:12px;color:#374151;line-height:1.7;margin:0 0 10px;">Full Terms & Conditions are available at: <a href="https://www.shipcars.fr/cgu" style="color:#4dd4c8;">https://www.shipcars.fr/cgu</a></p>
+    </div>
+
+    ${res.tiers_payeur_nom ? `
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:16px;margin-top:16px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;">Third-party payer clause</div>
+      <p style="font-size:12px;color:#374151;line-height:1.7;margin:0 0 8px;">
+        <strong>${res.tiers_payeur_nom}</strong> (${res.tiers_payeur_email || '—'}${res.tiers_payeur_telephone ? ` · ${res.tiers_payeur_telephone}` : ''})
+        has paid for this rental and is jointly liable with the driver <strong>${res.locataire_nom}</strong> for all amounts owed to SHIP CARS under this rental agreement, including the deposit (€900), extra mileage charges (${prixKm}), fuel, cleaning, franchise in case of damage and any fines.
+        ${res.tiers_payeur_consent_at ? `<br><strong style="color:#065f46;">Consent recorded on ${new Date(res.tiers_payeur_consent_at).toLocaleString('en-GB', { timeZone: 'Europe/Paris' })} — IP: ${res.tiers_payeur_consent_ip || '—'}</strong>` : ''}
+      </p>
+    </div>` : ''}
+
+    <div style="background:#f0fdfb;border:1px solid #6ee7b7;border-radius:8px;padding:14px 16px;margin-top:12px;">
+      <p style="font-size:12px;color:#065f46;line-height:1.7;margin:0;font-weight:500;">
+        By completing payment for this booking, the driver identified above confirms having read the Ship Cars General Terms & Conditions and accepts them in full. Validation of the online payment constitutes full acceptance of this rental contract and the applicable T&Cs, in accordance with French Civil Code articles 1125 et seq. governing contract formation by electronic means.
+      </p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+      <tr>
+        <td style="width:50%;vertical-align:top;padding-right:16px;">
+          <div style="font-size:10px;color:#9ca3af;line-height:1.6;">Information provided by the driver may be verified. SHIP CARS reserves the right to correct any inaccuracies identified.</div>
+        </td>
+        <td style="width:50%;vertical-align:top;text-align:right;">
+          <div style="font-size:10px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">For SHIP CARS — Lessor</div>
+          <img src="https://www.shipcars.fr/img/tampon-shipcars.jpg" alt="Ship Cars stamp" width="160" style="max-width:160px;display:block;margin-left:auto;" onerror="this.style.display='none'" />
+          <div style="font-size:9px;color:#6b7280;margin-top:4px;">SAS · Capital €1,000 · SIRET 95083648600015<br>RCS Grenoble · APE 77.11A</div>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+}
+
 function cautionUrl(reservationId: string): string {
   return `${BASE_URL}/api/stripe/caution?reservation_id=${reservationId}`;
 }
 
-function tenantEmailHtml(contractHtml: string): string {
+function tenantEmailHtml(contractHtml: string, lang = 'fr'): string {
+  const isEn = lang === 'en';
   return `
   <!DOCTYPE html>
-  <html lang="fr">
+  <html lang="${lang}">
   <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
     <div style="max-width:740px;margin:32px auto;padding:0 16px;">
 
       <!-- Bandeau confirmation -->
       <div style="background:#0f1e33;border-radius:12px 12px 0 0;padding:28px 32px;text-align:center;">
         <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:6px;">Ship<span style="color:#4dd4c8;">Cars</span></div>
-        <div style="font-size:14px;color:#a0b0c0;">Votre contrat de location</div>
+        <div style="font-size:14px;color:#a0b0c0;">${isEn ? 'Your rental contract' : 'Votre contrat de location'}</div>
       </div>
 
       <div style="background:#fff;border-radius:0 0 12px 12px;padding:28px 32px;border:1px solid #e8eaf0;border-top:none;">
         <p style="font-size:15px;color:#1f2937;margin-bottom:24px;">
-          Bonjour,<br><br>
-          Votre paiement a été validé. Vous trouverez ci-dessous votre contrat de location Ship Cars.
+          ${isEn ? 'Hello,' : 'Bonjour,'}<br><br>
+          ${isEn ? 'Your payment has been confirmed. Please find your Ship Cars rental contract below.' : 'Votre paiement a été validé. Vous trouverez ci-dessous votre contrat de location Ship Cars.'}
         </p>
 
         ${contractHtml}
 
         <p style="font-size:13px;color:#6b7280;margin-top:24px;">
-          À bientôt sur la route,<br>
-          <strong style="color:#0f1e33;">L'équipe Ship Cars</strong>
+          ${isEn ? 'See you on the road,' : 'À bientôt sur la route,'}<br>
+          <strong style="color:#0f1e33;">${isEn ? 'The Ship Cars team' : "L'équipe Ship Cars"}</strong>
         </p>
       </div>
     </div>
@@ -420,7 +545,11 @@ export const POST = async ({ request }) => {
         const prixLitreRaw  = await getReglage('prix_litre_carburant');
         const prixKm    = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' € TTC / km';
         const prixLitre = parseFloat(prixLitreRaw).toFixed(2).replace('.', ',') + ' €/L';
-        const contractHtml = buildContractHtml(res, veh, prixKm, prixLitre);
+        const prixKmEn  = parseFloat(prixKmRaw).toFixed(2) + ' € / km';
+        const prixLitreEn = parseFloat(prixLitreRaw).toFixed(2) + ' €/L';
+        const contractHtml = res.lang === 'en'
+          ? buildContractHtmlEn(res, veh, prixKmEn, prixLitreEn)
+          : buildContractHtml(res, veh, prixKm, prixLitre);
         const contractNum = res.id
           ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase()
           : reservationId;
@@ -477,8 +606,10 @@ export const POST = async ({ request }) => {
             await resend.emails.send({
               from: `Ship Cars <${FROM_EMAIL}>`,
               to: emailClient,
-              subject: `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
-              html: tenantEmailHtml(contractHtml),
+              subject: res.lang === 'en'
+                ? `Your Ship Cars rental contract — No. SC-${contractNum}`
+                : `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
+              html: tenantEmailHtml(contractHtml, res.lang ?? 'fr'),
               attachments: pdfAttachment,
             });
             console.log(`✅ Contrat + PDF envoyés au locataire : ${emailClient}`);

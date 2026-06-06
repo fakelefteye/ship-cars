@@ -240,7 +240,12 @@ const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === '
 {lang === 'es' && <script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>}
 {lang === 'it' && <script is:inline src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/it.js"></script>}
 
-<script is:inline define:vars={{ flatpickrLocale }}>
+<script is:inline define:vars={{
+  flatpickrLocale,
+  i18nNoVehicle:  t.catalogue.empty,
+  i18nVehicle1:   lang === 'en' ? 'vehicle available' : lang === 'es' ? 'vehículo disponible' : lang === 'it' ? 'veicolo disponibile' : 'véhicule disponible',
+  i18nVehicleN:   lang === 'en' ? 'vehicles available' : lang === 'es' ? 'vehículos disponibles' : lang === 'it' ? 'veicoli disponibili' : 'véhicules disponibles',
+}}>
 (function () {
   function fmt(d) {
     const bcp = flatpickrLocale === 'es' ? 'es-ES' : flatpickrLocale === 'it' ? 'it-IT' : flatpickrLocale === 'en' ? 'en-GB' : 'fr-FR';
@@ -290,8 +295,8 @@ const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === '
       });
       const n = available.length;
       countEl.textContent = n === 0
-        ? 'Aucun véhicule disponible sur ces dates'
-        : n + ' véhicule' + (n > 1 ? 's' : '') + ' disponible' + (n > 1 ? 's' : '') + ' sur ces dates';
+        ? i18nNoVehicle
+        : n + ' ' + (n > 1 ? i18nVehicleN : i18nVehicle1);
       resultEl.style.display = 'flex';
       resultEl.className = 'df-result ' + (n === 0 ? 'df-result--none' : 'df-result--ok');
     } catch (e) {

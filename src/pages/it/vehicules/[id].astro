@@ -1,0 +1,6 @@
+---
+export const prerender = false;
+const { id } = Astro.params;
+Astro.cookies.set('shipcars_lang', 'it', { path: '/', maxAge: 60 * 60 * 24 * 30 });
+return Astro.redirect(`/vehicules/${id}`, 302);
+---
