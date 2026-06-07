@@ -302,7 +302,7 @@ let month        = new Date().getMonth();
 let prixBasse    = 0, prixMoyenne = 0, prixHaute = 0, prixTresHaute = 0;
 let tarifs       = [];
 let blocages     = [];
-let rangeStart   = null, rangeHover = null;
+let rangeStart   = null, rangeHover = null, rangeDone = false;
 const TODAY      = new Date().toISOString().slice(0,10);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -526,8 +526,8 @@ function renderCalendar() {
 // Sélection jours / plage
 // ─────────────────────────────────────────────────────────────────────────────
 function onDayClick(d) {
-  if (!rangeStart) {
-    rangeStart = d; rangeHover = d;
+  if (!rangeStart || rangeDone) {
+    rangeStart = d; rangeHover = d; rangeDone = false;
     document.getElementById('hint-sel').textContent = 'Cliquez une 2ᵉ date pour une plage';
     renderCalendar();
     if (mode === 'durees') openDureePanel(d, d);
@@ -539,7 +539,7 @@ function onDayClick(d) {
   } else {
     const a = rangeStart < d ? rangeStart : d;
     const b = rangeStart < d ? d : rangeStart;
-    rangeStart = null; rangeHover = null;
+    rangeStart = a; rangeHover = b; rangeDone = true;
     document.getElementById('hint-sel').textContent = '';
     renderCalendar();
     if (mode === 'durees') openDureePanel(a, b);
@@ -586,7 +586,7 @@ function openEditPanel(debut, fin) {
 }
 
 function clearEdit() {
-  rangeStart = null; rangeHover = null;
+  rangeStart = null; rangeHover = null; rangeDone = false;
   document.getElementById('hint-sel').textContent = '';
   document.getElementById('panel-edit').style.display = 'none';
   document.getElementById('panel-duree').style.display = 'none';
