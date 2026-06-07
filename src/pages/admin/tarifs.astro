@@ -512,7 +512,7 @@ function renderCalendar() {
       cell.style.cursor = 'pointer';
       cell.addEventListener('click', () => onDayClick(d));
       cell.addEventListener('mouseenter', () => {
-        if (rangeStart) { rangeHover = d; renderCalendar(); }
+        if (rangeStart && rangeHover !== d) { rangeHover = d; renderCalendar(); }
       });
     }
 
