@@ -330,10 +330,16 @@ function getTarifOverride(d) {
   return matches[0] ?? null;
 }
 
+function toLocalKey(s) {
+  if (!s) return '';
+  const dt = new Date(s);
+  return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate());
+}
+
 function getBlocage(d) {
   return blocages.find(b => {
-    const deb = (b.date_debut || '').slice(0, 10);
-    const fin = (b.date_fin   || '').slice(0, 10);
+    const deb = toLocalKey(b.date_debut);
+    const fin = toLocalKey(b.date_fin);
     return d >= deb && d <= fin;
   }) ?? null;
 }
