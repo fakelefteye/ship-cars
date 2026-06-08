@@ -173,6 +173,7 @@ export const home = {
       clear: '✕ Effacer',
       empty: 'Aucun véhicule disponible pour le moment.',
       emptySub: 'Revenez bientôt ou contactez-nous directement.',
+      priceNotice: '⚠️ Les prix et les durées minimales de location varient selon les périodes et les disponibilités de dernière minute. Revenez fréquemment : nos tarifs peuvent changer.',
     },
     why: {
       title1: 'À 5 min de la gare',
@@ -242,6 +243,7 @@ export const home = {
       clear: '✕ Clear',
       empty: 'No vehicles available at the moment.',
       emptySub: 'Check back soon or contact us directly.',
+      priceNotice: '⚠️ Prices and minimum rental durations vary depending on the season and last-minute availability. Check back often — our rates can change.',
     },
     why: {
       title1: '5 min from the station',
@@ -311,6 +313,7 @@ export const home = {
       clear: '✕ Borrar',
       empty: 'No hay vehículos disponibles en este momento.',
       emptySub: 'Vuelve pronto o contáctanos directamente.',
+      priceNotice: '⚠️ Los precios y las duraciones mínimas de alquiler varían según la temporada y la disponibilidad de última hora. Vuelve a menudo: nuestras tarifas pueden cambiar.',
     },
     why: {
       title1: 'A 5 min de la estación',
@@ -380,6 +383,7 @@ export const home = {
       clear: '✕ Cancella',
       empty: 'Nessun veicolo disponibile al momento.',
       emptySub: 'Torna presto o contattaci direttamente.',
+      priceNotice: '⚠️ I prezzi e le durate minime di noleggio variano in base al periodo e alla disponibilità dell\'ultimo minuto. Torna spesso: le nostre tariffe possono cambiare.',
     },
     why: {
       title1: 'A 5 min dalla stazione',

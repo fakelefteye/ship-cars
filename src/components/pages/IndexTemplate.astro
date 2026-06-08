@@ -149,6 +149,10 @@ const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === '
             <span>{t.catalogue.chip3} <a href={zonesHref}>{t.catalogue.chip3link}</a></span>
           </div>
         </div>
+        <div class="price-notice">
+          <span class="price-notice-icon">⚠️</span>
+          <p>{t.catalogue.priceNotice}</p>
+        </div>
       </div>
 
       <div class="date-filter">
@@ -397,6 +401,9 @@ const flatpickrLocale = lang === 'en' ? 'en' : lang === 'es' ? 'es' : lang === '
   .info-chip svg { color: var(--teal); flex-shrink: 0; }
   .info-chip--zone a { color: var(--teal); font-weight: 600; text-decoration: none; }
   .info-chip--zone a:hover { text-decoration: underline; }
+  .price-notice { display: flex; align-items: flex-start; gap: 0.6rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 0.85rem 1.1rem; margin-top: 1rem; font-size: 0.85rem; color: #92400e; line-height: 1.55; max-width: 720px; }
+  .price-notice-icon { flex-shrink: 0; font-size: 1rem; line-height: 1.55; }
+  .price-notice p { margin: 0; }
   .date-filter { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; padding: 1rem 1.25rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
   .df-picker { display: flex; align-items: center; gap: 0; background: #f8fafc; border: 1.5px solid #e5e7eb; border-radius: 10px; cursor: pointer; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; flex: 1; min-width: 280px; }
   .df-picker:hover, .df-picker:focus-visible, .df-picker.has-selection { border-color: #4dd4c8; box-shadow: 0 0 0 3px rgba(77,212,200,0.12); outline: none; }
