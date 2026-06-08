@@ -8,7 +8,7 @@ if (!cookies.includes('admin_auth=true')) return Astro.redirect('/admin');
 
 const { data: vehicules } = await supabaseAdmin
   .from('vehicules')
-  .select('id, nom, prix_journalier_base, prix_basse, prix_moyenne, prix_haute, prix_tres_haute, getaround_id')
+  .select('id, nom, immatriculation, prix_journalier_base, prix_basse, prix_moyenne, prix_haute, prix_tres_haute, getaround_id')
   .order('nom');
 
 // Pré-sélection via URL param ?vehicule=UUID
@@ -40,7 +40,7 @@ const urlParam = Astro.url.searchParams.get('vehicule') ?? '';
             data-ga={v.getaround_id ?? ''}
             selected={v.id === urlParam}
           >
-            {v.nom}{v.getaround_id ? ' 🔗' : ''}
+            {v.immatriculation ? `${v.immatriculation} — ${v.nom}` : v.nom}{v.getaround_id ? ' 🔗' : ''}
           </option>
         ))}
       </select>
