@@ -117,6 +117,12 @@ if (!icalSecret) {
 const SITE_URL  = import.meta.env.PUBLIC_SITE_URL || 'https://www.shipcars.fr';
 const icalFeedUrl = `${SITE_URL}/api/calendar/reservations.ics?token=${icalSecret}`;
 
+// Variables CGU
+const cguKmInclus      = await supabaseAdmin.from('app_config').select('value').eq('key','km_inclus_par_jour').single().then(r => r.data?.value ?? '100');
+const cguCaution       = await supabaseAdmin.from('app_config').select('value').eq('key','montant_caution').single().then(r => r.data?.value ?? '900');
+const cguFranchiseVol  = await supabaseAdmin.from('app_config').select('value').eq('key','franchise_vol').single().then(r => r.data?.value ?? '3000');
+const cguPenaliteTabac = await supabaseAdmin.from('app_config').select('value').eq('key','penalite_tabac').single().then(r => r.data?.value ?? '50');
+
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
 const deleted = url.searchParams.get('deleted');
@@ -124,19 +130,53 @@ const updated = url.searchParams.get('updated');
 ---
 
 <MainLayout title="Administration - Ship Cars">
-  <div class="admin-container">
+<div class="admin-layout">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────────────────────── -->
+  <nav class="admin-sidebar" id="admin-sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">🚗</span>
+      <div><strong>Ship Cars</strong><br><span class="sidebar-sub">Administration</span></div>
+    </div>
+
+    <div class="sidebar-nav">
+      <p class="sidebar-group-label">GESTION</p>
+      <button class="sidebar-btn" data-tab-target="parametres">
+        <span class="sidebar-icon">⚙️</span> Paramètres
+      </button>
+      <button class="sidebar-btn" data-tab-target="vehicules">
+        <span class="sidebar-icon">🚗</span> Véhicules
+      </button>
+      <button class="sidebar-btn" data-tab-target="operations">
+        <span class="sidebar-icon">💸</span> Opérations
+      </button>
+      <button class="sidebar-btn" data-tab-target="cgu">
+        <span class="sidebar-icon">📄</span> CGU / CGV
+      </button>
+
+      <p class="sidebar-group-label" style="margin-top:1.5rem;">CALENDRIERS</p>
+      <a href="/admin/calendrier" class="sidebar-link">
+        <span class="sidebar-icon">📅</span> Calendrier
+      </a>
+      <a href="/admin/tarifs" class="sidebar-link">
+        <span class="sidebar-icon">💰</span> Tarifs &amp; Règles
+      </a>
+    </div>
+
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Fermer le menu">✕</button>
+  </nav>
+
+  <!-- ── CONTENU PRINCIPAL ──────────────────────────────────────────────── -->
+  <div class="admin-main" id="admin-main">
+    <div class="admin-topbar">
+      <button class="topbar-menu-btn" id="topbar-menu-btn" aria-label="Menu">☰</button>
+      <span class="topbar-title" id="topbar-title">Paramètres</span>
+    </div>
+    <div class="admin-container">
+
+    <!-- ── TAB : PARAMÈTRES ─────────────────────────────────────────────── -->
+    <div data-tab-section="parametres">
     <header class="admin-header">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-        <h1>Tableau de bord</h1>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-          <a href="/admin/calendrier" style="background:#4dd4c8;color:#0f1e33;padding:0.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:0.88rem;text-decoration:none;">
-            📅 Calendrier
-          </a>
-          <a href="/admin/tarifs" style="background:#c9a84c;color:#000;padding:0.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:0.88rem;text-decoration:none;">
-            💰 Tarifs &amp; Règles
-          </a>
-        </div>
-      </div>
       <!-- MAINTENANCE TOGGLE -->
       <div class={`maint-card ${maintenance ? 'maint-on' : ''}`} id="maint-card" style="margin-top:1rem;">
         <div class="maint-left">
@@ -290,9 +330,11 @@ const updated = url.searchParams.get('updated');
       {deleted && <p class="success-msg">✅ L'élément a été supprimé avec succès !</p>}
       {updated && <p class="success-msg">✅ L'élément a été modifié avec succès !</p>}
     </header>
-    
+    </div><!-- /tab parametres -->
+
+    <!-- ── TAB : OPÉRATIONS ─────────────────────────────────────────────── -->
     <!-- REMBOURSEMENT -->
-    <section class="admin-card" id="section-rembourser">
+    <section class="admin-card" id="section-rembourser" data-tab-section="operations">
       <h2>💸 Rembourser une réservation</h2>
       <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem;">
         Saisir l'ID de réservation (UUID) pour déclencher le remboursement Stripe, annuler la location et libérer le créneau Getaround. Le payeur reçoit automatiquement un email de confirmation.
@@ -319,8 +361,9 @@ const updated = url.searchParams.get('updated');
       </div>
     </section>
 
+    <!-- ── TAB : VÉHICULES ──────────────────────────────────────────────── -->
     <!-- LISTE DES VÉHICULES -->
-    <section class="admin-card">
+    <section class="admin-card" data-tab-section="vehicules">
       <h2>🚗 Véhicules ({vehicules?.length || 0})</h2>
       <div class="items-list">
         {vehicules?.map((vehicule) => (
@@ -349,7 +392,7 @@ const updated = url.searchParams.get('updated');
     </section>
 
     <!-- ÉTAT DES VÉHICULES AU DÉPART (km + niveau carburant + photos dommages) -->
-    <section class="admin-card">
+    <section class="admin-card" data-tab-section="vehicules">
       <h2>🚗 État au départ de la location</h2>
       <p class="subtitle">À remplir avant chaque remise des clés. Ces informations apparaissent dans le contrat envoyé par mail.</p>
       <div class="etat-list" id="etat-list">
@@ -407,7 +450,7 @@ const updated = url.searchParams.get('updated');
     </section>
 
     <!-- GESTION DES SIÈGES AUTO -->
-    <section class="admin-card">
+    <section class="admin-card" data-tab-section="vehicules">
       <h2>🪑 Gestion des sièges auto</h2>
       <p class="subtitle">Ajustez le stock et le prix des sièges auto disponibles.</p>
 
@@ -441,7 +484,7 @@ const updated = url.searchParams.get('updated');
     </section>
     
     <!-- CODES PROMO -->
-    <section class="admin-card">
+    <section class="admin-card" data-tab-section="operations">
       <h2>🎟️ Codes promo ({codesPromo?.length || 0})</h2>
       <p class="subtitle">Créez, activez ou désactivez les codes de réduction. Les codes désactivés sont refusés au checkout.</p>
 
@@ -517,7 +560,7 @@ const updated = url.searchParams.get('updated');
     </section>
 
     <!-- FORMULAIRE AJOUT -->
-    <section class="admin-card">
+    <section class="admin-card" data-tab-section="vehicules">
       <h2>Ajouter un véhicule ou un accessoire</h2>
       <p class="subtitle">Remplissez les informations ci-dessous pour mettre à jour votre catalogue.</p>
 
@@ -665,7 +708,78 @@ const updated = url.searchParams.get('updated');
         <button type="submit" class="btn-submit">💾 Enregistrer l'élément</button>
       </form>
     </section>
-  </div>
+
+    <!-- ── TAB : CGU / CGV ──────────────────────────────────────────────── -->
+    <section class="admin-card" data-tab-section="cgu">
+      <h2>📄 CGU / Contrat de location</h2>
+      <p class="subtitle">Modifiez les valeurs financières qui apparaissent dans vos CGU et dans chaque contrat de location envoyé aux clients. Les changements prennent effet immédiatement.</p>
+
+      <div class="cgu-grid">
+        <div class="cgu-field">
+          <label class="cgu-label">📏 Kilométrage inclus par jour</label>
+          <p class="cgu-hint">Forfait de base dans chaque location. Au-delà, le prix au km s'applique.</p>
+          <div class="cgu-input-row">
+            <input type="number" id="cgu-km-inclus" class="cgu-input" value={cguKmInclus} min="0" step="10" />
+            <span class="cgu-unit">km / jour</span>
+          </div>
+        </div>
+
+        <div class="cgu-field">
+          <label class="cgu-label">🛣️ Prix km supplémentaire</label>
+          <p class="cgu-hint">Facturé pour chaque km dépassant le forfait inclus.</p>
+          <div class="cgu-input-row">
+            <input type="number" id="cgu-prix-km" class="cgu-input" value={prixKmActuel} min="0" step="0.01" />
+            <span class="cgu-unit">€ / km</span>
+          </div>
+        </div>
+
+        <div class="cgu-field">
+          <label class="cgu-label">⛽ Prix du litre de carburant</label>
+          <p class="cgu-hint">Facturé si le véhicule est rendu avec un niveau inférieur au départ.</p>
+          <div class="cgu-input-row">
+            <input type="number" id="cgu-prix-litre" class="cgu-input" value={prixLitreActuel} min="0" step="0.01" />
+            <span class="cgu-unit">€ / litre</span>
+          </div>
+        </div>
+
+        <div class="cgu-field">
+          <label class="cgu-label">🔒 Montant de la caution</label>
+          <p class="cgu-hint">Montant préautorisé sur la carte bancaire du client (aucune somme bloquée).</p>
+          <div class="cgu-input-row">
+            <input type="number" id="cgu-caution" class="cgu-input" value={cguCaution} min="0" step="50" />
+            <span class="cgu-unit">€</span>
+          </div>
+        </div>
+
+        <div class="cgu-field">
+          <label class="cgu-label">🚨 Franchise vol (clés non restituées)</label>
+          <p class="cgu-hint">Montant à charge du locataire en cas de vol avec incapacité de restituer les clés.</p>
+          <div class="cgu-input-row">
+            <input type="number" id="cgu-franchise-vol" class="cgu-input" value={cguFranchiseVol} min="0" step="100" />
+            <span class="cgu-unit">€</span>
+          </div>
+        </div>
+
+        <div class="cgu-field">
+          <label class="cgu-label">🚬 Pénalité tabac / vapotage</label>
+          <p class="cgu-hint">Pénalité forfaitaire en cas de cigarette ou vapotage dans le véhicule.</p>
+          <div class="cgu-input-row">
+            <input type="number" id="cgu-penalite-tabac" class="cgu-input" value={cguPenaliteTabac} min="0" step="5" />
+            <span class="cgu-unit">€</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cgu-actions">
+        <button id="btn-save-cgu" class="cgu-save-btn">💾 Enregistrer les CGU</button>
+        <a href="/cgu" target="_blank" class="cgu-preview-link">👁️ Voir les CGU en ligne</a>
+        <div id="cgu-feedback" style="display:none;font-size:.85rem;font-weight:600;"></div>
+      </div>
+    </section>
+
+    </div><!-- /admin-container -->
+  </div><!-- /admin-main -->
+</div><!-- /admin-layout -->
 
   <!-- MODAL POUR MODIFICATION -->
   <div id="edit-modal" class="modal" style="display:none;">
@@ -683,6 +797,80 @@ const updated = url.searchParams.get('updated');
 
 <script>
   // @ts-nocheck
+
+  // ── Navigation par onglets ─────────────────────────────────────────
+  const TAB_LABELS = {
+    parametres: '⚙️ Paramètres',
+    vehicules:  '🚗 Véhicules',
+    operations: '💸 Opérations',
+    cgu:        '📄 CGU / CGV',
+  };
+
+  function switchTab(tabId) {
+    document.querySelectorAll('[data-tab-section]').forEach(el => {
+      el.style.display = (el.dataset.tabSection === tabId) ? '' : 'none';
+    });
+    document.querySelectorAll('[data-tab-target]').forEach(btn => {
+      btn.classList.toggle('sidebar-btn--active', btn.dataset.tabTarget === tabId);
+    });
+    const label = document.getElementById('topbar-title');
+    if (label) label.textContent = TAB_LABELS[tabId] ?? tabId;
+    try { localStorage.setItem('adminTab', tabId); } catch {}
+  }
+
+  // Restaurer l'onglet actif ou lire ?tab= dans l'URL
+  const tabFromUrl  = new URLSearchParams(location.search).get('tab');
+  const tabSaved    = (() => { try { return localStorage.getItem('adminTab'); } catch { return null; } })();
+  switchTab(tabFromUrl || tabSaved || 'parametres');
+
+  document.querySelectorAll('[data-tab-target]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget));
+  });
+
+  // ── Menu burger (mobile) ────────────────────────────────────────────
+  const sidebar     = document.getElementById('admin-sidebar');
+  const toggleBtn   = document.getElementById('sidebar-toggle');
+  const menuBtn     = document.getElementById('topbar-menu-btn');
+  toggleBtn?.addEventListener('click', () => sidebar?.classList.remove('sidebar-open'));
+  menuBtn?.addEventListener('click',   () => sidebar?.classList.add('sidebar-open'));
+
+  // ── Sauvegarde CGU ─────────────────────────────────────────────────
+  document.getElementById('btn-save-cgu')?.addEventListener('click', async function() {
+    const btn      = this;
+    const feedback = document.getElementById('cgu-feedback');
+    const fields   = {
+      km_inclus_par_jour:     document.getElementById('cgu-km-inclus')?.value,
+      prix_km_supplementaire: document.getElementById('cgu-prix-km')?.value,
+      prix_litre_carburant:   document.getElementById('cgu-prix-litre')?.value,
+      montant_caution:        document.getElementById('cgu-caution')?.value,
+      franchise_vol:          document.getElementById('cgu-franchise-vol')?.value,
+      penalite_tabac:         document.getElementById('cgu-penalite-tabac')?.value,
+    };
+    btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+    try {
+      const res  = await fetch('/api/admin/reglages', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      });
+      const data = await res.json();
+      if (data.success) {
+        feedback.textContent = '✅ CGU mises à jour avec succès !';
+        feedback.style.color = '#059669';
+        feedback.style.display = 'block';
+        setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+      } else {
+        feedback.textContent = '❌ Erreur : ' + (data.error || 'inconnue');
+        feedback.style.color = '#dc2626';
+        feedback.style.display = 'block';
+      }
+    } catch {
+      feedback.textContent = '❌ Erreur réseau';
+      feedback.style.color = '#dc2626';
+      feedback.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = '💾 Enregistrer les CGU';
+  });
 
   // ── Maintenance toggle ──────────────────────────────────────────────
   document.getElementById('btn-maint')?.addEventListener('click', async function() {
@@ -1713,10 +1901,73 @@ const updated = url.searchParams.get('updated');
   .wk-btn-off:hover { opacity:.85; }
   .wk-btn-on:disabled, .wk-btn-off:disabled { opacity:.5; cursor:not-allowed; }
 
-  .admin-container { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
-  .admin-header { margin-bottom: 2rem; }
+  /* ── Layout sidebar ─────────────────────────────────────────────── */
+  .admin-layout { display:flex; min-height:100vh; background:#f0f4f8; }
+
+  .admin-sidebar {
+    width:240px; min-width:240px; background:#0f1e33; color:#a0b4c8;
+    display:flex; flex-direction:column; padding:0; position:sticky;
+    top:0; height:100vh; overflow-y:auto; z-index:100;
+    transition:transform .25s ease;
+  }
+  .sidebar-brand { display:flex; align-items:center; gap:.75rem; padding:1.5rem 1.25rem 1rem; border-bottom:1px solid rgba(255,255,255,.08); }
+  .sidebar-logo  { font-size:1.6rem; flex-shrink:0; }
+  .sidebar-brand strong { color:#fff; font-size:1rem; font-family:'Exo 2',sans-serif; }
+  .sidebar-brand .sidebar-sub { font-size:.72rem; color:#4dd4c8; text-transform:uppercase; letter-spacing:.06em; }
+  .sidebar-nav   { padding:.75rem .75rem 2rem; flex:1; }
+  .sidebar-group-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#4a6580; font-weight:700; padding:.75rem .5rem .35rem; }
+  .sidebar-btn {
+    display:flex; align-items:center; gap:.65rem; width:100%; background:transparent;
+    color:#a0b4c8; border:none; border-radius:9px; padding:.65rem .9rem; font-size:.875rem;
+    font-weight:500; cursor:pointer; text-align:left; transition:background .15s, color .15s;
+    margin-bottom:.2rem;
+  }
+  .sidebar-btn:hover                { background:rgba(77,212,200,.08); color:#e2e8f0; }
+  .sidebar-btn--active              { background:rgba(77,212,200,.15); color:#4dd4c8; font-weight:700; }
+  .sidebar-btn--active .sidebar-icon { color:#4dd4c8; }
+  .sidebar-icon  { font-size:1.05rem; flex-shrink:0; width:1.3rem; text-align:center; }
+  .sidebar-link  {
+    display:flex; align-items:center; gap:.65rem; color:#a0b4c8; text-decoration:none;
+    border-radius:9px; padding:.65rem .9rem; font-size:.875rem; transition:background .15s, color .15s;
+    margin-bottom:.2rem;
+  }
+  .sidebar-link:hover  { background:rgba(255,255,255,.06); color:#e2e8f0; }
+  .sidebar-toggle { display:none; }
+
+  .admin-main { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .admin-topbar {
+    display:none; align-items:center; gap:.75rem; background:#0f1e33; color:#fff;
+    padding:.75rem 1rem; position:sticky; top:0; z-index:50;
+  }
+  .topbar-menu-btn { background:transparent; border:none; color:#fff; font-size:1.3rem; cursor:pointer; }
+  .topbar-title    { font-weight:700; font-family:'Exo 2',sans-serif; font-size:1rem; }
+
+  .admin-container { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem 3rem; width:100%; }
+  .admin-header    { margin-bottom:1.5rem; }
   .success-msg { background: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; border: 1px solid #c3e6cb; margin-top: 1rem; }
-  
+
+  /* ── CGU éditeur ─────────────────────────────────────────────────── */
+  .cgu-grid       { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem; margin:1.5rem 0; }
+  .cgu-field      { background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:1.1rem 1.2rem; }
+  .cgu-label      { font-size:.88rem; font-weight:700; color:#0f1e33; display:block; margin-bottom:.3rem; }
+  .cgu-hint       { font-size:.78rem; color:#6b7280; margin:.25rem 0 .75rem; line-height:1.4; }
+  .cgu-input-row  { display:flex; align-items:center; gap:.5rem; }
+  .cgu-input      { width:100px; padding:.5rem .7rem; border:1.5px solid #d1d5db; border-radius:7px; font-size:1rem; font-weight:700; text-align:center; transition:border-color .15s; }
+  .cgu-input:focus { border-color:#4dd4c8; outline:none; }
+  .cgu-unit       { font-size:.83rem; color:#6b7280; font-weight:500; white-space:nowrap; }
+  .cgu-actions    { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid #e5e7eb; }
+  .cgu-save-btn   { background:#4dd4c8; color:#0a1421; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:700; font-size:.9rem; cursor:pointer; transition:opacity .15s; }
+  .cgu-save-btn:hover { opacity:.88; }
+  .cgu-preview-link { color:#6b7280; font-size:.85rem; text-decoration:underline; }
+
+  @media (max-width: 768px) {
+    .admin-sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-100%); }
+    .admin-sidebar.sidebar-open { transform:translateX(0); }
+    .admin-topbar { display:flex; }
+    .sidebar-toggle { display:block; position:absolute; top:1rem; right:.75rem; background:transparent; border:none; color:#a0b4c8; font-size:1.1rem; cursor:pointer; }
+    .admin-container { padding:0 1rem 2rem; }
+  }
+
   .admin-card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #eee; margin-bottom: 2rem; }
   .subtitle { color: #666; margin-bottom: 2rem; font-size: 0.95rem; }
 

@@ -4,7 +4,10 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { getReglage, setReglage } from '../../../lib/reglages';
 
-const ALLOWED_KEYS = ['prix_km_supplementaire', 'forcer_2j_weekend', 'prix_litre_carburant'];
+const ALLOWED_KEYS = [
+  'prix_km_supplementaire', 'forcer_2j_weekend', 'prix_litre_carburant',
+  'km_inclus_par_jour', 'montant_caution', 'franchise_vol', 'penalite_tabac',
+];
 
 export const GET: APIRoute = async ({ request }) => {
   const cookies = request.headers.get('cookie') || '';

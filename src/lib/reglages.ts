@@ -4,6 +4,10 @@ const DEFAULTS: Record<string, string> = {
   prix_km_supplementaire: '0.40',
   prix_litre_carburant:   '1.80',
   forcer_2j_weekend:      'false',
+  km_inclus_par_jour:     '100',
+  montant_caution:        '900',
+  franchise_vol:          '3000',
+  penalite_tabac:         '50',
 };
 
 export async function getReglage(key: string): Promise<string> {

@@ -6,6 +6,14 @@ const prixLitreRaw  = await getReglage('prix_litre_carburant');
 const prixLitreCgu  = parseFloat(prixLitreRaw).toFixed(2).replace('.', ',') + ' €/L';
 const prixKmRaw     = await getReglage('prix_km_supplementaire');
 const prixKmCgu     = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' € TTC/km';
+const kmInclusRaw   = await getReglage('km_inclus_par_jour');
+const kmInclusCgu   = kmInclusRaw || '100';
+const cautionRaw    = await getReglage('montant_caution');
+const cautionCgu    = cautionRaw ? Number(cautionRaw).toLocaleString('fr-FR') : '900';
+const franchiseRaw  = await getReglage('franchise_vol');
+const franchiseCgu  = franchiseRaw ? Number(franchiseRaw).toLocaleString('fr-FR') : '3 000';
+const tabacRaw      = await getReglage('penalite_tabac');
+const tabacCgu      = tabacRaw || '50';
 ---
 
 <MainLayout title="CGU — Conditions Générales d'Utilisation · Ship Cars">
@@ -169,7 +177,7 @@ const prixKmCgu     = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' €
 
       <section>
         <h2>Article 8 – Kilométrage</h2>
-        <p>Un forfait de <strong>100 km par jour</strong> est inclus dans chaque réservation. Tout kilomètre supplémentaire au-delà de ce forfait est facturé <strong>{prixKmCgu}</strong>. Ce dépassement est constaté par lecture du boîtier Connect au retour du véhicule et facturé sur la caution ou par prélèvement séparé.</p>
+        <p>Un forfait de <strong>{kmInclusCgu} km par jour</strong> est inclus dans chaque réservation. Tout kilomètre supplémentaire au-delà de ce forfait est facturé <strong>{prixKmCgu}</strong>. Ce dépassement est constaté par lecture du boîtier Connect au retour du véhicule et facturé sur la caution ou par prélèvement séparé.</p>
         <p>Pour les offres tarifaires spéciales (ex. tarif dernière minute), le forfait kilométrique journalier peut être réduit — le tarif au kilomètre supplémentaire reste identique : <strong>{prixKmCgu}</strong>.</p>
       </section>
 
@@ -194,7 +202,7 @@ const prixKmCgu     = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' €
             </tbody>
           </table>
         </div>
-        <p>Les animaux de compagnie ne sont pas autorisés dans le véhicule sauf accord préalable écrit du Loueur. Tout non-respect entraîne la facturation des frais de nettoyage correspondants. Il est formellement interdit de fumer ou de vapoter dans le véhicule — une pénalité forfaitaire de <strong>50 €</strong> est appliquée en plus du nettoyage si nécessaire.</p>
+        <p>Les animaux de compagnie ne sont pas autorisés dans le véhicule sauf accord préalable écrit du Loueur. Tout non-respect entraîne la facturation des frais de nettoyage correspondants. Il est formellement interdit de fumer ou de vapoter dans le véhicule — une pénalité forfaitaire de <strong>{tabacCgu} €</strong> est appliquée en plus du nettoyage si nécessaire.</p>
       </section>
 
       <section>
@@ -239,7 +247,7 @@ const prixKmCgu     = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' €
         <p>Les véhicules SHIP CARS sont assurés auprès de <strong>AXA FRANCE IARD</strong> (313 Terrasses de l'Arche – 92727 Nanterre Cedex, RCS Nanterre 722 057 460), via le courtier <strong>AON</strong> (31-35 rue de la Fédération – 75717 Paris Cedex 15, Orias n° 07001560), dans le cadre d'un contrat groupement de flottes dédié à la location de courte durée.</p>
         <p>La valeur maximum assurée est de <strong>50 000 € TTC par véhicule</strong>. Pour les véhicules de moins de 12 mois, l'indemnisation en cas de dommage total s'effectue à la valeur à neuf.</p>
         <h3>11.2 Garanties et franchises</h3>
-        <p>Les garanties et franchises applicables sont précisées dans l'état de parc client annexé au contrat. La franchise en cas de <strong>vol avec incapacité de restituer les clés est fixée à 3 000 €</strong>, intégralement à la charge du Locataire.</p>
+        <p>Les garanties et franchises applicables sont précisées dans l'état de parc client annexé au contrat. La franchise en cas de <strong>vol avec incapacité de restituer les clés est fixée à {franchiseCgu} €</strong>, intégralement à la charge du Locataire.</p>
         <h3>11.3 Exclusions de garantie</h3>
         <ul>
           <li>Conduite sous l'emprise de l'alcool (&gt; 0,5 g/L) ou de stupéfiants</li>
@@ -248,7 +256,7 @@ const prixKmCgu     = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' €
           <li>Aménagements, équipements ou accessoires non prévus au catalogue constructeur</li>
           <li>Appareils audio, objets personnels et effets transportés</li>
           <li>Dégâts sur pneus, jantes et parties basses sans choc identifié</li>
-          <li>Vol avec incapacité de restituer les clés : franchise spécifique 3 000 €</li>
+          <li>Vol avec incapacité de restituer les clés : franchise spécifique {franchiseCgu} €</li>
         </ul>
         <h3>11.4 Utilisations non couvertes par l'assurance</h3>
         <p>Les véhicules sont assurés exclusivement pour des déplacements privés ou professionnels. Sont expressément exclus :</p>
