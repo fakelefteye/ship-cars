@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
 import { blockDates, unblockDates } from '../../../lib/getaround';
 import { getReglage } from '../../../lib/reglages';
+import { buildCalendar, buildVEvent } from '../../../lib/ical';
 // pdfkit en import dynamique — un crash pdf ne tue pas tout le webhook
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
@@ -600,7 +601,24 @@ export const POST = async ({ request }) => {
         }
         console.log(`📎 ${permisAttachments.length}/3 photo(s) de permis jointe(s)`);
 
-        // 4a. Email au locataire (contrat PDF uniquement — pas les photos de son propre permis)
+        // Génération du fichier .ics pour l'événement calendrier du locataire
+        const icsContent = buildCalendar(
+          [buildVEvent({
+            uid:         `resa-${res.id}@shipcars.fr`,
+            dtstart:     res.date_debut,
+            dtend:       res.date_fin,
+            summary:     res.lang === 'en'
+              ? `Car rental SC-${contractNum} — ${veh?.nom ?? 'Vehicle'}`
+              : `Location SC-${contractNum} — ${veh?.nom ?? 'Véhicule'}`,
+            description: res.lang === 'en'
+              ? `Ship Cars rental\nVehicle: ${veh?.nom ?? ''}\nPickup: 62 rue Félix Esclangon, 38000 Grenoble`
+              : `Location Ship Cars\nVéhicule : ${veh?.nom ?? ''}\nAdresse : 62 rue Félix Esclangon, 38000 Grenoble`,
+          })],
+          'Ship Cars',
+        );
+        const icsAttachment = [{ filename: `reservation-SC-${contractNum}.ics`, content: Buffer.from(icsContent).toString('base64') }];
+
+        // 4a. Email au locataire (contrat PDF + événement .ics)
         if (emailClient) {
           try {
             await resend.emails.send({
@@ -610,7 +628,7 @@ export const POST = async ({ request }) => {
                 ? `Your Ship Cars rental contract — No. SC-${contractNum}`
                 : `Votre contrat de location Ship Cars — N° SC-${contractNum}`,
               html: tenantEmailHtml(contractHtml, res.lang ?? 'fr'),
-              attachments: pdfAttachment,
+              attachments: [...pdfAttachment, ...icsAttachment],
             });
             console.log(`✅ Contrat + PDF envoyés au locataire : ${emailClient}`);
           } catch (err) {

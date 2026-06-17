@@ -3,6 +3,7 @@
 import MainLayout from '../../layouts/MainLayout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
 import { isMaintenanceMode } from '../../lib/maintenance';
+import { randomUUID } from 'crypto';
 
 // Vérification du mot de passe
 const url = new URL(Astro.request.url);
@@ -105,6 +106,16 @@ const { data: litreData } = await supabaseAdmin.from('app_config').select('value
 const prixLitreActuel = litreData?.value ?? '1.80';
 const { data: wkData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'forcer_2j_weekend').single();
 const forcer2jWeekendActif = wkData?.value === 'true';
+
+// Flux iCal — génère le token si absent
+let { data: icalData } = await supabaseAdmin.from('app_config').select('value').eq('key', 'ical_secret').single();
+let icalSecret = icalData?.value as string | undefined;
+if (!icalSecret) {
+  icalSecret = randomUUID();
+  await supabaseAdmin.from('app_config').upsert({ key: 'ical_secret', value: icalSecret }, { onConflict: 'key' });
+}
+const SITE_URL  = import.meta.env.PUBLIC_SITE_URL || 'https://www.shipcars.fr';
+const icalFeedUrl = `${SITE_URL}/api/calendar/reservations.ics?token=${icalSecret}`;
 
 // On récupère le paramètre "success" dans l'URL pour afficher une notification
 const success = url.searchParams.get('success');
@@ -247,6 +258,33 @@ const updated = url.searchParams.get('updated');
         </div>
       </div>
       <div id="litre-feedback" style="display:none;margin-top:.4rem;font-size:.83rem;font-weight:600;"></div>
+
+      <!-- FLUX iCAL -->
+      <div class="maint-card" style="margin-top:.75rem;flex-direction:column;align-items:flex-start;gap:.75rem;">
+        <div>
+          <strong>📅 Flux iCal — sync calendrier</strong>
+          <p style="margin:.25rem 0 0;font-size:.82rem;color:#6b7280;line-height:1.5;">
+            Abonnez-vous à cette URL dans Google Calendar, Apple Calendar, Outlook… pour voir vos réservations en temps réel.<br>
+            <em style="font-size:.78rem;">Google Calendar → « Ajouter un calendrier » → « À partir de l'URL » · Apple → « S'abonner à un calendrier »</em>
+          </p>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;width:100%;flex-wrap:wrap;">
+          <input
+            id="ical-url"
+            type="text"
+            readonly
+            value={icalFeedUrl}
+            style="flex:1;min-width:0;padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.78rem;font-family:monospace;background:#f9fafb;color:#374151;cursor:text;"
+          />
+          <button id="btn-ical-copy" style="background:#4dd4c8;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+            📋 Copier
+          </button>
+          <button id="btn-ical-regen" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:.5rem 1.1rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+            🔄 Régénérer
+          </button>
+        </div>
+        <div id="ical-feedback" style="display:none;font-size:.82rem;font-weight:600;"></div>
+      </div>
 
       {success && <p class="success-msg">✅ L'élément a été ajouté avec succès !</p>}
       {deleted && <p class="success-msg">✅ L'élément a été supprimé avec succès !</p>}
@@ -952,6 +990,42 @@ const updated = url.searchParams.get('updated');
       }
     } catch { feedback.textContent = '❌ Erreur réseau'; feedback.style.display = 'block'; feedback.style.color = '#dc2626'; }
     btn.disabled = false; btn.textContent = '💾 Enregistrer';
+  });
+
+  // ── Flux iCal ─────────────────────────────────────────────────────
+  document.getElementById('btn-ical-copy')?.addEventListener('click', function() {
+    const input    = document.getElementById('ical-url') as HTMLInputElement;
+    const feedback = document.getElementById('ical-feedback') as HTMLElement;
+    navigator.clipboard.writeText(input.value).then(() => {
+      feedback.textContent = '✅ URL copiée dans le presse-papiers !';
+      feedback.style.color  = '#059669';
+      feedback.style.display = 'block';
+      setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+    });
+  });
+
+  document.getElementById('btn-ical-regen')?.addEventListener('click', async function() {
+    if (!confirm('Régénérer le token ? L\'ancienne URL ne fonctionnera plus — vous devrez re-vous abonner dans votre calendrier.')) return;
+    const btn      = this as HTMLButtonElement;
+    const input    = document.getElementById('ical-url') as HTMLInputElement;
+    const feedback = document.getElementById('ical-feedback') as HTMLElement;
+    btn.disabled = true; btn.textContent = '⏳…';
+    try {
+      const res  = await fetch('/api/admin/ical-token', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (data.token) {
+        const base = input.value.split('?')[0];
+        input.value = base + '?token=' + data.token;
+        feedback.textContent = '✅ Nouveau token généré — copiez la nouvelle URL.';
+        feedback.style.color = '#059669';
+        feedback.style.display = 'block';
+      } else {
+        feedback.textContent = '❌ Erreur : ' + (data.error || 'inconnue');
+        feedback.style.color = '#dc2626';
+        feedback.style.display = 'block';
+      }
+    } catch { feedback.textContent = '❌ Erreur réseau'; feedback.style.color = '#dc2626'; feedback.style.display = 'block'; }
+    btn.disabled = false; btn.textContent = '🔄 Régénérer';
   });
 
   // ── Remboursement réservation ───────────────────────────────────────
