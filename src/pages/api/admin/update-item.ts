@@ -38,6 +38,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         getaround_id:    formData.get('getaround_id'),
         immatriculation: formData.get('immatriculation'),
         description:     formData.get('description'),
+        description_en:  formData.get('description_en'),
+        description_es:  formData.get('description_es'),
+        description_it:  formData.get('description_it'),
         stock: formData.get('stock'),
         stock_total: formData.get('stock_total') // Pour les mises à jour JSON
       };
@@ -70,6 +73,15 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       }
       if ('description' in data) {
         updatePayload.description = data.description?.toString() || null;
+      }
+      if ('description_en' in data) {
+        updatePayload.description_en = data.description_en?.toString() || null;
+      }
+      if ('description_es' in data) {
+        updatePayload.description_es = data.description_es?.toString() || null;
+      }
+      if ('description_it' in data) {
+        updatePayload.description_it = data.description_it?.toString() || null;
       }
       if ('carburant' in data) {
         updatePayload.carburant = data.carburant?.toString() || null;

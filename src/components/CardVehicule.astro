@@ -3,7 +3,7 @@ import type { Lang } from '../i18n/translations';
 const { id, nom, modele, prix, image, lang = 'fr' } = Astro.props as {
   id: string; nom: string; modele: string; prix: number; image: string; lang?: Lang;
 };
-const href = lang === 'fr' ? `/vehicules/${id}` : `/${lang}/vehicules/${id}`;
+const href = lang === 'fr' ? `/vehicules/${id}?lang=fr` : `/${lang}/vehicules/${id}`;
 const labels: Record<Lang, { from: string; perDay: string; included: string; see: string }> = {
   fr: { from: 'à partir de', perDay: '/jour', included: '100 km/jour inclus', see: 'Voir les dispo' },
   en: { from: 'from',        perDay: '/day',  included: '100 km/day incl.',  see: 'Check availability' },

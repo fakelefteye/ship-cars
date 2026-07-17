@@ -19,7 +19,10 @@ const basePath = currentLang === 'fr' ? currentPath : stripLang(currentPath);
 
   <div class="lang-dropdown" id="lang-dropdown" role="menu">
     {LANGS.map(lang => {
-      const href = langPath(lang.code, basePath);
+      const rawHref = langPath(lang.code, basePath);
+      const href = basePath.startsWith('/vehicules/')
+        ? `${rawHref}${rawHref.includes('?') ? '&' : '?'}lang=${lang.code}`
+        : rawHref;
       const isActive = lang.code === currentLang;
       return (
         <a

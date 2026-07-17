@@ -51,6 +51,9 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         getaround_id:    formData.get('getaround_id')?.toString() || null,
         immatriculation: formData.get('immatriculation')?.toString().toUpperCase() || null,
         description:     formData.get('description')?.toString() || null,
+        description_en:  formData.get('description_en')?.toString() || null,
+        description_es:  formData.get('description_es')?.toString() || null,
+        description_it:  formData.get('description_it')?.toString() || null,
         carburant:       formData.get('carburant')?.toString() || null,
         reservoir_litres: formData.get('reservoir_litres') ? parseInt(formData.get('reservoir_litres') as string) : null,
       });

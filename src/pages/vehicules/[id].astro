@@ -4,8 +4,9 @@ import { supabaseAdmin } from '../../lib/supabase';
 import { isMaintenanceMode } from '../../lib/maintenance';
 import { veh, type Lang } from '../../i18n/translations';
 
-const rawLang = Astro.cookies.get('shipcars_lang')?.value ?? 'fr';
+const rawLang = Astro.url.searchParams.get('lang') ?? Astro.cookies.get('shipcars_lang')?.value ?? 'fr';
 const lang: Lang = ['en','es','it'].includes(rawLang) ? rawLang as Lang : 'fr';
+Astro.cookies.set('shipcars_lang', lang, { path: '/', maxAge: 60 * 60 * 24 * 30 });
 const tv = veh[lang];
 
 const { id } = Astro.params;
@@ -94,11 +95,20 @@ const photos = [
           </div>
         )}
 
-        {vehicule.description && (
-          <div class="vehicle-description">
-            <p>{vehicule.description}</p>
-          </div>
-        )}
+        {(() => {
+          const descByLang: Record<Lang, string | null> = {
+            fr: vehicule.description,
+            en: vehicule.description_en,
+            es: vehicule.description_es,
+            it: vehicule.description_it,
+          };
+          const localizedDescription = descByLang[lang] || vehicule.description;
+          return localizedDescription && (
+            <div class="vehicle-description">
+              <p>{localizedDescription}</p>
+            </div>
+          );
+        })()}
       </section>
 
       <!-- INFOS + RÉSA -->

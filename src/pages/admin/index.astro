@@ -600,8 +600,23 @@ const updated = url.searchParams.get('updated');
           </div>
 
           <div class="form-group">
-            <label for="description">Description du véhicule <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
+            <label for="description">Description du véhicule (français) <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
             <textarea id="description" name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville et sur l'autoroute. Climatisation, bluetooth, caméra de recul..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="description_en">Description (English) <span style="font-weight:400;color:#6b7280;">(optionnel — sinon le français s'affiche)</span></label>
+            <textarea id="description_en" name="description_en" rows="3" placeholder="Ex: Citroën C3, ideal for city driving and motorway trips. Air conditioning, bluetooth, rear camera..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="description_es">Description (Español) <span style="font-weight:400;color:#6b7280;">(optionnel — sinon le français s'affiche)</span></label>
+            <textarea id="description_es" name="description_es" rows="3" placeholder="Ex: Citroën C3, ideal para la ciudad y la autopista. Aire acondicionado, bluetooth, cámara trasera..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="description_it">Description (Italiano) <span style="font-weight:400;color:#6b7280;">(optionnel — sinon le français s'affiche)</span></label>
+            <textarea id="description_it" name="description_it" rows="3" placeholder="Ex: Citroën C3, ideale in città e in autostrada. Climatizzatore, bluetooth, telecamera posteriore..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;"></textarea>
           </div>
 
           <div class="form-group">
@@ -1667,8 +1682,23 @@ const updated = url.searchParams.get('updated');
           </div>
 
           <div class="form-group">
-            <label>Description <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
+            <label>Description (français) <span style="font-weight:400;color:#6b7280;">(affichée sur la fiche publique)</span></label>
             <textarea name="description" rows="4" placeholder="Ex: Citroën C3 idéale pour les déplacements en ville..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description || ''}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Description (English) <span style="font-weight:400;color:#6b7280;">(optionnel — sinon le français s'affiche)</span></label>
+            <textarea name="description_en" rows="3" placeholder="Ex: Citroën C3, ideal for city driving..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description_en || ''}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Description (Español) <span style="font-weight:400;color:#6b7280;">(optionnel — sinon le français s'affiche)</span></label>
+            <textarea name="description_es" rows="3" placeholder="Ex: Citroën C3, ideal para la ciudad..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description_es || ''}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Description (Italiano) <span style="font-weight:400;color:#6b7280;">(optionnel — sinon le français s'affiche)</span></label>
+            <textarea name="description_it" rows="3" placeholder="Ex: Citroën C3, ideale in città..." style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;font-family:inherit;resize:vertical;">${item.description_it || ''}</textarea>
           </div>
 
           <div class="form-group" style="margin-top:1rem;">
