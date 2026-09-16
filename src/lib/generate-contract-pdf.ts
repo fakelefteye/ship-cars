@@ -17,17 +17,47 @@ function fmtDateTime(s: string | null | undefined): string {
   });
 }
 
+export interface ContractPdfOptions {
+  /** Prix du km supplémentaire, en euros (ex: 0.4) */
+  prixKm?: number;
+  /** Prix du litre de carburant manquant, en euros (ex: 3) */
+  prixLitre?: number;
+  /** URL du logo de l'agence (app_config.logo_url) */
+  logoUrl?: string;
+  /** URL du tampon/signature de l'agence (app_config.tampon_url) */
+  tamponUrl?: string;
+}
+
+async function fetchImage(url: string | undefined | null): Promise<Buffer | null> {
+  if (!url) return null;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return Buffer.from(await r.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+function fmtEur(value: number): string {
+  return value.toFixed(2).replace('.', ',');
+}
+
 export async function generateContractPdf(
   res: Record<string, any>,
-  veh: Record<string, any> | null
+  veh: Record<string, any> | null,
+  opts: ContractPdfOptions = {}
 ): Promise<Buffer> {
-  // Pré-chargement du tampon/signature (si le fichier existe sur le serveur)
-  let stampBuffer: Buffer | null = null;
-  try {
-    const baseUrl = process.env.PUBLIC_SITE_URL || 'https://www.shipcars.fr';
-    const r = await fetch(`${baseUrl}/img/tampon-shipcars.jpg`);
-    if (r.ok) stampBuffer = Buffer.from(await r.arrayBuffer());
-  } catch { /* pas de tampon disponible — on utilise le fallback texte */ }
+  const prixKm    = Number.isFinite(opts.prixKm)    ? opts.prixKm!    : 0.40;
+  const prixLitre = Number.isFinite(opts.prixLitre) ? opts.prixLitre! : 1.80;
+
+  const [logoBuffer, stampBuffer] = await Promise.all([
+    fetchImage(opts.logoUrl),
+    // Tampon configuré dans l'admin, sinon ancien fichier statique
+    fetchImage(opts.tamponUrl).then(b => b ?? fetchImage(
+      `${process.env.PUBLIC_SITE_URL || 'https://www.shipcars.fr'}/img/tampon-shipcars.jpg`
+    )),
+  ]);
 
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -87,25 +117,52 @@ export async function generateContractPdf(
     }
 
     /* ─── EN-TÊTE ─────────────────────────────────────────────────── */
-    // Bloc gauche — coordonnées Loueur
-    doc.rect(COL, doc.y, W / 2 - 5, 70).fill('#f8fafc').stroke();
-    doc.fillColor(COLOR_BLUE).font('Helvetica-Bold').fontSize(14).text('SHIP CARS', COL + 8, doc.y - 65);
-    doc.fillColor(COLOR_MUTED).font('Helvetica').fontSize(7.5)
-       .text('Location de vehicules de courte duree', COL + 8, doc.y - 5)
-       .text('31 rue Pre Megne — 38650 SINARD', COL + 8)
-       .text('SIRET : 950 836 486 00015 — RCS Grenoble', COL + 8)
-       .text('bill.shipcars@gmail.com — Tel. 07 81 38 13 36', COL + 8);
+    const headerTop = doc.y;
+    const headerH   = 70;
+    const boxW      = W / 2 - 5;
+
+    // Bloc gauche — logo (ou nom) + coordonnées Loueur
+    doc.rect(COL, headerTop, boxW, headerH).fill('#f8fafc');
+
+    let leftY = headerTop + 7;
+    if (logoBuffer) {
+      try {
+        doc.image(logoBuffer, COL + 8, leftY, { fit: [64, 24], align: 'left' });
+        leftY += 28;
+      } catch {
+        doc.fillColor(COLOR_BLUE).font('Helvetica-Bold').fontSize(13)
+           .text('SHIP CARS', COL + 8, leftY, { width: boxW - 16, lineBreak: false });
+        leftY += 19;
+      }
+    } else {
+      doc.fillColor(COLOR_BLUE).font('Helvetica-Bold').fontSize(13)
+         .text('SHIP CARS', COL + 8, leftY, { width: boxW - 16, lineBreak: false });
+      leftY += 19;
+    }
+
+    doc.fillColor(COLOR_MUTED).font('Helvetica').fontSize(7);
+    for (const line of [
+      'Location de vehicules de courte duree',
+      '31 rue Pre Megne — 38650 SINARD',
+      'SIRET : 950 836 486 00015 — RCS Grenoble',
+      'bill.shipcars@gmail.com — Tel. 07 81 38 13 36',
+    ]) {
+      doc.text(line, COL + 8, leftY, { width: boxW - 16, lineBreak: false });
+      leftY += 9;
+    }
 
     // Bloc droit — N° contrat
     const bx = COL + W / 2 + 5;
-    doc.rect(bx, doc.y - 65, W / 2 - 5, 70).fill(COLOR_BLUE).stroke();
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(13)
-       .text('CONTRAT DE LOCATION', bx + 8, doc.y - 60, { width: W / 2 - 20 })
-       .text('DE VEHICULE',          bx + 8, undefined,  { width: W / 2 - 20 });
+    doc.rect(bx, headerTop, boxW, headerH).fill(COLOR_BLUE);
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(12)
+       .text('CONTRAT DE LOCATION', bx + 8, headerTop + 10, { width: boxW - 16, lineBreak: false })
+       .text('DE VEHICULE',         bx + 8, headerTop + 25, { width: boxW - 16, lineBreak: false });
     doc.font('Helvetica').fontSize(8.5)
-       .text(`N° SC-${contractNum}`, bx + 8, undefined, { width: W / 2 - 20 })
-       .text(`Date : ${fmtDate(new Date().toISOString())}`, bx + 8, undefined, { width: W / 2 - 20 });
-    doc.fillColor(COLOR_TEXT).moveDown(0.8);
+       .text(`N° SC-${contractNum}`, bx + 8, headerTop + 43, { width: boxW - 16, lineBreak: false })
+       .text(`Date : ${fmtDate(new Date().toISOString())}`, bx + 8, headerTop + 55, { width: boxW - 16, lineBreak: false });
+
+    doc.fillColor(COLOR_TEXT);
+    doc.y = headerTop + headerH + 8;
 
     /* ─── SECTION 1 — IDENTIFICATION DES PARTIES ──────────────────── */
     sectionHeader('1. Identification des parties');
@@ -164,7 +221,7 @@ export async function generateContractPdf(
       ['Date / heure de fin',      fmtDateTime(res.date_fin)],
       ['Lieu de mise a disposition','62 rue Felix Esclangon 38000 Grenoble'],
       ['Lieu de restitution',      'Identique au lieu de mise a disposition'],
-      ['Kilometrage inclus',       `${kmInclus} km (puis 0,40 EUR TTC / km supplementaire)`],
+      ['Kilometrage inclus',       `${kmInclus} km (puis ${fmtEur(prixKm)} EUR TTC / km supplementaire)`],
       ['Prix total de la location', `${Number(res.montant_total).toFixed(2)} EUR (hors carburant)`],
       ['Caution / depot de garantie', '900 EUR'],
       ['Franchise applicable',     '1 300 EUR — voir article 6.2'],
@@ -208,8 +265,8 @@ export async function generateContractPdf(
     /* ─── SECTION 7 — FRAIS COMPLEMENTAIRES (résumé) ─────────────── */
     sectionHeader('7. Frais complementaires eventuels');
     const frais: [string, string][] = [
-      ['Kilometrage supp.',       '0,40 EUR TTC / km'],
-      ['Carburant manquant',      '0,60 EUR / litre + ajustement prix reel'],
+      ['Kilometrage supp.',       `${fmtEur(prixKm)} EUR TTC / km`],
+      ['Carburant manquant',      `${fmtEur(prixLitre)} EUR / litre`],
       ['Retard restitution',      '15 EUR / heure entamee (30 min de tolerance)'],
       ['Caractere non-fumeur',    '30 EUR'],
       ['Conducteur non declare',  '500 EUR + decheance assurance'],

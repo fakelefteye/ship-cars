@@ -2,8 +2,7 @@
 // src/pages/admin/configuration.astro
 // Page de gestion des configurations : logo, tampon, tarifs (prix/km, prix/litre)
 import MainLayout from '../../layouts/MainLayout.astro';
-import { supabaseAdmin } from '../../lib/supabase';
-import { getReglage, setReglage } from '../../lib/reglages';
+import { getReglage } from '../../lib/reglages';
 
 // Vérification du mot de passe
 const url = new URL(Astro.request.url);
@@ -115,6 +114,7 @@ const prixLitre = await getReglage('prix_litre_carburant');
     try {
       const res = await fetch('/api/admin/upload-config-image', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
       const data = await res.json();
@@ -150,6 +150,7 @@ const prixLitre = await getReglage('prix_litre_carburant');
     try {
       const res = await fetch('/api/admin/upload-config-image?type=tampon', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
       const data = await res.json();
@@ -170,8 +171,8 @@ const prixLitre = await getReglage('prix_litre_carburant');
 
   tarifsForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const prixKm = (document.getElementById('prixKm') as HTMLInputElement).value;
-    const prixLitre = (document.getElementById('prixLitre') as HTMLInputElement).value;
+    const prixKm = document.getElementById('prixKm').value;
+    const prixLitre = document.getElementById('prixLitre').value;
 
     if (!prixKm || !prixLitre) {
       tarifsStatus.textContent = '❌ Tous les champs sont obligatoires';
@@ -181,9 +182,10 @@ const prixLitre = await getReglage('prix_litre_carburant');
     tarifsStatus.textContent = '⏳ Enregistrement...';
 
     try {
-      const res = await fetch('/api/admin/set-reglage', {
+      const res = await fetch('/api/admin/reglages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           prix_km_supplementaire: prixKm,
           prix_litre_carburant: prixLitre,

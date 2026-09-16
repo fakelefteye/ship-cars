@@ -583,7 +583,12 @@ export const POST = async ({ request }) => {
         let pdfBuffer: Buffer | null = null;
         try {
           const { generateContractPdf } = await import('../../../lib/generate-contract-pdf');
-          pdfBuffer = await generateContractPdf(res, veh);
+          pdfBuffer = await generateContractPdf(res, veh, {
+            prixKm:    parseFloat(prixKmRaw),
+            prixLitre: parseFloat(prixLitreRaw),
+            logoUrl,
+            tamponUrl,
+          });
           console.log(`✅ PDF contrat généré (${pdfBuffer!.length} bytes)`);
         } catch (err) {
           console.error('❌ Erreur génération PDF (non bloquant):', err);

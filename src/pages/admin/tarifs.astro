@@ -510,7 +510,7 @@ function renderCalendar() {
     if (blocage) {
       const lbl = document.createElement('span');
       lbl.className = 'day-lbl';
-      lbl.textContent = blocage.source === 'getaround' ? 'GA' : '🔒';
+      lbl.textContent = blocage.source === 'getaround' ? 'Réservé' : 'Bloqué';
       cell.appendChild(lbl);
     }
 
@@ -1083,8 +1083,8 @@ h1 { font-size:1.6rem; font-weight:800; color:#f0f4f8; margin:0; }
 /* Label blocage */
 .day-lbl {
   margin-top:auto; align-self:flex-end;
-  font-size:.65rem; font-weight:700; color:#1e3a5f;
-  text-transform:uppercase; letter-spacing:.04em;
+  font-size:.58rem; font-weight:700; color:#1e3a5f;
+  text-transform:uppercase; letter-spacing:.02em;
 }
 .cal-day.day-blocked .day-lbl { color:#991b1b; }
 
