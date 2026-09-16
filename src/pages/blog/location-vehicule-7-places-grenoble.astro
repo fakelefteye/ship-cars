@@ -1,0 +1,270 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre = "Location de véhicule 7 places à Grenoble : guide complet";
+const slug = "location-vehicule-7-places-grenoble";
+const date = new Date().toISOString().split('T')[0];
+const desc = "Besoin d'une voiture 7 places à Grenoble ? Ship Cars propose des solutions de location flexibles pour les familles et les groupes. Réservation en ligne, sans agence physique, tarifs transparents.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": { "@type": "Organization", "name": "Ship Cars", "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" } },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+    <header class="article-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb"><a href="/">Accueil</a> › <a href="/blog">Blog</a> › <span>7 places Grenoble</span></div>
+        <div class="article-tag-header">
+          <span class="tag">🚐 Location</span>
+          <span class="meta-date">{new Date().toLocaleDateString('fr-FR')}</span>
+          <span class="meta-read">· 8 min de lecture</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          Vous êtes en famille nombreuse ou vous organisez un voyage en groupe à Grenoble ? Découvrez comment <strong>louer un véhicule 7 places</strong> simplement, sans passer par une agence physique. Ship Cars vous propose des solutions flexibles, transparentes et sans surprise pour vos déplacements collectifs.
+        </p>
+      </div>
+    </header>
+
+    <div class="art-container article-body">
+      <div class="article-content">
+
+        <section>
+          <h2>Pourquoi louer un véhicule 7 places à Grenoble ?</h2>
+          <p>
+            Un véhicule 7 places est la solution idéale pour de nombreuses situations :
+          </p>
+          <ul>
+            <li><strong>Famille nombreuse</strong> — parents avec enfants et grands-parents, ou famille recomposée</li>
+            <li><strong>Groupe d'amis</strong> — week-end en montagne, visite aux Alpes, escapade en Provence</li>
+            <li><strong>Équipes de travail</strong> — déplacements professionnels collectifs sans frais de transport individuel</li>
+            <li><strong>Événements familiaux</strong> — mariage, réunion de famille, sorties collégiales</li>
+            <li><strong>Séminaires d'entreprise</strong> — meilleur coût qu'un minibus traditionnel pour petits groupes</li>
+          </ul>
+          <p>
+            Contrairement aux agences de location classiques qui nécessitent un déplacement en boutique, Ship Cars vous permet de <strong>réserver votre 7 places directement en ligne</strong>, sans attendre, sans file d'attente.
+          </p>
+        </section>
+
+        <section>
+          <h2>Avantages de louer un 7 places via Ship Cars</h2>
+
+          <h3>✅ 100% en ligne, 0 déplacement agence</h3>
+          <p>
+            Réservez depuis votre téléphone, votre ordinateur, à n'importe quelle heure du jour ou de la nuit. Pas besoin de vous arrêter en agence, pas de horaires fixes, pas de paperasse en main propre. Tout se fait numériquement, sécurisé via Stripe.
+          </p>
+
+          <h3>✅ Tarifs transparents et affichés d'avance</h3>
+          <p>
+            Le prix que vous voyez est le prix final. Aucun frais caché, aucune surcharge découverte au retour. Kilométrage inclus, assurance comprise, caution expliquée clairement. Pour une famille de 7, cela représente un coût par personne très compétitif.
+          </p>
+
+          <h3>✅ Ouverture à distance sans clé physique</h3>
+          <p>
+            À l'heure exacte de votre réservation, votre véhicule s'ouvre via votre téléphone. Pas de clé à récupérer en main propre, pas de contact nécessaire. Parfait si vous arrivez tard ou tôt, ou si vous préférez minimiser les interactions.
+          </p>
+
+          <h3>✅ Flexibilité pour les groupes</h3>
+          <p>
+            Vous pouvez renseigner plusieurs conducteurs autorisés au moment de la réservation, faciliter le trajet de groupe, et chacun peut participer à la discussion du trajet avant de partir. Tous les détails du contrat vous sont envoyés par email.
+          </p>
+
+          <h3>✅ Assurance complète et caution simplifiée</h3>
+          <p>
+            Tous les véhicules 7 places de Ship Cars sont assurés via AXA. La caution est prise en pré-autorisation bancaire (900 €) — elle n'est pas débitée si vous rendez le véhicule en bon état. Franchises claires en cas de sinistre.
+          </p>
+        </section>
+
+        <section>
+          <h2>Comment réserver un 7 places à Grenoble avec Ship Cars</h2>
+
+          <h3>Étape 1 : Accédez au catalogue</h3>
+          <p>
+            Allez sur <a href="/" style="color:var(--teal);font-weight:600;">shipcars.fr</a>, sélectionnez vos dates (départ et retour) et cherchez un véhicule 7 places parmi notre flotte.
+          </p>
+
+          <h3>Étape 2 : Remplissez le formulaire de réservation</h3>
+          <p>
+            Vos informations personnelles, permis de conduire (photo recto, verso, selfie), et celles de vos passagers conducteurs. Sécurisé, chiffré, protégé.
+          </p>
+
+          <h3>Étape 3 : Confirmez et payez</h3>
+          <p>
+            Stripe gère votre paiement. La caution (900 €) est pré-autorisée sur votre carte, mais pas débitée immédiatement. Vous recevez un contrat PDF et l'événement calendrier (fichier .ics) par email.
+          </p>
+
+          <h3>Étape 4 : Récupérez sans contact</h3>
+          <p>
+            À l'heure de votre réservation, le véhicule s'ouvre directement depuis votre téléphone. Vous trouvez tous les détails (localisation GPS, numéro d'immatriculation, état des blessures) dans votre email de confirmation.
+          </p>
+        </section>
+
+        <section>
+          <h2>Où chercher votre 7 places : localisation à Grenoble</h2>
+          <p>
+            Ship Cars est basé à <strong>2 rue de la Frise, 38000 Grenoble</strong>, à environ 5 minutes à pied de la gare SNCF. C'est l'emplacement idéal si vous arrivez en train de Paris, Lyon, Marseille ou ailleurs.
+          </p>
+          <p>
+            Notre agence est ouverte 24h/24, 7j/7. Pas de fermeture le soir ni le week-end. Que vous ayez besoin d'un 7 places lundi matin ou dimanche minuit, c'est possible.
+          </p>
+        </section>
+
+        <section>
+          <h2>Questions fréquentes sur la location 7 places à Grenoble</h2>
+
+          <h3>Combien coûte un véhicule 7 places par jour ?</h3>
+          <p>
+            Le tarif dépend du modèle exact et de la période. <a href="/#catalogue" style="color:var(--teal);font-weight:600;">Consultez notre catalogue</a> pour voir les prix en temps réel en fonction de vos dates. En moyenne, comptez entre 70 € et 150 € par jour pour un 7 places, soit 10 à 20 € par personne si vous êtes 7 — très compétitif !
+          </p>
+
+          <h3>Quel âge minimum pour louer ?</h3>
+          <p>
+            Il n'y a pas d'âge minimum légal au-delà de la possession d'un permis valide. <strong>Le permis doit avoir été obtenu depuis au moins 2 ans.</strong> Si vous n'avez votre permis que depuis 1 an, Ship Cars ne peut malheureusement pas vous louer.
+          </p>
+
+          <h3>Puis-je ajouter un conducteur supplémentaire ?</h3>
+          <p>
+            Oui, et c'est <strong>gratuit</strong>. Lors de la réservation, vous pouvez renseigner un second conducteur (ou même un tiers). Tous les conducteurs doivent avoir un permis depuis au least 2 ans et être couverts par l'assurance du contrat.
+          </p>
+
+          <h3>Puis-je aller en Suisse ou en Italie avec un 7 places Ship Cars ?</h3>
+          <p>
+            Oui, nos véhicules sont autorisés à circuler en Suisse (cantons autorisés) et en Italie frontalière (Piémont, Val d'Aoste). Consultez <a href="/zones" style="color:var(--teal);font-weight:600;">notre page zones de circulation</a> pour la liste complète. Sortir de la zone autorisée annule la garantie d'assurance.
+          </p>
+
+          <h3>Combien de kilomètres sont inclus ?</h3>
+          <p>
+            <strong>100 km par jour</strong> sont inclus dans tous nos tarifs. Si vous en dépassez, les kilomètres supplémentaires sont facturés 0,40 € TTC par km. Pour une famille en week-end local, c'est largement suffisant.
+          </p>
+
+          <h3>Et si je dois retourner le véhicule ailleurs qu'à Grenoble ?</h3>
+          <p>
+            Pour un retour dans une autre ville, contactez-nous directement via WhatsApp au <strong>06 61 69 11 78</strong>. Nous étudierons votre demande selon le lieu et la disponibilité.
+          </p>
+        </section>
+
+        <section>
+          <h2>Conseils pour louer un 7 places en groupe</h2>
+
+          <h3>1. Réservez à l'avance</h3>
+          <p>
+            Les véhicules 7 places sont moins nombreux que les citadines. Si vous avez des dates fixes, réservez 2-3 semaines avant pour avoir le meilleur choix.
+          </p>
+
+          <h3>2. Désignez un conducteur principal</h3>
+          <p>
+            Le locataire principal devra fournir ses documents et accepter les conditions. Les autres conducteurs doivent simplement être déclarés et avoir un permis valide.
+          </p>
+
+          <h3>3. Vérifiez l'espace bagages</h3>
+          <p>
+            Un 7 places c'est 7 sièges, mais les bagages doivent être adaptés. Prévoyez des sacs de taille raisonnable ou une petite remorque si nécessaire (à demander à la réservation).
+          </p>
+
+          <h3>4. Profitez du carburant inclus (niveau au départ)</h3>
+          <p>
+            Le véhicule vous est livré au niveau de carburant constaté à la prise en charge. Vous devez le retourner au même niveau. Sinon, la remise à niveau vous est facturée 1,80 €/L.
+          </p>
+
+          <h3>5. Documentez l'état du véhicule</h3>
+          <p>
+            Des photos de blessures pré-existantes vous sont envoyées au départ. Consultez-les et signalez tout problème sous 1 heure. Cela vous protège en cas de réclamation au retour.
+          </p>
+        </section>
+
+        <section>
+          <h2>Alternatives : et si je ne trouve pas de 7 places disponible ?</h2>
+          <p>
+            Si tous nos 7 places sont réservés pour vos dates, vous avez plusieurs options :
+          </p>
+          <ul>
+            <li><strong>Louer deux voitures</strong> — deux citadines pour 7 personnes (ou un 5 places + un 4 places)</li>
+            <li><strong>Changer vos dates</strong> — même quelques jours de décalage peut ouvrir des disponibilités</li>
+            <li><strong>Nous contacter</strong> — appelez-nous au <strong>06 61 69 11 78</strong>, nous pourrons peut-être vous proposer une solution alternative</li>
+          </ul>
+        </section>
+
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Prêt à louer votre 7 places à Grenoble ?</h2>
+            <p>Réservez en 5 minutes, payez en sécurité, ouvrez votre véhicule depuis votre téléphone.</p>
+            <a href="/#catalogue" class="cta-btn">Voir les disponibilités →</a>
+          </div>
+        </div>
+
+      </div>
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>📍 Localisation</strong>
+          <ul>
+            <li>2 rue de la Frise, 38000 Grenoble</li>
+            <li>5 min de la gare SNCF</li>
+            <li>Ouvert 24h/24, 7j/7</li>
+            <li>📱 WhatsApp : 06 61 69 11 78</li>
+          </ul>
+          <a href="/#catalogue" class="sidebar-btn">Réserver →</a>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/location-voiture-sans-agence-grenoble">Location sans agence à Grenoble →</a>
+          <a href="/location-voiture-grenoble">Location de voiture Grenoble →</a>
+          <a href="/faq">FAQ complète →</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page { color: var(--text); }
+  .art-container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+  .article-hero { background: linear-gradient(135deg, #0a1421 0%, #0f1e33 100%); padding: 4rem 0 3rem; border-bottom: 1px solid var(--border); }
+  .article-breadcrumb { font-size: .78rem; color: var(--text-dim); margin-bottom: 1rem; }
+  .article-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .article-hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: .75rem; letter-spacing: -.02em; }
+  .article-tag-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; font-size: .8rem; }
+  .tag { background: rgba(77,212,200,.2); color: var(--teal); padding: .35rem .8rem; border-radius: 99px; font-weight: 600; }
+  .meta-date { color: var(--text-dim); }
+  .article-lead { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; }
+  .article-body { display: grid; grid-template-columns: 1fr 300px; gap: 3rem; padding: 3rem 0 4rem; align-items: start; }
+  .article-content { }
+  .article-content section { margin-bottom: 2.5rem; }
+  .article-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: .75rem; border-bottom: 2px solid var(--teal); color: var(--teal); }
+  .article-content h3 { font-size: 1.1rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: .5rem; color: var(--text); }
+  .article-content p { color: var(--text-muted); line-height: 1.8; margin-bottom: 1rem; }
+  .article-content ul { color: var(--text-muted); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem; }
+  .article-content li { margin-bottom: .5rem; }
+  .article-cta { background: rgba(77,212,200,.08); border: 1px solid rgba(77,212,200,.3); border-radius: 16px; padding: 2rem; margin: 3rem 0; text-align: center; }
+  .cta-inner h2 { border: none; color: var(--text); margin-bottom: .5rem; }
+  .cta-inner p { color: var(--text-muted); margin-bottom: 1.5rem; }
+  .cta-btn { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 700; padding: .75rem 1.5rem; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+  .cta-btn:hover { opacity: .85; }
+  .article-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+  .sidebar-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+  .sidebar-card strong { font-size: .9rem; color: var(--teal); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 1rem; }
+  .sidebar-card ul { list-style: none; padding: 0; margin: 0; }
+  .sidebar-card li { font-size: .85rem; color: var(--text-muted); padding: .35rem 0; }
+  .sidebar-btn { display: block; margin-top: 1rem; background: var(--teal); color: #0a1421; font-weight: 700; padding: .75rem; border-radius: 8px; text-decoration: none; text-align: center; }
+  .sidebar-btn:hover { opacity: .85; }
+  .sidebar-related a { display: block; font-size: .9rem; color: var(--teal); text-decoration: none; margin-bottom: .75rem; }
+  .sidebar-related a:hover { text-decoration: underline; }
+  @media (max-width: 900px) {
+    .article-body { grid-template-columns: 1fr; }
+    .article-sidebar { display: none; }
+  }
+</style>
