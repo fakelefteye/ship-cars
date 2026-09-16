@@ -71,6 +71,14 @@ const photos = [
 
   <div class="container detail-container">
 
+    <div id="caution-echec-banner" class="caution-echec-banner" style="display:none;">
+      <span class="caution-echec-icon">⚠️</span>
+      <div>
+        <strong>{tv.cautionEchecTitle}</strong>
+        <p>{tv.cautionEchecMsg}</p>
+      </div>
+    </div>
+
     <a href={lang === 'fr' ? '/' : `/${lang}/`} class="back-link">{tv.back}</a>
 
     <div class="detail-grid">
@@ -1418,6 +1426,22 @@ const photos = [
       submit.textContent = 'Continuer vers le paiement →';
     }
   });
+
+  // Affiche le message d'échec de caution si on revient de Stripe sans autorisation réussie
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('caution_echec') === '1') {
+      const banner = document.getElementById('caution-echec-banner');
+      if (banner) {
+        banner.style.display = 'flex';
+        banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      params.delete('caution_echec');
+      const newSearch = params.toString();
+      const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    }
+  })();
 </script>
 
 <style>
@@ -2001,6 +2025,21 @@ const photos = [
     margin-bottom: 1.25rem;
     font-size: 0.82rem;
   }
+
+  .caution-echec-banner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.4);
+    border-radius: var(--radius);
+    padding: 1rem 1.15rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+  }
+  .caution-echec-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1; }
+  .caution-echec-banner strong { display: block; color: #ef4444; margin-bottom: 3px; font-size: 0.92rem; }
+  .caution-echec-banner p { color: var(--text-dim); line-height: 1.5; margin: 0; }
 
   .caution-icon { font-size: 1rem; flex-shrink: 0; }
 

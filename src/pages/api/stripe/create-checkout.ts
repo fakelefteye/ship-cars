@@ -112,39 +112,45 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (resError) throw resError;
 
-    // 2. On crée la session de paiement Stripe
-    const session = await stripe.checkout.sessions.create({
+    // 2. On crée d'abord la session de CAUTION (900 €, pré-autorisation à capture manuelle).
+    // Le paiement de la location n'est déclenché que si cette pré-autorisation réussit —
+    // voir /api/stripe/caution-then-rental qui enchaîne sur la session de location.
+    // Les infos nécessaires à la création de la session de location sont passées en metadata
+    // pour être relues par caution-then-rental sans dépendre d'un état serveur intermédiaire.
+    const cautionSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_creation: 'always',
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `Location : ${vehicule_nom}`,
-              description: `Du ${new Date(date_debut).toLocaleString('fr-FR', {timeZone:'Europe/Paris'})} au ${new Date(date_fin).toLocaleString('fr-FR', {timeZone:'Europe/Paris'})}`,
-            },
-            unit_amount: Math.round(finalMontant * 100), // Stripe veut des centimes
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: 'Caution de location — Ship Cars',
+            description: 'Empreinte bancaire de 900 € — aucun débit. Les fonds sont libérés après restitution sans incident.',
           },
-          quantity: 1,
+          unit_amount: 90000,
         },
-      ],
+        quantity: 1,
+      }],
       mode: 'payment',
       payment_intent_data: {
-        setup_future_usage: 'off_session',
+        capture_method: 'manual',
       },
-      // On passe l'ID de la résa en metadata pour la retrouver lors du Webhook
       metadata: {
+        type: 'caution_pre',
         reservation_id: reservation.id,
         vehicule_id: vehicule_id,
+        vehicule_nom: vehicule_nom,
+        date_debut: date_debut,
+        date_fin: date_fin,
+        montant: finalMontant.toFixed(2),
         promo_code: verifiedPromoCode || '',
         reduction: verifiedReduction.toFixed(2),
       },
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/vehicules/${vehicule_id}`,
+      success_url: `${baseUrl}/api/stripe/caution-then-rental?reservation_id=${reservation.id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/vehicules/${vehicule_id}?caution_echec=1`,
     });
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200 });
+    return new Response(JSON.stringify({ url: cautionSession.url }), { status: 200 });
 
   } catch (error: any) {
     console.error("Erreur Stripe Session:", error);

@@ -30,7 +30,7 @@ function fmtDate(d: string | null | undefined): string {
   return new Date(d).toLocaleDateString('fr-FR');
 }
 
-function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0,40 € TTC / km', prixLitre = '1,80 €/L'): string {
+function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0,40 € TTC / km', prixLitre = '1,80 €/L', logoUrl = '', tamponUrl = ''): string {
   const contractNum = res.id
     ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase()
     : '—';
@@ -51,7 +51,7 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
     <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:2px solid #e8eaf0;padding-bottom:20px;margin-bottom:28px;">
       <tr>
         <td>
-          <span style="font-size:22px;font-weight:800;color:#0f1e33;">Ship<span style="color:#4dd4c8;">Cars</span></span>
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height:40px;display:block;" onerror="this.style.display='none'" />` : '<span style="font-size:22px;font-weight:800;color:#0f1e33;">Ship<span style="color:#4dd4c8;">Cars</span></span>'}
         </td>
         <td align="right">
           <div style="font-size:13px;font-weight:700;color:#1a1a2e;">Contrat de location</div>
@@ -177,7 +177,7 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
         </td>
         <td style="width:50%;vertical-align:top;text-align:right;">
           <div style="font-size:10px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">Pour SHIP CARS — Le Loueur</div>
-          <img src="https://www.shipcars.fr/img/tampon-shipcars.jpg" alt="Tampon Ship Cars" width="160" style="max-width:160px;display:block;margin-left:auto;" onerror="this.style.display='none'" />
+          ${tamponUrl ? `<img src="${tamponUrl}" alt="Tampon" width="160" style="max-width:160px;display:block;margin-left:auto;" onerror="this.style.display='none'" />` : ''}
           <div style="font-size:9px;color:#6b7280;margin-top:4px;">
             SAS · Capital 1 000 € · SIRET 95083648600015<br>RCS Grenoble · APE 77.11A
           </div>
@@ -187,7 +187,7 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
   </div>`;
 }
 
-function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0.40 € / km', prixLitre = '1.80 €/L'): string {
+function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0.40 € / km', prixLitre = '1.80 €/L', logoUrl = '', tamponUrl = ''): string {
   const contractNum = res.id ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase() : '—';
   const diffDays = Math.max(1, Math.ceil((new Date(res.date_fin).getTime() - new Date(res.date_debut).getTime()) / 86400000));
   const fmtEn = (d: string | null | undefined) => {
@@ -213,7 +213,7 @@ function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> 
   <div style="background:#fff;color:#1a1a2e;border-radius:12px;padding:32px;max-width:700px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:2px solid #e8eaf0;padding-bottom:20px;margin-bottom:28px;">
       <tr>
-        <td><span style="font-size:22px;font-weight:800;color:#0f1e33;">Ship<span style="color:#4dd4c8;">Cars</span></span></td>
+        <td>${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height:40px;display:block;" onerror="this.style.display='none'" />` : '<span style="font-size:22px;font-weight:800;color:#0f1e33;">Ship<span style="color:#4dd4c8;">Cars</span></span>'}</td>
         <td align="right">
           <div style="font-size:13px;font-weight:700;color:#1a1a2e;">Rental Contract</div>
           <div style="font-size:12px;color:#6b7280;margin-top:3px;">No. SC-${contractNum}</div>
@@ -303,7 +303,7 @@ function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> 
         </td>
         <td style="width:50%;vertical-align:top;text-align:right;">
           <div style="font-size:10px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">For SHIP CARS — Lessor</div>
-          <img src="https://www.shipcars.fr/img/tampon-shipcars.jpg" alt="Ship Cars stamp" width="160" style="max-width:160px;display:block;margin-left:auto;" onerror="this.style.display='none'" />
+          ${tamponUrl ? `<img src="${tamponUrl}" alt="Stamp" width="160" style="max-width:160px;display:block;margin-left:auto;" onerror="this.style.display='none'" />` : ''}
           <div style="font-size:9px;color:#6b7280;margin-top:4px;">SAS · Capital €1,000 · SIRET 95083648600015<br>RCS Grenoble · APE 77.11A</div>
         </td>
       </tr>
@@ -409,7 +409,12 @@ export const POST = async ({ request }) => {
     const session = event.data.object as Stripe.Checkout.Session;
 
     // ── Caution (pré-autorisation) ──
-    if (session.metadata?.type === 'caution') {
+    // 'caution'     : lien de secours / rappel (src/pages/api/stripe/caution.ts)
+    // 'caution_pre' : nouvelle étape systématique avant le paiement de la location
+    //                 (src/pages/api/stripe/create-checkout.ts → caution-then-rental.ts déjà
+    //                 fait la mise à jour en base de façon synchrone ; ce bloc la confirme
+    //                 de façon idempotente si le webhook arrive quand même)
+    if (session.metadata?.type === 'caution' || session.metadata?.type === 'caution_pre') {
       const resId = session.metadata?.reservation_id;
       const paymentIntentId = typeof session.payment_intent === 'string'
         ? session.payment_intent
@@ -444,7 +449,21 @@ export const POST = async ({ request }) => {
         console.log(`✅ Réservation ${reservationId} marquée comme PAYÉE.`);
       }
 
-      // 2. Caution automatique — pré-autorisation off-session avec la carte enregistrée
+      // 2. Caution automatique — filet de sécurité uniquement.
+      // Depuis le nouveau flux (caution capturée AVANT le paiement de la location via
+      // create-checkout.ts → caution-then-rental.ts), la caution est normalement déjà
+      // 'autorisee' à ce stade. On ne retente une pré-autorisation off-session que si,
+      // pour une raison quelconque, elle ne l'est pas encore — pour éviter un double blocage
+      // de 900 € sur la carte du client.
+      const { data: resCautionCheck } = await supabase
+        .from('reservations')
+        .select('caution_statut')
+        .eq('id', reservationId)
+        .single();
+
+      if (resCautionCheck?.caution_statut === 'autorisee') {
+        console.log(`ℹ️ Caution déjà autorisée avant le paiement — résa ${reservationId}, pas de nouvelle tentative.`);
+      } else
       try {
         const piId = typeof session.payment_intent === 'string'
           ? session.payment_intent
@@ -544,13 +563,15 @@ export const POST = async ({ request }) => {
         const veh = res.vehicules ?? null;
         const prixKmRaw     = await getReglage('prix_km_supplementaire');
         const prixLitreRaw  = await getReglage('prix_litre_carburant');
+        const logoUrl       = await getReglage('logo_url');
+        const tamponUrl     = await getReglage('tampon_url');
         const prixKm    = parseFloat(prixKmRaw).toFixed(2).replace('.', ',') + ' € TTC / km';
         const prixLitre = parseFloat(prixLitreRaw).toFixed(2).replace('.', ',') + ' €/L';
         const prixKmEn  = parseFloat(prixKmRaw).toFixed(2) + ' € / km';
         const prixLitreEn = parseFloat(prixLitreRaw).toFixed(2) + ' €/L';
         const contractHtml = res.lang === 'en'
-          ? buildContractHtmlEn(res, veh, prixKmEn, prixLitreEn)
-          : buildContractHtml(res, veh, prixKm, prixLitre);
+          ? buildContractHtmlEn(res, veh, prixKmEn, prixLitreEn, logoUrl, tamponUrl)
+          : buildContractHtml(res, veh, prixKm, prixLitre, logoUrl, tamponUrl);
         const contractNum = res.id
           ? (res.id as string).replace(/-/g, '').slice(0, 8).toUpperCase()
           : reservationId;
@@ -611,8 +632,8 @@ export const POST = async ({ request }) => {
               ? `Car rental SC-${contractNum} — ${veh?.nom ?? 'Vehicle'}`
               : `Location SC-${contractNum} — ${veh?.nom ?? 'Véhicule'}`,
             description: res.lang === 'en'
-              ? `Ship Cars rental\nVehicle: ${veh?.nom ?? ''}\nPickup: 62 rue Félix Esclangon, 38000 Grenoble`
-              : `Location Ship Cars\nVéhicule : ${veh?.nom ?? ''}\nAdresse : 62 rue Félix Esclangon, 38000 Grenoble`,
+              ? `Ship Cars rental\nVehicle: ${veh?.nom ?? ''}\nPickup: 2 rue de la Frise, 38000 Grenoble`
+              : `Location Ship Cars\nVéhicule : ${veh?.nom ?? ''}\nAdresse : 2 rue de la Frise, 38000 Grenoble`,
           })],
           'Ship Cars',
         );

@@ -1,0 +1,203 @@
+---
+// src/pages/admin/configuration.astro
+// Page de gestion des configurations : logo, tampon, tarifs (prix/km, prix/litre)
+import MainLayout from '../../layouts/MainLayout.astro';
+import { supabaseAdmin } from '../../lib/supabase';
+import { getReglage, setReglage } from '../../lib/reglages';
+
+// Vérification du mot de passe
+const url = new URL(Astro.request.url);
+const password = url.searchParams.get('password');
+const adminPassword = import.meta.env.ADMIN_PASSWORD;
+const cookies = Astro.request.headers.get('cookie') || '';
+const isAuthenticated = cookies.includes('admin_auth=true') || password === adminPassword;
+
+if (!isAuthenticated) {
+  return Astro.redirect('/admin?error=auth');
+}
+
+// Récupère les configurations actuelles
+const logoUrl = await getReglage('logo_url');
+const tamponUrl = await getReglage('tampon_url');
+const prixKm = await getReglage('prix_km_supplementaire');
+const prixLitre = await getReglage('prix_litre_carburant');
+---
+
+<MainLayout title="Administration — Configuration" lang="fr">
+  <div style="max-width:900px;margin:2rem auto;padding:0 1rem;">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+      <h1>⚙️ Configuration de l'agence</h1>
+      <a href="/admin" style="color:#4dd4c8;text-decoration:none;">← Retour admin</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+
+      <!-- Colonne 1: Uploads -->
+      <div>
+        <h2 style="font-size:1.25rem;margin-bottom:1.5rem;">📷 Images</h2>
+
+        <!-- Logo -->
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
+          <h3 style="margin:0 0 0.5rem;font-size:0.95rem;">Logo (en-tête contrat)</h3>
+          {logoUrl && (
+            <div style="margin-bottom:1rem;">
+              <img src={logoUrl} alt="Logo" style="max-height:60px;display:block;border-radius:8px;" />
+            </div>
+          )}
+          <form id="logoForm" style="display:flex;flex-direction:column;gap:0.5rem;">
+            <input type="file" id="logoInput" accept="image/*" style="padding:0.5rem;border:1px solid #ddd;border-radius:6px;" />
+            <button type="submit" style="background:#4dd4c8;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Uploader logo</button>
+            <div id="logoStatus" style="font-size:0.85rem;color:#6b7280;"></div>
+          </form>
+        </div>
+
+        <!-- Tampon -->
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;">
+          <h3 style="margin:0 0 0.5rem;font-size:0.95rem;">Tampon (signature contrat)</h3>
+          {tamponUrl && (
+            <div style="margin-bottom:1rem;">
+              <img src={tamponUrl} alt="Tampon" style="max-height:80px;display:block;border-radius:8px;" />
+            </div>
+          )}
+          <form id="tamponForm" style="display:flex;flex-direction:column;gap:0.5rem;">
+            <input type="file" id="tamponInput" accept="image/*" style="padding:0.5rem;border:1px solid #ddd;border-radius:6px;" />
+            <button type="submit" style="background:#4dd4c8;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Uploader tampon</button>
+            <div id="tamponStatus" style="font-size:0.85rem;color:#6b7280;"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Colonne 2: Tarifs -->
+      <div>
+        <h2 style="font-size:1.25rem;margin-bottom:1.5rem;">💰 Tarifs</h2>
+
+        <form id="tarifsForm" style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.95rem;">Prix par km supplémentaire (€)</label>
+            <input type="number" id="prixKm" name="prixKm" value={prixKm} step="0.01" min="0" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:1rem;box-sizing:border-box;" />
+            <small style="color:#6b7280;display:block;margin-top:0.5rem;">Affiché comme: {parseFloat(prixKm).toFixed(2).replace('.', ',')} € TTC / km</small>
+          </div>
+
+          <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.95rem;">Prix carburant supplémentaire (€/L)</label>
+            <input type="number" id="prixLitre" name="prixLitre" value={prixLitre} step="0.01" min="0" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:6px;font-size:1rem;box-sizing:border-box;" />
+            <small style="color:#6b7280;display:block;margin-top:0.5rem;">Affiché comme: {parseFloat(prixLitre).toFixed(2).replace('.', ',')} €/L</small>
+          </div>
+
+          <button type="submit" style="background:#4dd4c8;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Enregistrer tarifs</button>
+          <div id="tarifsStatus" style="font-size:0.85rem;color:#6b7280;"></div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</MainLayout>
+
+<script>
+  // Upload logo
+  const logoForm = document.getElementById('logoForm');
+  const logoInput = document.getElementById('logoInput');
+  const logoStatus = document.getElementById('logoStatus');
+
+  logoForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = logoInput.files?.[0];
+    if (!file) {
+      logoStatus.textContent = '❌ Veuillez sélectionner un fichier';
+      return;
+    }
+
+    logoStatus.textContent = '⏳ Upload en cours...';
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/admin/upload-config-image', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        logoStatus.textContent = '✅ Logo uploadé avec succès';
+        // Recharger la page pour voir l'image
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        logoStatus.textContent = '❌ ' + (data.error || 'Erreur upload');
+      }
+    } catch (err) {
+      logoStatus.textContent = '❌ Erreur réseau';
+    }
+  });
+
+  // Upload tampon
+  const tamponForm = document.getElementById('tamponForm');
+  const tamponInput = document.getElementById('tamponInput');
+  const tamponStatus = document.getElementById('tamponStatus');
+
+  tamponForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = tamponInput.files?.[0];
+    if (!file) {
+      tamponStatus.textContent = '❌ Veuillez sélectionner un fichier';
+      return;
+    }
+
+    tamponStatus.textContent = '⏳ Upload en cours...';
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/admin/upload-config-image?type=tampon', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        tamponStatus.textContent = '✅ Tampon uploadé avec succès';
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        tamponStatus.textContent = '❌ ' + (data.error || 'Erreur upload');
+      }
+    } catch (err) {
+      tamponStatus.textContent = '❌ Erreur réseau';
+    }
+  });
+
+  // Enregistrement des tarifs
+  const tarifsForm = document.getElementById('tarifsForm');
+  const tarifsStatus = document.getElementById('tarifsStatus');
+
+  tarifsForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const prixKm = (document.getElementById('prixKm') as HTMLInputElement).value;
+    const prixLitre = (document.getElementById('prixLitre') as HTMLInputElement).value;
+
+    if (!prixKm || !prixLitre) {
+      tarifsStatus.textContent = '❌ Tous les champs sont obligatoires';
+      return;
+    }
+
+    tarifsStatus.textContent = '⏳ Enregistrement...';
+
+    try {
+      const res = await fetch('/api/admin/set-reglage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prix_km_supplementaire: prixKm,
+          prix_litre_carburant: prixLitre,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        tarifsStatus.textContent = '✅ Tarifs enregistrés avec succès';
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        tarifsStatus.textContent = '❌ ' + (data.error || 'Erreur sauvegarde');
+      }
+    } catch (err) {
+      tarifsStatus.textContent = '❌ Erreur réseau';
+    }
+  });
+</script>

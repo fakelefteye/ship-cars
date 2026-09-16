@@ -8,6 +8,8 @@ const DEFAULTS: Record<string, string> = {
   montant_caution:        '900',
   franchise_vol:          '3000',
   penalite_tabac:         '50',
+  logo_url:               '',
+  tampon_url:             '',
 };
 
 export async function getReglage(key: string): Promise<string> {
