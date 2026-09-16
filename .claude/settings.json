@@ -16,11 +16,15 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\" -Recurse -Include \"*.ts\", \"*.js\", \"*.sql\")",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(xargs ls -la)",
-      "Bash(Get-Content \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\\\\supabase\\\\enable_rls.sql\")"
+      "Bash(Get-Content \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\\\\supabase\\\\enable_rls.sql\")",
+      "Bash(Get-ChildItem *)",
+      "Bash(Test-Path *)"
     ],
     "defaultMode": "dontAsk",
     "additionalDirectories": [
-      "c:\\Users\\aolsu\\Documents\\sites wordpress\\scrape-getaround"
+      "c:\\Users\\aolsu\\Documents\\sites wordpress\\scrape-getaround",
+      "c:\\Users\\aolsu\\Documents\\trading-app",
+      "C:\\Users\\aolsu\\Documents\\trading-app"
     ]
   }
 }
