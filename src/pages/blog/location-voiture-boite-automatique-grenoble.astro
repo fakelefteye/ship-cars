@@ -1,0 +1,285 @@
+---
+export const prerender = true;
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const titre = "Location voiture boîte automatique à Grenoble : confort garantis";
+const slug = "location-voiture-boite-automatique-grenoble";
+const date = new Date().toISOString().split('T')[0];
+const desc = "Cherchez une voiture avec boîte automatique à Grenoble ? Ship Cars propose des véhicules confortables et fluides pour vos trajets en montagne ou en ville. Réservation en ligne, sans agence.";
+---
+
+<MainLayout title={`${titre} | Blog Ship Cars`}>
+  <Fragment slot="head">
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={`https://www.shipcars.fr/blog/${slug}`} />
+    <script type="application/ld+json" is:inline>{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": titre,
+      "description": desc,
+      "datePublished": date,
+      "dateModified": date,
+      "author": { "@type": "Organization", "name": "Ship Cars" },
+      "publisher": { "@type": "Organization", "name": "Ship Cars", "logo": { "@type": "ImageObject", "url": "https://www.shipcars.fr/logo_ship_cars.png" } },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.shipcars.fr/blog/${slug}` }
+    })}</script>
+  </Fragment>
+
+  <div class="article-page">
+    <header class="article-hero">
+      <div class="art-container">
+        <div class="article-breadcrumb"><a href="/">Accueil</a> › <a href="/blog">Blog</a> › <span>Boîte automatique</span></div>
+        <div class="article-tag-header">
+          <span class="tag">🚗 Confort</span>
+          <span class="meta-date">{new Date().toLocaleDateString('fr-FR')}</span>
+          <span class="meta-read">· 6 min de lecture</span>
+        </div>
+        <h1>{titre}</h1>
+        <p class="article-lead">
+          Vous n'aimez pas manipuler une pédale d'embrayage en montagne ? <strong>Louez une voiture avec boîte automatique à Grenoble</strong> pour un confort optimal, moins de fatigue et une conduite plus fluide. Découvrez les avantages et comment réserver.
+        </p>
+      </div>
+    </header>
+
+    <div class="art-container article-body">
+      <div class="article-content">
+
+        <section>
+          <h2>Pourquoi choisir une boîte automatique à Grenoble ?</h2>
+          <p>
+            Grenoble et ses environs offrent des conditions de conduite variées — montagne, routes sinueuses, centre-ville congestionné. La boîte automatique est un allié précieux :
+          </p>
+          <ul>
+            <li><strong>Montagne sans fatigue</strong> — pas de risque de perte du moteur en côte, pas de friction embrayage en pente</li>
+            <li><strong>Encombrements urbains</strong> — pas d'aller-retour embrayage en stop-and-go, juste poser le pied sur le frein</li>
+            <li><strong>Confort longueur de trajet</strong> — moins de tension musculaire à la jambe gauche, idéal pour longs trajets</li>
+            <li><strong>Sécurité pluie/neige</strong> — moins d'à-coups en freinage/accélération, traction plus progressive</li>
+            <li><strong>Conduite relaxante</strong> — laissez la boîte gérer les rapports, vous vous concentrez sur la route</li>
+            <li><strong>Revente plus cher</strong> — si vous envisagez d'acheter après, les autos se revendent mieux que les manuelles</li>
+          </ul>
+          <p>
+            En particulier, les trajets Grenoble ↔ Chamonix (1 heure, ~1000 m de dénivelé), ou Grenoble ↔ Lyon (100 km d'autoroute) sont nettement plus agréables en automatique.
+          </p>
+        </section>
+
+        <section>
+          <h2>Types de boîtes automatiques chez Ship Cars</h2>
+
+          <h3>CVT (Transmission Continuellement Variable)</h3>
+          <p>
+            <strong>Fonctionnement :</strong> pas de rapports distincts, ratio continu, accélération très fluide.<br>
+            <strong>Avantages :</strong> efficacité énergétique, très progressif, silencieux.<br>
+            <strong>Inconvénients :</strong> sensation moins sportive, légèrement moins dynamique en accélération courte.
+          </p>
+
+          <h3>BVA (Boîte Variateur Automatique à 6-8 rapports)</h3>
+          <p>
+            <strong>Fonctionnement :</strong> rapports discrets comme une manuelle, mais changement automatique sans action du conducteur.<br>
+            <strong>Avantages :</strong> équilibre entre économie, confort et dynamique, très courant.<br>
+            <strong>Inconvénients :</strong> très rares, minimum est une bonne polyvalence.
+          </p>
+
+          <h3>Double embrayage (DCT / DSG)</h3>
+          <p>
+            <strong>Fonctionnement :</strong> deux embrayages qui alternent, rapports ultra-rapides, changement imperceptible.<br>
+            <strong>Avantages :</strong> réactivité, efficacité maximale, dynamique sportif possible.<br>
+            <strong>Inconvénients :</strong> coût de location plus élevé, maintenance spécialisée (rare chez Ship Cars pour l'instant).
+          </p>
+
+          <h3>Boîte hydrostatique (très haut de gamme)</h3>
+          <p>
+            <strong>Fonctionnement :</strong> hydraulique ultra-fluide, zéro choc, confort ultime.<br>
+            <strong>Avantages :</strong> confort de roulage maximal.<br>
+            <strong>Inconvénients :</strong> rare, réservée aux berlines/SUV premium.
+          </p>
+        </section>
+
+        <section>
+          <h2>Avantages de louer avec Ship Cars</h2>
+
+          <h3>✅ Automatique à prix compétitif</h3>
+          <p>
+            Les boîtes automatiques coûtent généralement plus cher à l'achat que les manuelles. Chez Ship Cars, la surcharge est minime par rapport aux agences classiques — parfois même absente selon le modèle.
+          </p>
+
+          <h3>✅ Choix de modèles</h3>
+          <p>
+            Citadines, berlines, SUV — nous avons plusieurs automatiques pour tous les budgets. Consultez notre <a href="/#catalogue" style="color:var(--teal);font-weight:600;">catalogue</a> et filtrez par transmission si vous cherchez une auto spécifique.
+          </p>
+
+          <h3>✅ 100% en ligne, sans agence</h3>
+          <p>
+            Réservez votre auto à distance, ouvrez-la sans clé, retournez-la en 30 secondes sans passer par un accueil.
+          </p>
+
+          <h3>✅ Montagne ? Pas de problème</h3>
+          <p>
+            Nos autos automatiques sont testées en montagne grenoble (Chartreuse, Belledonne, Oisans). Pas de limites routes sinueuses, l'auto gère tout.
+          </p>
+
+          <h3>✅ Tarifs transparents</h3>
+          <p>
+            Le prix affiché = prix final. Pas de surcharge essence, pas de "frais transmission", tout clair d'avance.
+          </p>
+        </section>
+
+        <section>
+          <h2>Comment conduire une boîte automatique : conseils pratiques</h2>
+
+          <h3>Démarrage et arrêt</h3>
+          <p>
+            Appuyez sur le frein, tournez la clé (ou bouton démarrage), passez en D (Drive = avancer) ou R (Reverse = reculer). C'est tout. Pas d'embrayage à gérer.
+          </p>
+
+          <h3>Freinage</h3>
+          <p>
+            Appuyez simplement sur le frein. La boîte réduit de rapport automatiquement, pas besoin de désembrayer. En montagne, le moteur freine naturellement (moteur brake).
+          </p>
+
+          <h3>Pentes (montée)</h3>
+          <p>
+            Ne vous inquiétez pas. L'auto maintient son rapport et monte la pente sans secousse. Si vous trouvez ça trop lent, appuyez légèrement sur l'accélérateur, elle descendra d'un rapport automatiquement.
+          </p>
+
+          <h3>Pentes (descente)</h3>
+          <p>
+            N'abusez pas du frein (surchauffe). Passez en S (Sport) ou manuellement en rapport plus bas (2 ou 3) pour laisser le moteur freiner. L'auto gère la descente toute seule sans user les plaquettes.
+          </p>
+
+          <h3>Accélération</h3>
+          <p>
+            Appuyez sur l'accélérateur, la boîte descend de rapport(s) automatiquement pour vous donner la puissance. Relâchez, elle remonte progressivement en régime pour économiser.
+          </p>
+
+          <h3>Parking (P = Parking)</h3>
+          <p>
+            Arrêtez-vous complètement, appuyez sur le frein, mettez en P. Coupez le moteur. La boîte verrouille la transmission (sécurité anti-roulement). Pas besoin de frein à main.
+          </p>
+        </section>
+
+        <section>
+          <h2>Questions fréquentes — Boîte automatique à Grenoble</h2>
+
+          <h3>Consomme-t-elle plus qu'une manuelle ?</h3>
+          <p>
+            Non. Les automatiques modernes consomment souvent <strong>moins</strong> qu'une manuelle, car elles optimisent les rapports 24/7. Comptez 5-10% de différence (souvent en faveur de l'auto).
+          </p>
+
+          <h3>C'est plus cher à l'entretien ?</h3>
+          <p>
+            Très légèrement. Filtre transmission tous les 60 000 km (~80 €), vidange tous les 100 000 km (~120 €). Sinon, mêmes révisions qu'une manuelle.
+          </p>
+
+          <h3>Puis-je tirer une remorque avec une auto ?</h3>
+          <p>
+            Oui, mais pas toutes. Contactez-nous avant de réserver si vous avez besoin d'une remorque — certains modèles auto ne sont pas aptes attelage.
+          </p>
+
+          <h3>Faut-il utiliser le frein à main en montagne ?</h3>
+          <p>
+            Non, le P (Park) verrouille tout. Cependant, par sécurité supplémentaire, vous pouvez laisser le frein à main serré (certains le font par habitude).
+          </p>
+
+          <h3>Quel âge minimum pour une auto ?</h3>
+          <p>
+            Même règle que nos manuelles : permis depuis au moins 2 ans. Pas de limite d'âge, les jeunes conducteurs sont bienvenues.
+          </p>
+
+          <h3>Et si j'ai jamais conduit l'auto ?</h3>
+          <p>
+            Aucun souci ! L'automatique est plus simple qu'une manuelle. Votre email de confirmation inclut un tutoriel de 2 min si c'est votre première fois. Appelez-nous au <strong>06 61 69 11 78</strong> si vous avez des questions.
+          </p>
+        </section>
+
+        <section>
+          <h2>Comparaison : manuel vs automatique chez Ship Cars</h2>
+          <p>
+            <strong>Choisir une manuelle si :</strong> vous aimez les sensations, budget limité, conduite dynamique sportive, familiarité complète.<br>
+            <strong>Choisir une automatique si :</strong> confort prioritaire, trajets longs/montagne, conduite relaxante, premiers fois montagne Alpine.
+          </p>
+          <p>
+            Bonne nouvelle : Ship Cars a les deux ! Comparez les prix sur notre <a href="/#catalogue" style="color:var(--teal);font-weight:600;">catalogue</a> et choisissez selon vos envies du jour.
+          </p>
+        </section>
+
+        <section>
+          <h2>Trajets Grenoble où l'auto brille</h2>
+          <ul>
+            <li><strong>Grenoble → Chamonix</strong> (1h, montée 1000m) : confort maximal en auto</li>
+            <li><strong>Grenoble → Chambéry</strong> (55 min, routes sinueuses) : très fluide</li>
+            <li><strong>Grenoble → Lyon</strong> (100 km autoroute) : cruise control facile en auto</li>
+            <li><strong>Grenoble → Annecy</strong> (1h15, montagne) : ascension sans effort</li>
+            <li><strong>Grenoble centre ville</strong> (embouteillages) : moins de fatigue sans embrayage</li>
+          </ul>
+        </section>
+
+        <div class="article-cta">
+          <div class="cta-inner">
+            <h2>Prêt à louer une automatique à Grenoble ?</h2>
+            <p>Réservez votre voiture de confort en 5 minutes, 100% en ligne.</p>
+            <a href="/#catalogue" class="cta-btn">Voir les automatiques disponibles →</a>
+          </div>
+        </div>
+
+      </div>
+      <aside class="article-sidebar">
+        <div class="sidebar-card">
+          <strong>🚗 Avantages Auto</strong>
+          <ul>
+            <li>Zéro embrayage montagne</li>
+            <li>Moins de fatigue</li>
+            <li>Confort stop-and-go</li>
+            <li>Sécurité accrue pluie</li>
+            <li>Conduite relaxante</li>
+          </ul>
+          <a href="/#catalogue" class="sidebar-btn">Réserver →</a>
+        </div>
+        <div class="sidebar-card sidebar-related">
+          <strong>Articles liés</strong>
+          <a href="/blog/location-voiture-electrique-grenoble">Électrique Grenoble →</a>
+          <a href="/blog/location-vehicule-7-places-grenoble">7 places →</a>
+          <a href="/location-voiture-grenoble">Toutes locations →</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .article-page { color: var(--text); }
+  .art-container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+  .article-hero { background: linear-gradient(135deg, #0a1421 0%, #0f1e33 100%); padding: 4rem 0 3rem; border-bottom: 1px solid var(--border); }
+  .article-breadcrumb { font-size: .78rem; color: var(--text-dim); margin-bottom: 1rem; }
+  .article-breadcrumb a { color: var(--teal); text-decoration: none; }
+  .article-hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: .75rem; letter-spacing: -.02em; }
+  .article-tag-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; font-size: .8rem; }
+  .tag { background: rgba(77,212,200,.2); color: var(--teal); padding: .35rem .8rem; border-radius: 99px; font-weight: 600; }
+  .meta-date { color: var(--text-dim); }
+  .article-lead { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; }
+  .article-body { display: grid; grid-template-columns: 1fr 300px; gap: 3rem; padding: 3rem 0 4rem; align-items: start; }
+  .article-content { }
+  .article-content section { margin-bottom: 2.5rem; }
+  .article-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: .75rem; border-bottom: 2px solid var(--teal); color: var(--teal); }
+  .article-content h3 { font-size: 1.1rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: .5rem; color: var(--text); }
+  .article-content p { color: var(--text-muted); line-height: 1.8; margin-bottom: 1rem; }
+  .article-content ul { color: var(--text-muted); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem; }
+  .article-content li { margin-bottom: .5rem; }
+  .article-cta { background: rgba(77,212,200,.08); border: 1px solid rgba(77,212,200,.3); border-radius: 16px; padding: 2rem; margin: 3rem 0; text-align: center; }
+  .cta-inner h2 { border: none; color: var(--text); margin-bottom: .5rem; }
+  .cta-inner p { color: var(--text-muted); margin-bottom: 1.5rem; }
+  .cta-btn { display: inline-block; background: var(--teal); color: #0a1421; font-weight: 700; padding: .75rem 1.5rem; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+  .cta-btn:hover { opacity: .85; }
+  .article-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+  .sidebar-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+  .sidebar-card strong { font-size: .9rem; color: var(--teal); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 1rem; }
+  .sidebar-card ul { list-style: none; padding: 0; margin: 0; }
+  .sidebar-card li { font-size: .85rem; color: var(--text-muted); padding: .35rem 0; }
+  .sidebar-btn { display: block; margin-top: 1rem; background: var(--teal); color: #0a1421; font-weight: 700; padding: .75rem; border-radius: 8px; text-decoration: none; text-align: center; }
+  .sidebar-btn:hover { opacity: .85; }
+  .sidebar-related a { display: block; font-size: .9rem; color: var(--teal); text-decoration: none; margin-bottom: .75rem; }
+  .sidebar-related a:hover { text-decoration: underline; }
+  @media (max-width: 900px) {
+    .article-body { grid-template-columns: 1fr; }
+    .article-sidebar { display: none; }
+  }
+</style>
