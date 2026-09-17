@@ -275,7 +275,7 @@ const updated = url.searchParams.get('updated');
             value={prixKmActuel}
             style="width:80px;padding:.45rem .6rem;border:1px solid #ccc;border-radius:7px;font-size:.95rem;font-weight:700;text-align:center;" />
           <span style="color:#6b7280;font-size:.9rem;">€ / km</span>
-          <button id="btn-km" style="background:#4dd4c8;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;">
+          <button id="btn-km" style="background:#d97706;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;">
             💾 Enregistrer
           </button>
         </div>
@@ -319,7 +319,7 @@ const updated = url.searchParams.get('updated');
             value={icalFeedUrl}
             style="flex:1;min-width:0;padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.78rem;font-family:monospace;background:#f9fafb;color:#374151;cursor:text;"
           />
-          <button id="btn-ical-copy" style="background:#4dd4c8;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+          <button id="btn-ical-copy" style="background:#d97706;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;">
             📋 Copier
           </button>
           <button id="btn-ical-regen" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:.5rem 1.1rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem;white-space:nowrap;">
@@ -1938,41 +1938,42 @@ const updated = url.searchParams.get('updated');
   .admin-layout { display:flex; min-height:100vh; background:#f0f4f8; }
 
   .admin-sidebar {
-    width:240px; min-width:240px; background:#0f1e33; color:#a0b4c8;
+    width:240px; min-width:240px; background:#f6f7f9; color:#5b6470;
     display:flex; flex-direction:column; padding:0; position:sticky;
     top:0; height:100vh; overflow-y:auto; z-index:100;
     transition:transform .25s ease;
   }
-  .sidebar-brand { display:flex; align-items:center; gap:.75rem; padding:1.5rem 1.25rem 1rem; border-bottom:1px solid rgba(255,255,255,.08); }
+  .sidebar-brand { display:flex; align-items:center; gap:.75rem; padding:1.5rem 1.25rem 1rem; border-bottom:1px solid #e3e7ed; }
   .sidebar-logo  { font-size:1.6rem; flex-shrink:0; }
-  .sidebar-brand strong { color:#fff; font-size:1rem; font-family:'Exo 2',sans-serif; }
-  .sidebar-brand .sidebar-sub { font-size:.72rem; color:#4dd4c8; text-transform:uppercase; letter-spacing:.06em; }
+  .sidebar-brand strong { color:#16181d; font-size:1rem; font-family:'Exo 2',sans-serif; }
+  .sidebar-brand .sidebar-sub { font-size:.72rem; color:#d97706; text-transform:uppercase; letter-spacing:.06em; }
   .sidebar-nav   { padding:.75rem .75rem 2rem; flex:1; }
   .sidebar-group-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#4a6580; font-weight:700; padding:.75rem .5rem .35rem; }
   .sidebar-btn {
     display:flex; align-items:center; gap:.65rem; width:100%; background:transparent;
-    color:#a0b4c8; border:none; border-radius:9px; padding:.65rem .9rem; font-size:.875rem;
+    color:#5b6470; border:none; border-radius:9px; padding:.65rem .9rem; font-size:.875rem;
     font-weight:500; cursor:pointer; text-align:left; transition:background .15s, color .15s;
     margin-bottom:.2rem;
   }
-  .sidebar-btn:hover                { background:rgba(77,212,200,.08); color:#e2e8f0; }
-  .sidebar-btn--active              { background:rgba(77,212,200,.15); color:#4dd4c8; font-weight:700; }
-  .sidebar-btn--active .sidebar-icon { color:#4dd4c8; }
+  .sidebar-btn:hover                { background:rgba(217,119,6,.08); color:#16181d; }
+  .sidebar-btn--active              { background:rgba(217,119,6,.15); color:#b45309; font-weight:700; }
+  .sidebar-btn--active .sidebar-icon { color:#d97706; }
   .sidebar-icon  { font-size:1.05rem; flex-shrink:0; width:1.3rem; text-align:center; }
   .sidebar-link  {
-    display:flex; align-items:center; gap:.65rem; color:#a0b4c8; text-decoration:none;
+    display:flex; align-items:center; gap:.65rem; color:#5b6470; text-decoration:none;
     border-radius:9px; padding:.65rem .9rem; font-size:.875rem; transition:background .15s, color .15s;
     margin-bottom:.2rem;
   }
-  .sidebar-link:hover  { background:rgba(255,255,255,.06); color:#e2e8f0; }
+  .sidebar-link:hover  { background:rgba(22,24,29,0.035); color:#16181d; }
   .sidebar-toggle { display:none; }
 
   .admin-main { flex:1; min-width:0; display:flex; flex-direction:column; }
   .admin-topbar {
-    display:none; align-items:center; gap:.75rem; background:#0f1e33; color:#fff;
+    display:none; align-items:center; gap:.75rem; background:#f6f7f9; color:#16181d;
     padding:.75rem 1rem; position:sticky; top:0; z-index:50;
+    border-bottom:1px solid #e3e7ed;
   }
-  .topbar-menu-btn { background:transparent; border:none; color:#fff; font-size:1.3rem; cursor:pointer; }
+  .topbar-menu-btn { background:transparent; border:none; color:#16181d; font-size:1.3rem; cursor:pointer; }
   .topbar-title    { font-weight:700; font-family:'Exo 2',sans-serif; font-size:1rem; }
 
   .admin-container { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem 3rem; width:100%; }
@@ -1986,10 +1987,10 @@ const updated = url.searchParams.get('updated');
   .cgu-hint       { font-size:.78rem; color:#6b7280; margin:.25rem 0 .75rem; line-height:1.4; }
   .cgu-input-row  { display:flex; align-items:center; gap:.5rem; }
   .cgu-input      { width:100px; padding:.5rem .7rem; border:1.5px solid #d1d5db; border-radius:7px; font-size:1rem; font-weight:700; text-align:center; transition:border-color .15s; }
-  .cgu-input:focus { border-color:#4dd4c8; outline:none; }
+  .cgu-input:focus { border-color:#d97706; outline:none; }
   .cgu-unit       { font-size:.83rem; color:#6b7280; font-weight:500; white-space:nowrap; }
   .cgu-actions    { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid #e5e7eb; }
-  .cgu-save-btn   { background:#4dd4c8; color:#0a1421; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:700; font-size:.9rem; cursor:pointer; transition:opacity .15s; }
+  .cgu-save-btn   { background:#d97706; color:#0a1421; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:700; font-size:.9rem; cursor:pointer; transition:opacity .15s; }
   .cgu-save-btn:hover { opacity:.88; }
   .cgu-preview-link { color:#6b7280; font-size:.85rem; text-decoration:underline; }
 
@@ -1997,7 +1998,7 @@ const updated = url.searchParams.get('updated');
     .admin-sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-100%); }
     .admin-sidebar.sidebar-open { transform:translateX(0); }
     .admin-topbar { display:flex; }
-    .sidebar-toggle { display:block; position:absolute; top:1rem; right:.75rem; background:transparent; border:none; color:#a0b4c8; font-size:1.1rem; cursor:pointer; }
+    .sidebar-toggle { display:block; position:absolute; top:1rem; right:.75rem; background:transparent; border:none; color:#5b6470; font-size:1.1rem; cursor:pointer; }
     .admin-container { padding:0 1rem 2rem; }
   }
 
@@ -2047,8 +2048,8 @@ const updated = url.searchParams.get('updated');
   .item-info span { color: #666; font-size: 0.9rem; margin-right: 1rem; }
   .price { color: #2ecc71; font-weight: bold; }
   .ga-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; margin-left: 6px; }
-  .ga-ok      { background: rgba(59,130,246,0.15); color: #60a5fa; }
-  .ga-missing { background: rgba(234,179,8,0.12);  color: #fbbf24; }
+  .ga-ok      { background: rgba(59,130,246,0.15); color: #1d4ed8; }
+  .ga-missing { background: rgba(234,179,8,0.12);  color: #b45309; }
   .stock { color: #f39c12; }
   .item-actions { display: flex; gap: 0.5rem; }
   .btn-tarifs { padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; text-decoration: none; background: #22c55e; color: #000; }
@@ -2097,24 +2098,24 @@ const updated = url.searchParams.get('updated');
   .promo-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border: 1px solid #e9ecef; border-radius: 10px; background: #fafafa; transition: opacity 0.2s; }
   .promo-row.off { opacity: 0.55; background: #f3f3f3; }
   .promo-info { display: flex; align-items: center; gap: 1rem; flex: 1; }
-  .promo-code-badge { font-family: 'Courier New', monospace; font-weight: 700; background: #4dd4c8; color: #0a1421; padding: 0.4rem 0.8rem; border-radius: 6px; letter-spacing: 0.05em; }
+  .promo-code-badge { font-family: 'Courier New', monospace; font-weight: 700; background: #d97706; color: #0a1421; padding: 0.4rem 0.8rem; border-radius: 6px; letter-spacing: 0.05em; }
   .promo-row.off .promo-code-badge { background: #b7bec6; color: #555; }
   .promo-meta { font-size: 0.9rem; color: #333; display: flex; gap: 0.5rem; align-items: center; }
   .promo-meta strong { font-size: 1rem; }
   .promo-desc { color: #888; font-weight: 300; }
-  .promo-window { color: #4dd4c8; font-size: 0.82rem; font-weight: 500; background: rgba(77,212,200,0.1); padding: 2px 8px; border-radius: 6px; }
+  .promo-window { color: #b45309; font-size: 0.82rem; font-weight: 500; background: rgba(217,119,6,0.1); padding: 2px 8px; border-radius: 6px; }
   .promo-usage-badge { font-size: 0.78rem; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; white-space: nowrap; }
-  .promo-usage-badge.zero { background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; }
+  .promo-usage-badge.zero { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
   .promo-usage-badge.has-paye { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
-  .promo-hint { font-size: 0.82rem; color: #666; background: #f8f9fa; padding: 0.75rem 1rem; border-left: 3px solid #4dd4c8; border-radius: 4px; margin: 0; }
+  .promo-hint { font-size: 0.82rem; color: #666; background: #f8f9fa; padding: 0.75rem 1rem; border-left: 3px solid #d97706; border-radius: 4px; margin: 0; }
   .promo-date-row { grid-template-columns: 1fr 1fr; }
-  .optional { color: #aaa; font-weight: 400; font-size: 0.82em; }
+  .optional { color: #6b7280; font-weight: 400; font-size: 0.82em; }
   .promo-actions { display: flex; gap: 1rem; align-items: center; }
   .promo-toggle { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; }
   .promo-toggle-input { display: none; }
   .promo-toggle-slider { width: 38px; height: 22px; background: #ccc; border-radius: 22px; position: relative; transition: background 0.2s; }
   .promo-toggle-slider::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.2s; }
-  .promo-toggle-input:checked + .promo-toggle-slider { background: #4dd4c8; }
+  .promo-toggle-input:checked + .promo-toggle-slider { background: #d97706; }
   .promo-toggle-input:checked + .promo-toggle-slider::after { transform: translateX(16px); }
   .promo-toggle-label { font-size: 0.85rem; font-weight: 600; color: #555; min-width: 64px; }
   .btn-delete-promo { background: transparent; border: 1px solid #eee; padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 1rem; }
@@ -2144,9 +2145,9 @@ const updated = url.searchParams.get('updated');
   .btn-upload-dmg { background: #e0f2fe; color: #0369a1; border: 1px dashed #7dd3fc; padding: .4rem .8rem; border-radius: 7px; font-size: .78rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
   .btn-upload-dmg:hover { background: #bae6fd; }
   .etat-dmg-preview { width: 90px; height: 65px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
-  .etat-dmg-empty { font-size: .68rem; color: #9ca3af; font-style: italic; }
+  .etat-dmg-empty { font-size: .68rem; color: #6b7280; font-style: italic; }
   .etat-actions { display: flex; }
-  .btn-save-etat { background: #4dd4c8; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+  .btn-save-etat { background: #d97706; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
   .btn-save-etat:hover { opacity: .85; }
   .btn-save-etat:disabled { opacity: .5; cursor: not-allowed; }
 

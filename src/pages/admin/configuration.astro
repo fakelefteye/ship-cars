@@ -27,7 +27,7 @@ const prixLitre = await getReglage('prix_litre_carburant');
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
       <h1>⚙️ Configuration de l'agence</h1>
-      <a href="/admin" style="color:#4dd4c8;text-decoration:none;">← Retour admin</a>
+      <a href="/admin" style="color:#d97706;text-decoration:none;">← Retour admin</a>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
@@ -46,7 +46,7 @@ const prixLitre = await getReglage('prix_litre_carburant');
           )}
           <form id="logoForm" style="display:flex;flex-direction:column;gap:0.5rem;">
             <input type="file" id="logoInput" accept="image/*" style="padding:0.5rem;border:1px solid #ddd;border-radius:6px;" />
-            <button type="submit" style="background:#4dd4c8;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Uploader logo</button>
+            <button type="submit" style="background:#d97706;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Uploader logo</button>
             <div id="logoStatus" style="font-size:0.85rem;color:#6b7280;"></div>
           </form>
         </div>
@@ -61,7 +61,7 @@ const prixLitre = await getReglage('prix_litre_carburant');
           )}
           <form id="tamponForm" style="display:flex;flex-direction:column;gap:0.5rem;">
             <input type="file" id="tamponInput" accept="image/*" style="padding:0.5rem;border:1px solid #ddd;border-radius:6px;" />
-            <button type="submit" style="background:#4dd4c8;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Uploader tampon</button>
+            <button type="submit" style="background:#d97706;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Uploader tampon</button>
             <div id="tamponStatus" style="font-size:0.85rem;color:#6b7280;"></div>
           </form>
         </div>
@@ -84,7 +84,7 @@ const prixLitre = await getReglage('prix_litre_carburant');
             <small style="color:#6b7280;display:block;margin-top:0.5rem;">Affiché comme: {parseFloat(prixLitre).toFixed(2).replace('.', ',')} €/L</small>
           </div>
 
-          <button type="submit" style="background:#4dd4c8;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Enregistrer tarifs</button>
+          <button type="submit" style="background:#d97706;color:#0a1421;border:none;padding:0.75rem;border-radius:6px;cursor:pointer;font-weight:600;">Enregistrer tarifs</button>
           <div id="tarifsStatus" style="font-size:0.85rem;color:#6b7280;"></div>
         </form>
       </div>

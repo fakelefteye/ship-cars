@@ -51,33 +51,43 @@ const blogHref = '/blog';
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        /* Ship Cars — charte couleurs logo */
-        --navy-deep:   #0a1421;   /* fond principal — bleu nuit profond */
-        --navy:        #0f1e33;   /* fond carte */
-        --navy-light:  #1a2d47;   /* fond carte hover */
-        --navy-accent: #20385a;   /* bordure accent */
+        /* Ship Cars — charte claire, accents jaune/orange (codes location de véhicules) */
+        --yellow:       #ffd100;   /* jaune signature — fonds de boutons, bandeaux */
+        --yellow-dark:  #e6bd00;   /* survol du jaune */
+        --yellow-soft:  rgba(255,209,0,0.16);
+        --orange:       #d97706;   /* accent lisible sur blanc — liens, icônes, titres */
+        --orange-dark:  #b45309;   /* survol / texte dense */
+        --orange-soft:  rgba(217,119,6,0.10);
 
-        --teal:        #4dd4c8;   /* teal du "Ship" */
-        --teal-bright: #5eead4;   /* variante claire */
-        --teal-soft:   rgba(77,212,200,0.12);
-
-        --silver:      #d4d8de;   /* argenté du "CARS" */
-        --silver-dim:  #a8afbd;
+        --ink:          #16181d;   /* noir de texte / barres sombres */
+        --ink-2:        #232830;
 
         /* alias fonctionnels */
-        --bg:          var(--navy-deep);
-        --bg-2:        var(--navy);
-        --bg-3:        var(--navy-light);
-        --border:      rgba(212,216,222,0.08);
-        --border-md:   rgba(77,212,200,0.22);
-        --gold:        var(--teal);         /* ancien accent gold -> teal */
-        --gold-light:  var(--teal-bright);
-        --text:        #f0f3f7;
-        --text-muted:  #8a95a8;
-        --text-dim:    #55627a;
-        --green:       #3ecf8e;
+        --bg:          #ffffff;
+        --bg-2:        #f6f7f9;
+        --bg-3:        #eceff4;
+        --border:      #e3e7ed;
+        --border-md:   #d3d9e2;
+        --text:        #16181d;
+        --text-muted:  #5b6470;
+        --text-dim:    #8b939f;
+        --green:       #16a34a;
         --radius:      12px;
         --radius-lg:   20px;
+
+        /* compatibilité : les anciens noms pointent vers les nouveaux accents,
+           ce qui convertit d'un coup les styles qui les utilisent encore */
+        --teal:        var(--orange);
+        --teal-bright: var(--orange-dark);
+        --teal-soft:   var(--orange-soft);
+        --gold:        var(--orange);
+        --gold-light:  var(--orange-dark);
+        --navy-deep:   var(--bg);
+        --navy:        var(--bg-2);
+        --navy-light:  var(--bg-3);
+        --navy-accent: var(--border-md);
+        --silver:      var(--text-muted);
+        --silver-dim:  var(--text-dim);
       }
 
       /* ── Maintenance banner ── */
@@ -107,12 +117,12 @@ const blogHref = '/blog';
       /* ── Zone restriction notice ── */
       .zone-notice {
         display:flex; align-items:center; gap:.7rem;
-        background:rgba(77,212,200,.08); border:1px solid rgba(77,212,200,.25);
+        background:var(--yellow-soft); border:1px solid rgba(217,119,6,.28);
         border-radius:10px; padding:.7rem 1rem; font-size:.83rem;
-        color:var(--text-muted,#8a95a8); line-height:1.5;
+        color:var(--text-muted,#5b6470); line-height:1.5;
       }
-      .zone-notice strong { color:var(--teal,#4dd4c8); }
-      .zone-notice a { color:var(--teal,#4dd4c8); font-weight:600; text-decoration:underline; white-space:nowrap; }
+      .zone-notice strong { color:var(--orange-dark,#b45309); }
+      .zone-notice a { color:var(--orange-dark,#b45309); font-weight:600; text-decoration:underline; white-space:nowrap; }
 
       html { scroll-behavior: smooth; }
 
@@ -130,10 +140,11 @@ const blogHref = '/blog';
         position: sticky;
         top: 0;
         z-index: 100;
-        background: rgba(10,20,33,0.88);
+        background: rgba(255,255,255,0.90);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
         border-bottom: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(22,24,29,0.05);
         padding: 0 2rem;
         height: 64px;
         display: flex;
