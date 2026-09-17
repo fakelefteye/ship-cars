@@ -59,7 +59,9 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\aolsu\\\\Documents\\\\sites wordpress\\\\shipcars.fr\" -Recurse -Force)",
       "Bash(Select-Object -First 50)",
       "Bash(git commit -m ' *)",
-      "Bash(git commit -m 'feat: deux nouveaux articles blog — électrique et automatique *)"
+      "Bash(git commit -m 'feat: deux nouveaux articles blog — électrique et automatique *)",
+      "Bash(node scratch-audit.cjs)",
+      "Bash(git show *)"
     ]
   }
 }
