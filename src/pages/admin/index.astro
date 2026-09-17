@@ -275,7 +275,7 @@ const updated = url.searchParams.get('updated');
             value={prixKmActuel}
             style="width:80px;padding:.45rem .6rem;border:1px solid #ccc;border-radius:7px;font-size:.95rem;font-weight:700;text-align:center;" />
           <span style="color:#6b7280;font-size:.9rem;">€ / km</span>
-          <button id="btn-km" style="background:#d97706;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;">
+          <button id="btn-km" style="background:#0d9488;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;">
             💾 Enregistrer
           </button>
         </div>
@@ -319,7 +319,7 @@ const updated = url.searchParams.get('updated');
             value={icalFeedUrl}
             style="flex:1;min-width:0;padding:.5rem .8rem;border:1px solid #d1d5db;border-radius:8px;font-size:.78rem;font-family:monospace;background:#f9fafb;color:#374151;cursor:text;"
           />
-          <button id="btn-ical-copy" style="background:#d97706;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+          <button id="btn-ical-copy" style="background:#0d9488;color:#0a1421;border:none;padding:.5rem 1.1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;">
             📋 Copier
           </button>
           <button id="btn-ical-regen" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:.5rem 1.1rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem;white-space:nowrap;">
@@ -1946,7 +1946,7 @@ const updated = url.searchParams.get('updated');
   .sidebar-brand { display:flex; align-items:center; gap:.75rem; padding:1.5rem 1.25rem 1rem; border-bottom:1px solid #e3e7ed; }
   .sidebar-logo  { font-size:1.6rem; flex-shrink:0; }
   .sidebar-brand strong { color:#16181d; font-size:1rem; font-family:'Exo 2',sans-serif; }
-  .sidebar-brand .sidebar-sub { font-size:.72rem; color:#d97706; text-transform:uppercase; letter-spacing:.06em; }
+  .sidebar-brand .sidebar-sub { font-size:.72rem; color:#0d9488; text-transform:uppercase; letter-spacing:.06em; }
   .sidebar-nav   { padding:.75rem .75rem 2rem; flex:1; }
   .sidebar-group-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:#4a6580; font-weight:700; padding:.75rem .5rem .35rem; }
   .sidebar-btn {
@@ -1955,9 +1955,9 @@ const updated = url.searchParams.get('updated');
     font-weight:500; cursor:pointer; text-align:left; transition:background .15s, color .15s;
     margin-bottom:.2rem;
   }
-  .sidebar-btn:hover                { background:rgba(217,119,6,.08); color:#16181d; }
-  .sidebar-btn--active              { background:rgba(217,119,6,.15); color:#b45309; font-weight:700; }
-  .sidebar-btn--active .sidebar-icon { color:#d97706; }
+  .sidebar-btn:hover                { background:rgba(13,148,136,.08); color:#16181d; }
+  .sidebar-btn--active              { background:rgba(13,148,136,.15); color:#b45309; font-weight:700; }
+  .sidebar-btn--active .sidebar-icon { color:#0d9488; }
   .sidebar-icon  { font-size:1.05rem; flex-shrink:0; width:1.3rem; text-align:center; }
   .sidebar-link  {
     display:flex; align-items:center; gap:.65rem; color:#5b6470; text-decoration:none;
@@ -1987,10 +1987,10 @@ const updated = url.searchParams.get('updated');
   .cgu-hint       { font-size:.78rem; color:#6b7280; margin:.25rem 0 .75rem; line-height:1.4; }
   .cgu-input-row  { display:flex; align-items:center; gap:.5rem; }
   .cgu-input      { width:100px; padding:.5rem .7rem; border:1.5px solid #d1d5db; border-radius:7px; font-size:1rem; font-weight:700; text-align:center; transition:border-color .15s; }
-  .cgu-input:focus { border-color:#d97706; outline:none; }
+  .cgu-input:focus { border-color:#0d9488; outline:none; }
   .cgu-unit       { font-size:.83rem; color:#6b7280; font-weight:500; white-space:nowrap; }
   .cgu-actions    { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid #e5e7eb; }
-  .cgu-save-btn   { background:#d97706; color:#0a1421; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:700; font-size:.9rem; cursor:pointer; transition:opacity .15s; }
+  .cgu-save-btn   { background:#0d9488; color:#0a1421; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:700; font-size:.9rem; cursor:pointer; transition:opacity .15s; }
   .cgu-save-btn:hover { opacity:.88; }
   .cgu-preview-link { color:#6b7280; font-size:.85rem; text-decoration:underline; }
 
@@ -2098,16 +2098,16 @@ const updated = url.searchParams.get('updated');
   .promo-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border: 1px solid #e9ecef; border-radius: 10px; background: #fafafa; transition: opacity 0.2s; }
   .promo-row.off { opacity: 0.55; background: #f3f3f3; }
   .promo-info { display: flex; align-items: center; gap: 1rem; flex: 1; }
-  .promo-code-badge { font-family: 'Courier New', monospace; font-weight: 700; background: #d97706; color: #0a1421; padding: 0.4rem 0.8rem; border-radius: 6px; letter-spacing: 0.05em; }
+  .promo-code-badge { font-family: 'Courier New', monospace; font-weight: 700; background: #0d9488; color: #0a1421; padding: 0.4rem 0.8rem; border-radius: 6px; letter-spacing: 0.05em; }
   .promo-row.off .promo-code-badge { background: #b7bec6; color: #555; }
   .promo-meta { font-size: 0.9rem; color: #333; display: flex; gap: 0.5rem; align-items: center; }
   .promo-meta strong { font-size: 1rem; }
   .promo-desc { color: #888; font-weight: 300; }
-  .promo-window { color: #b45309; font-size: 0.82rem; font-weight: 500; background: rgba(217,119,6,0.1); padding: 2px 8px; border-radius: 6px; }
+  .promo-window { color: #b45309; font-size: 0.82rem; font-weight: 500; background: rgba(13,148,136,0.1); padding: 2px 8px; border-radius: 6px; }
   .promo-usage-badge { font-size: 0.78rem; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; white-space: nowrap; }
   .promo-usage-badge.zero { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
   .promo-usage-badge.has-paye { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
-  .promo-hint { font-size: 0.82rem; color: #666; background: #f8f9fa; padding: 0.75rem 1rem; border-left: 3px solid #d97706; border-radius: 4px; margin: 0; }
+  .promo-hint { font-size: 0.82rem; color: #666; background: #f8f9fa; padding: 0.75rem 1rem; border-left: 3px solid #0d9488; border-radius: 4px; margin: 0; }
   .promo-date-row { grid-template-columns: 1fr 1fr; }
   .optional { color: #6b7280; font-weight: 400; font-size: 0.82em; }
   .promo-actions { display: flex; gap: 1rem; align-items: center; }
@@ -2115,7 +2115,7 @@ const updated = url.searchParams.get('updated');
   .promo-toggle-input { display: none; }
   .promo-toggle-slider { width: 38px; height: 22px; background: #ccc; border-radius: 22px; position: relative; transition: background 0.2s; }
   .promo-toggle-slider::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.2s; }
-  .promo-toggle-input:checked + .promo-toggle-slider { background: #d97706; }
+  .promo-toggle-input:checked + .promo-toggle-slider { background: #0d9488; }
   .promo-toggle-input:checked + .promo-toggle-slider::after { transform: translateX(16px); }
   .promo-toggle-label { font-size: 0.85rem; font-weight: 600; color: #555; min-width: 64px; }
   .btn-delete-promo { background: transparent; border: 1px solid #eee; padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 1rem; }
@@ -2147,7 +2147,7 @@ const updated = url.searchParams.get('updated');
   .etat-dmg-preview { width: 90px; height: 65px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
   .etat-dmg-empty { font-size: .68rem; color: #6b7280; font-style: italic; }
   .etat-actions { display: flex; }
-  .btn-save-etat { background: #d97706; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+  .btn-save-etat { background: #0d9488; color: #0a1421; border: none; padding: .55rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .82rem; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
   .btn-save-etat:hover { opacity: .85; }
   .btn-save-etat:disabled { opacity: .5; cursor: not-allowed; }
 

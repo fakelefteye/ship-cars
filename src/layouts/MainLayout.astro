@@ -51,13 +51,16 @@ const blogHref = '/blog';
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        /* Ship Cars — charte claire, accents jaune/orange (codes location de véhicules) */
-        --yellow:       #ffd100;   /* jaune signature — fonds de boutons, bandeaux */
-        --yellow-dark:  #e6bd00;   /* survol du jaune */
-        --yellow-soft:  rgba(255,209,0,0.16);
-        --orange:       #d97706;   /* accent lisible sur blanc — liens, icônes, titres */
-        --orange-dark:  #b45309;   /* survol / texte dense */
-        --orange-soft:  rgba(217,119,6,0.10);
+        /* Ship Cars — charte claire, turquoise du logo en accent principal */
+        --teal:        #0d9488;   /* turquoise lisible sur blanc — liens, icônes, titres */
+        --teal-deep:   #0f766e;   /* survol / petit texte */
+        --teal-logo:   #4dd4c8;   /* turquoise du logo — aplats, halos, surbrillances */
+        --teal-soft:   rgba(13,148,136,0.10);
+
+        /* orange : réservé aux boutons de réservation, pour les faire ressortir */
+        --orange:       #ea6a0a;
+        --orange-dark:  #c2540a;
+        --orange-soft:  rgba(234,106,10,0.12);
 
         --ink:          #16181d;   /* noir de texte / barres sombres */
         --ink-2:        #232830;
@@ -75,13 +78,11 @@ const blogHref = '/blog';
         --radius:      12px;
         --radius-lg:   20px;
 
-        /* compatibilité : les anciens noms pointent vers les nouveaux accents,
+        /* compatibilité : les anciens noms pointent vers la palette claire,
            ce qui convertit d'un coup les styles qui les utilisent encore */
-        --teal:        var(--orange);
-        --teal-bright: var(--orange-dark);
-        --teal-soft:   var(--orange-soft);
-        --gold:        var(--orange);
-        --gold-light:  var(--orange-dark);
+        --teal-bright: var(--teal-deep);
+        --gold:        var(--teal);
+        --gold-light:  var(--teal-deep);
         --navy-deep:   var(--bg);
         --navy:        var(--bg-2);
         --navy-light:  var(--bg-3);
@@ -117,12 +118,12 @@ const blogHref = '/blog';
       /* ── Zone restriction notice ── */
       .zone-notice {
         display:flex; align-items:center; gap:.7rem;
-        background:var(--yellow-soft); border:1px solid rgba(217,119,6,.28);
+        background:var(--teal-soft); border:1px solid rgba(13,148,136,.28);
         border-radius:10px; padding:.7rem 1rem; font-size:.83rem;
         color:var(--text-muted,#5b6470); line-height:1.5;
       }
-      .zone-notice strong { color:var(--orange-dark,#b45309); }
-      .zone-notice a { color:var(--orange-dark,#b45309); font-weight:600; text-decoration:underline; white-space:nowrap; }
+      .zone-notice strong { color:var(--teal-deep,#0f766e); }
+      .zone-notice a { color:var(--teal-deep,#0f766e); font-weight:600; text-decoration:underline; white-space:nowrap; }
 
       html { scroll-behavior: smooth; }
 
