@@ -3,9 +3,12 @@
 //
 // Getaround renvoie pour chaque période une `reason` :
 //   booked | check_up | repairs | connect_issues | repatriation | other
-// Or quand le site bloque Getaround pour une de ses réservations (ou pour un blocage admin),
-// la période revient avec reason "other" : sans recoupement on la prendrait pour un blocage
-// Getaround. On la rapproche donc des enregistrements que le site a lui-même créés.
+// Or le site bloque Getaround pour ses propres réservations avec reason "booked" (cf.
+// stripe/webhook.ts et reservations/create.ts), soit exactement la valeur d'une vraie location
+// Getaround ; ses blocages admin partent en "other". La reason seule ne permet donc pas de
+// savoir qui a créé la période : on la rapproche des enregistrements que le site a lui-même
+// créés. Getaround ne renvoie pas d'identifiant de période dans cette liste, seules les dates
+// servent à faire le lien.
 
 export type GetaroundReason =
   | 'booked' | 'check_up' | 'repairs' | 'connect_issues' | 'repatriation' | 'other';
@@ -76,13 +79,12 @@ function findSelfBlock(period: PeriodLike, blocks: SelfBlock[]): SelfBlock | nul
 export function classifyUnavailability(period: PeriodLike, selfBlocks: SelfBlock[]): Classification {
   const reason = normalizeReason(period.reason);
 
-  // Une vraie location Getaround n'est jamais créée par le site
-  if (reason !== 'booked') {
-    const own = findSelfBlock(period, selfBlocks);
-    if (own?.kind === 'manual') return { skip: true };   // la ligne manuelle existe déjà
-    if (own?.kind === 'site') {
-      return { skip: false, source: 'site', note: own.label ? `Réservation site — ${own.label}` : 'Réservation site' };
-    }
+  // Quelle que soit la reason : une vraie location Getaround ne peut pas chevaucher une
+  // réservation du site sur la même voiture, donc une période aux mêmes dates vient du site.
+  const own = findSelfBlock(period, selfBlocks);
+  if (own?.kind === 'manual') return { skip: true };   // la ligne manuelle existe déjà
+  if (own?.kind === 'site') {
+    return { skip: false, source: 'site', note: own.label ? `Réservation site — ${own.label}` : 'Réservation site' };
   }
 
   const source = reason === 'booked' ? 'getaround' : `getaround_${reason}`;
