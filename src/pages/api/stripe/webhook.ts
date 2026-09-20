@@ -657,8 +657,8 @@ export const POST = async ({ request }) => {
               ? `Car rental SC-${contractNum} — ${veh?.nom ?? 'Vehicle'}`
               : `Location SC-${contractNum} — ${veh?.nom ?? 'Véhicule'}`,
             description: res.lang === 'en'
-              ? `Ship Cars rental\nVehicle: ${veh?.nom ?? ''}\nPickup: 2 rue de la Frise, 38000 Grenoble`
-              : `Location Ship Cars\nVéhicule : ${veh?.nom ?? ''}\nAdresse : 2 rue de la Frise, 38000 Grenoble`,
+              ? `Ship Cars rental\nVehicle: ${veh?.nom ?? ''}\nPickup: 15 rue de la Frise, 38000 Grenoble`
+              : `Location Ship Cars\nVéhicule : ${veh?.nom ?? ''}\nAdresse : 15 rue de la Frise, 38000 Grenoble`,
           })],
           'Ship Cars',
         );

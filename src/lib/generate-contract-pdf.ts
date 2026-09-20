@@ -231,7 +231,7 @@ export async function generateContractPdf(
       ['Carburant',                'Sans plomb 95 ou Sans plomb 98'],
       ['Date / heure de debut',    fmtDateTime(res.date_debut)],
       ['Date / heure de fin',      fmtDateTime(res.date_fin)],
-      ['Lieu de mise a disposition','62 rue Felix Esclangon 38000 Grenoble'],
+      ['Lieu de mise a disposition','15 rue de la Frise 38000 Grenoble'],
       ['Lieu de restitution',      'Identique au lieu de mise a disposition'],
       ['Kilometrage inclus',       `${kmInclus} km (puis ${fmtEur(prixKm)} EUR TTC / km supplementaire)`],
       ['Prix total de la location', `${Number(res.montant_total).toFixed(2)} EUR (hors carburant)`],

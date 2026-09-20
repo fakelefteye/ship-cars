@@ -131,7 +131,7 @@ export const home = {
       badge: 'Agence en ligne · Grenoble, proche de la gare',
       title: 'Location de voiture',
       subtitle: 'sans guichet, sans attente',
-      address: '2 rue de la Frise, 38000 Grenoble',
+      address: '15 rue de la Frise, 38000 Grenoble',
       addressSub: '— à 5 min à pied de la gare.',
       desc: 'Réservez en ligne, payez par Stripe, <strong>ouvrez votre voiture depuis votre téléphone</strong>. Zéro guichet, zéro file d\'attente.',
       step1: 'Réservez en ligne',
@@ -163,7 +163,7 @@ export const home = {
       label: 'Flotte disponible',
       title: 'Nos véhicules',
       sub: 'Tous nos véhicules sont vérifiés, assurés et entretenus. Caution par empreinte bancaire uniquement.',
-      chip1: '2 rue de la Frise, 38000 Grenoble',
+      chip1: '15 rue de la Frise, 38000 Grenoble',
       chip2: 'Agence 100% en ligne · Pas de boutique physique',
       chip3: 'Zone limitée Sud-Est & pays frontaliers.',
       chip3link: 'Voir les zones →',
@@ -177,7 +177,7 @@ export const home = {
     },
     why: {
       title1: 'À 5 min de la gare',
-      desc1: '2 rue de la Frise, Grenoble. Récupérez votre voiture rapidement après votre descente du train.',
+      desc1: '15 rue de la Frise, Grenoble. Récupérez votre voiture rapidement après votre descente du train.',
       title2: 'Paiement sécurisé',
       desc2: 'Stripe gère votre paiement et la caution par empreinte bancaire. Aucune somme bloquée.',
       title3: 'Ouverture à distance',
@@ -201,7 +201,7 @@ export const home = {
       badge: 'Online agency · Grenoble, near the train station',
       title: 'Car rental',
       subtitle: 'no desk, no waiting',
-      address: '2 rue de la Frise, 38000 Grenoble',
+      address: '15 rue de la Frise, 38000 Grenoble',
       addressSub: '— 5 min walk from the train station.',
       desc: 'Book online, pay with Stripe, <strong>unlock your car from your phone</strong>. No desk, no queue.',
       step1: 'Book online',
@@ -233,7 +233,7 @@ export const home = {
       label: 'Available fleet',
       title: 'Our vehicles',
       sub: 'All our vehicles are inspected, insured and regularly maintained. Deposit by bank pre-authorisation only.',
-      chip1: '2 rue de la Frise, 38000 Grenoble',
+      chip1: '15 rue de la Frise, 38000 Grenoble',
       chip2: '100% online agency · No physical branch',
       chip3: 'Limited zone: South-East France & neighbouring countries.',
       chip3link: 'See zones →',
@@ -247,7 +247,7 @@ export const home = {
     },
     why: {
       title1: '5 min from the station',
-      desc1: '2 rue de la Frise, Grenoble. Pick up your car quickly after stepping off the train.',
+      desc1: '15 rue de la Frise, Grenoble. Pick up your car quickly after stepping off the train.',
       title2: 'Secure payment',
       desc2: 'Stripe handles your payment and the deposit by bank pre-authorisation. Nothing actually charged upfront.',
       title3: 'Remote unlock',
@@ -271,7 +271,7 @@ export const home = {
       badge: 'Agencia online · Grenoble, cerca de la estación',
       title: 'Alquiler de coches',
       subtitle: 'sin mostrador, sin esperas',
-      address: '2 rue de la Frise, 38000 Grenoble',
+      address: '15 rue de la Frise, 38000 Grenoble',
       addressSub: '— a 5 min a pie de la estación.',
       desc: 'Reserva online, paga con Stripe, <strong>abre tu coche desde el móvil</strong>. Sin mostrador, sin cola.',
       step1: 'Reserva online',
@@ -303,7 +303,7 @@ export const home = {
       label: 'Flota disponible',
       title: 'Nuestros vehículos',
       sub: 'Todos nuestros vehículos están revisados, asegurados y mantenidos. Depósito por preautorización bancaria.',
-      chip1: '2 rue de la Frise, 38000 Grenoble',
+      chip1: '15 rue de la Frise, 38000 Grenoble',
       chip2: 'Agencia 100% online · Sin oficina física',
       chip3: 'Zona limitada: Sureste de Francia y países fronterizos.',
       chip3link: 'Ver zonas →',
@@ -317,7 +317,7 @@ export const home = {
     },
     why: {
       title1: 'A 5 min de la estación',
-      desc1: '2 rue de la Frise, Grenoble. Recoge tu coche rápidamente al bajar del tren.',
+      desc1: '15 rue de la Frise, Grenoble. Recoge tu coche rápidamente al bajar del tren.',
       title2: 'Pago seguro',
       desc2: 'Stripe gestiona el pago y la fianza por preautorización bancaria. No se bloquea ningún importe.',
       title3: 'Apertura remota',
@@ -341,7 +341,7 @@ export const home = {
       badge: 'Agenzia online · Grenoble, vicino alla stazione',
       title: 'Noleggio auto',
       subtitle: 'senza sportello, senza attese',
-      address: '2 rue de la Frise, 38000 Grenoble',
+      address: '15 rue de la Frise, 38000 Grenoble',
       addressSub: '— a 5 min a piedi dalla stazione.',
       desc: 'Prenota online, paga con Stripe, <strong>apri la tua auto dal telefono</strong>. Zero sportello, zero fila.',
       step1: 'Prenota online',
@@ -373,7 +373,7 @@ export const home = {
       label: 'Flotta disponibile',
       title: 'I nostri veicoli',
       sub: 'Tutti i nostri veicoli sono controllati, assicurati e regolarmente manutenuti. Deposito solo tramite pre-autorizzazione bancaria.',
-      chip1: '2 rue de la Frise, 38000 Grenoble',
+      chip1: '15 rue de la Frise, 38000 Grenoble',
       chip2: 'Agenzia 100% online · Nessuna sede fisica',
       chip3: 'Zona limitata: Francia meridionale e paesi limitrofi.',
       chip3link: 'Vedi le zone →',
@@ -387,7 +387,7 @@ export const home = {
     },
     why: {
       title1: 'A 5 min dalla stazione',
-      desc1: '2 rue de la Frise, Grenoble. Ritira la tua auto subito dopo essere sceso dal treno.',
+      desc1: '15 rue de la Frise, Grenoble. Ritira la tua auto subito dopo essere sceso dal treno.',
       title2: 'Pagamento sicuro',
       desc2: 'Stripe gestisce il pagamento e il deposito in pre-autorizzazione bancaria. Nessun importo bloccato.',
       title3: 'Apertura remota',
@@ -469,7 +469,7 @@ export const faqContent = {
       {
         cat: 'Prise en charge & Retour',
         items: [
-          { q: 'Où se situe l\'agence Ship Cars à Grenoble ?', a: 'Notre agence est au 2 rue de la Frise, 38000 Grenoble, à 5 minutes à pied de la gare SNCF.' },
+          { q: 'Où se situe l\'agence Ship Cars à Grenoble ?', a: 'Notre agence est au 15 rue de la Frise, 38000 Grenoble, à 5 minutes à pied de la gare SNCF.' },
           { q: 'Quels sont les horaires de remise et de retour ?', a: 'Les horaires sont convenus à la réservation selon vos besoins. Notre service est disponible 7j/7.' },
           { q: 'Que se passe-t-il en cas de panne ou d\'accident ?', a: 'Contactez-nous immédiatement au 06 61 69 11 78. En cas d\'accident, établissez un constat amiable et prévenez-nous.' },
         ],
@@ -545,7 +545,7 @@ export const faqContent = {
       {
         cat: 'Pick-up & Return',
         items: [
-          { q: 'Where is the Ship Cars agency in Grenoble?', a: 'Our agency is at 2 rue de la Frise, 38000 Grenoble, 5 minutes\' walk from the SNCF train station.' },
+          { q: 'Where is the Ship Cars agency in Grenoble?', a: 'Our agency is at 15 rue de la Frise, 38000 Grenoble, 5 minutes\' walk from the SNCF train station.' },
           { q: 'What are the pick-up and return times?', a: 'Times are agreed at booking according to your needs. Our service is available 7 days a week.' },
           { q: 'What happens in case of breakdown or accident?', a: 'Contact us immediately on +33 6 61 69 11 78. In case of accident, fill in an incident report and notify us.' },
         ],
@@ -621,7 +621,7 @@ export const faqContent = {
       {
         cat: 'Recogida y Devolución',
         items: [
-          { q: '¿Dónde está la agencia Ship Cars en Grenoble?', a: 'Nuestra agencia está en 2 rue de la Frise, 38000 Grenoble, a 5 minutos a pie de la estación SNCF.' },
+          { q: '¿Dónde está la agencia Ship Cars en Grenoble?', a: 'Nuestra agencia está en 15 rue de la Frise, 38000 Grenoble, a 5 minutos a pie de la estación SNCF.' },
           { q: '¿Cuáles son los horarios de recogida y devolución?', a: 'Los horarios se acuerdan en la reserva según tus necesidades. Nuestro servicio está disponible 7 días a la semana.' },
           { q: '¿Qué ocurre en caso de avería o accidente?', a: 'Contáctanos inmediatamente en el +33 6 61 69 11 78. En caso de accidente, cumplimenta un parte amistoso e infórmanos.' },
         ],
@@ -697,7 +697,7 @@ export const faqContent = {
       {
         cat: 'Ritiro e Restituzione',
         items: [
-          { q: "Dove si trova l'agenzia Ship Cars a Grenoble?", a: "La nostra agenzia è in 2 rue de la Frise, 38000 Grenoble, a 5 minuti a piedi dalla stazione ferroviaria SNCF." },
+          { q: "Dove si trova l'agenzia Ship Cars a Grenoble?", a: "La nostra agenzia è in 15 rue de la Frise, 38000 Grenoble, a 5 minuti a piedi dalla stazione ferroviaria SNCF." },
           { q: 'Quali sono gli orari di ritiro e restituzione?', a: 'Gli orari vengono concordati alla prenotazione in base alle tue esigenze. Il nostro servizio è disponibile 7 giorni su 7.' },
           { q: 'Cosa succede in caso di guasto o incidente?', a: 'Contattaci immediatamente al +33 6 61 69 11 78. In caso di incidente, compila un modulo di constatazione amichevole e informaci.' },
         ],
