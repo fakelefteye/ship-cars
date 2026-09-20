@@ -141,7 +141,9 @@ const urlParam = Astro.url.searchParams.get('vehicule') ?? '';
           <span class="leg"><span class="ldot forte"></span> Forte</span>
           <span class="leg"><span class="ldot tres-forte"></span> Très forte (été)</span>
           <span class="leg"><span class="ldot custom"></span> Personnalisé</span>
-          <span class="leg"><span class="ldot ga"></span> Getaround</span>
+          <span class="leg"><span class="ldot site"></span> Réservé (site)</span>
+          <span class="leg"><span class="ldot ga"></span> Réservé Getaround</span>
+          <span class="leg"><span class="ldot gablock"></span> Blocage Getaround</span>
           <span class="leg"><span class="ldot blocked"></span> Bloqué</span>
           <span class="leg"><span class="ldot duree"></span> Durée min/max</span>
         </div>
@@ -336,6 +338,22 @@ function toLocalKey(s) {
   return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate());
 }
 
+// Origine d'un blocage, d'après indisponibilites.source posée par la synchro Getaround :
+//   site → réservation prise sur le site   getaround → location Getaround (booked)
+//   getaround_<reason> → blocage Getaround  manual → blocage saisi dans l'admin
+const GA_REASONS = {
+  check_up: 'Contrôle', repairs: 'Réparation', connect_issues: 'Connect',
+  repatriation: 'Rapatriement', other: 'Bloqué GA',
+};
+function blocInfo(source) {
+  if (source === 'site')      return { cls: 'day-site',    label: 'Réservé' };
+  if (source === 'getaround') return { cls: 'day-ga',      label: 'Réservé GA' };
+  if (source && source.startsWith('getaround_')) {
+    return { cls: 'day-gablock', label: GA_REASONS[source.slice('getaround_'.length)] || 'Bloqué GA' };
+  }
+  return { cls: 'day-blocked', label: 'Bloqué' };
+}
+
 function getBlocage(d) {
   return blocages.find(b => {
     const deb = toLocalKey(b.date_debut);
@@ -462,7 +480,7 @@ function renderCalendar() {
     if (isToday) cell.classList.add('day-today');
 
     if (blocage) {
-      cell.classList.add(blocage.source === 'getaround' ? 'day-ga' : 'day-blocked');
+      cell.classList.add(blocInfo(blocage.source).cls);
     } else {
       const tierClass = type === 'tres_haute' ? 'day-tres-haute'
                       : type === 'custom'     ? 'day-custom'
@@ -510,7 +528,7 @@ function renderCalendar() {
     if (blocage) {
       const lbl = document.createElement('span');
       lbl.className = 'day-lbl';
-      lbl.textContent = blocage.source === 'getaround' ? 'Réservé' : 'Bloqué';
+      lbl.textContent = blocInfo(blocage.source).label;
       cell.appendChild(lbl);
     }
 
@@ -1045,13 +1063,15 @@ h1 { font-size:1.6rem; font-weight:800; color:#16181d; margin:0; }
 .cal-day.day-tres-haute { background:#22c55e; }
 .cal-day.day-custom     { background:color-mix(in srgb, var(--cc,#c9a84c) 60%, #d1fae5); }
 .cal-day.day-ga         { background:#bfdbfe; }
+.cal-day.day-site { background:#fde68a; }
+.cal-day.day-gablock { background:#ddd6fe; }
 .cal-day.day-blocked    { background:#fee2e2; }
 
 .cal-day.day-today { outline:2px solid #c9a84c; outline-offset:-2px; }
 .cal-day.day-in-range   { outline:2px solid rgba(201,168,76,.7); outline-offset:-2px; }
 .cal-day.day-sel-start  { outline:2px solid #c9a84c; outline-offset:-2px; }
 
-.cal-day:not(.empty):not(.day-ga):not(.day-blocked):hover { filter:brightness(.9); cursor:pointer; }
+.cal-day:not(.empty):not(.day-ga):not(.day-site):not(.day-gablock):not(.day-blocked):hover { filter:brightness(.9); cursor:pointer; }
 
 /* Numéro du jour */
 .day-num {
@@ -1059,6 +1079,8 @@ h1 { font-size:1.6rem; font-weight:800; color:#16181d; margin:0; }
   align-self:flex-start;
 }
 .cal-day.day-ga .day-num,
+.cal-day.day-site .day-num,
+.cal-day.day-gablock .day-num,
 .cal-day.day-blocked .day-num { color:#1e3a5f; }
 
 /* Indicateur vacances/férié */
@@ -1078,6 +1100,8 @@ h1 { font-size:1.6rem; font-weight:800; color:#16181d; margin:0; }
 .cal-day.day-basse .day-price-badge   { background:rgba(0,0,0,.35); }
 .cal-day.day-tres-haute .day-price-badge { background:rgba(0,0,0,.6); }
 .cal-day.day-ga .day-price-badge,
+.cal-day.day-site .day-price-badge,
+.cal-day.day-gablock .day-price-badge,
 .cal-day.day-blocked .day-price-badge { display:none; }
 
 /* Label blocage */
@@ -1087,6 +1111,8 @@ h1 { font-size:1.6rem; font-weight:800; color:#16181d; margin:0; }
   text-transform:uppercase; letter-spacing:.02em;
 }
 .cal-day.day-blocked .day-lbl { color:#991b1b; }
+.cal-day.day-site .day-lbl { color:#92400e; }
+.cal-day.day-gablock .day-lbl { color:#5b21b6; }
 
 /* ── Légende ── */
 .legend { display:flex; gap:.8rem; flex-wrap:wrap; padding:.4rem .2rem; }
@@ -1098,6 +1124,8 @@ h1 { font-size:1.6rem; font-weight:800; color:#16181d; margin:0; }
 .ldot.tres-forte { background:#22c55e; }
 .ldot.custom    { background:#c9a84c; }
 .ldot.ga        { background:#bfdbfe; }
+.ldot.site { background:#fde68a; }
+.ldot.gablock { background:#ddd6fe; }
 .ldot.blocked   { background:#fee2e2; }
 
 /* ── Sidebar ── */

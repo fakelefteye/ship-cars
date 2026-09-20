@@ -3,11 +3,14 @@
 // vers la table indisponibilites de Supabase.
 // Utilise GET /cars/{id}/unavailabilities.json qui retourne toutes les périodes
 // (reason: "booked" pour les locations clients, autres raisons pour blocages manuels).
+// Chaque période est étiquetée selon sa reason, et rapprochée des réservations du site
+// pour ne pas présenter comme « Getaround » un blocage que le site a lui-même créé.
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { getUnavailablePeriods, getRentals, getRental } from '../../lib/getaround';
+import { classifyUnavailability, loadSelfBlocks, SYNCED_SOURCES } from '../../lib/unavailability-classifier';
 
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
@@ -47,27 +50,30 @@ export const GET: APIRoute = async ({ request }) => {
     const errors: string[] = [];
     const detail: Record<string, { unavailabilities: number; rentals: number }> = {};
 
-    // ── 1. Indisponibilités manuelles (blocs propriétaire) ──────────────────
+    // ── 1. Indisponibilités (locations Getaround, blocages, réservations du site) ──
     for (const vehicule of vehicules) {
       const carId = String(vehicule.getaround_id);
       const periods = await getUnavailablePeriods(carId, startDate, endDate);
+      const selfBlocks = await loadSelfBlocks(supabase, vehicule.id, startDate, endDate);
 
-      // Supprime les anciennes entrées manuelles syncées (sans rental_id)
+      // Supprime les anciennes entrées syncées (sans rental_id) — toutes origines confondues
       const { count } = await supabase
         .from('indisponibilites')
         .delete({ count: 'exact' })
         .eq('vehicule_id', vehicule.id)
-        .eq('source', 'getaround')
+        .in('source', SYNCED_SOURCES)
         .is('getaround_rental_id', null);
       deleted += count ?? 0;
 
       for (const period of periods) {
+        const c = classifyUnavailability(period, selfBlocks);
+        if (c.skip) continue;
         const { error } = await supabase.from('indisponibilites').insert({
           vehicule_id: vehicule.id,
           date_debut:  period.starts_at,
           date_fin:    period.ends_at,
-          source:      'getaround',
-          note:        period.reason ? `Getaround bloc (${period.reason})` : 'Getaround bloc',
+          source:      c.source,
+          note:        c.note,
         });
         if (error) errors.push(`${vehicule.nom} unavail: ${error.message}`);
         else syncedUnavail++;

@@ -41,13 +41,9 @@ export const POST: APIRoute = async ({ request }) => {
     .eq('id', vehicule_id)
     .single();
 
-  // Bloque sur Getaround si la voiture y est référencée
-  let blockedOnGetaround = false;
-  if (vehicule?.getaround_id) {
-    blockedOnGetaround = await blockDates(String(vehicule.getaround_id), date_debut, date_fin);
-  }
-
-  // Insère dans indisponibilites
+  // Insère dans indisponibilites AVANT de bloquer Getaround : Getaround renvoie aussitôt un
+  // webhook pour ce blocage, et il faut que la ligne manuelle existe déjà pour le reconnaître
+  // comme un écho du site plutôt que comme un blocage posé depuis l'app Getaround.
   const { data: record, error } = await supabase
     .from('indisponibilites')
     .insert({
@@ -62,6 +58,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+
+  // Bloque sur Getaround si la voiture y est référencée
+  let blockedOnGetaround = false;
+  if (vehicule?.getaround_id) {
+    blockedOnGetaround = !!(await blockDates(String(vehicule.getaround_id), date_debut, date_fin));
   }
 
   return new Response(

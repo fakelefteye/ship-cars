@@ -15,6 +15,7 @@ import type { APIRoute } from 'astro';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { supabaseAdmin as supabase } from '../../../lib/supabase';
 import { getRental, getUserById } from '../../../lib/getaround';
+import { classifyUnavailability, loadSelfBlocks } from '../../../lib/unavailability-classifier';
 import { upsertBrevoContact } from '../../../lib/brevo';
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
@@ -204,7 +205,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // ── Événements d'INDISPONIBILITÉ (blocage propriétaire depuis l'app GA) ──────
     if (eventType === 'unavailability.created') {
-      const { starts_at, ends_at, car_id } = payload?.data ?? {};
+      const { starts_at, ends_at, car_id, reason, id: periodId } = payload?.data ?? {};
       if (starts_at && ends_at && car_id) {
         const { data: vehicule } = await supabase
           .from('vehicules')
@@ -213,15 +214,30 @@ export const POST: APIRoute = async ({ request }) => {
           .single();
 
         if (vehicule) {
-          const { error: insErr } = await supabase.from('indisponibilites').insert({
-            vehicule_id: vehicule.id,
-            date_debut:  starts_at,
-            date_fin:    ends_at,
-            source:      'getaround',
-            note:        'Blocage Getaround (app propriétaire)',
-          });
-          if (insErr) console.error('[webhook] erreur insert unavailability:', insErr.message);
-          await logEvent(eventType, payload, insErr ? 'error' : 'inserted', insErr?.message);
+          // Le site bloque lui-même Getaround pour ses réservations : on ne doit pas
+          // présenter cet écho comme un blocage posé depuis l'app Getaround.
+          const margin = 24 * 60 * 60 * 1000;
+          const selfBlocks = await loadSelfBlocks(
+            supabase,
+            vehicule.id,
+            new Date(new Date(starts_at).getTime() - margin).toISOString(),
+            new Date(new Date(ends_at).getTime() + margin).toISOString(),
+          );
+          const c = classifyUnavailability({ id: periodId, starts_at, ends_at, reason }, selfBlocks);
+
+          if (c.skip) {
+            await logEvent(eventType, payload, 'skipped', "écho d'un blocage manuel du site");
+          } else {
+            const { error: insErr } = await supabase.from('indisponibilites').insert({
+              vehicule_id: vehicule.id,
+              date_debut:  starts_at,
+              date_fin:    ends_at,
+              source:      c.source,
+              note:        c.note,
+            });
+            if (insErr) console.error('[webhook] erreur insert unavailability:', insErr.message);
+            await logEvent(eventType, payload, insErr ? 'error' : 'inserted', insErr?.message);
+          }
         } else {
           console.warn('[webhook] car_id non trouvé pour unavailability:', car_id);
           await logEvent(eventType, payload, 'skipped', `car_id=${car_id} not in vehicules`);

@@ -60,6 +60,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── origine d'une indisponibilité (source posée par la synchro) ───── */
+  // site → réservation prise sur le site ; getaround → location Getaround (booked) ;
+  // getaround_<reason> → blocage Getaround détaillé ; manual → blocage saisi ici.
+  const GA_REASONS = {
+    check_up: 'Contrôle', repairs: 'Réparations', connect_issues: 'Connect',
+    repatriation: 'Rapatriement', other: 'Bloqué GA',
+  };
+  function srcInfo(source) {
+    if (source === 'site')      return { tag: 'Réservé',    bg: '#16a34a', badge: 'Réservation site',   color: '#16a34a' };
+    if (source === 'getaround') return { tag: 'Réservé GA', bg: '#4c1d95', badge: 'Location Getaround', color: '#7c3aed' };
+    if (source && source.startsWith('getaround_')) {
+      const r = source.slice('getaround_'.length);
+      return { tag: GA_REASONS[r] || 'Bloqué GA', bg: '#6d28d9', badge: 'Blocage Getaround', color: '#7c3aed' };
+    }
+    return { tag: 'Bloqué', bg: '#374151', badge: 'Blocage manuel', color: '#6b7280' };
+  }
+
   /* ── construction de la map de jours ─────────────────────────────── */
   function buildMap() {
     const map    = {};   // 'YYYY-MM-DD' -> { type, raw }
@@ -165,13 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // ── bloqué ───────────────────────────────────────────────────
         const i  = ev.raw;
-        const bg = i.source === 'getaround' ? '#4c1d95' : '#374151';
+        const info = srcInfo(i.source);
+        const bg = info.bg;
         el.className = 'dc dc-blocked' + (isToday ? ' dc-today' : '');
         el.style.background = bg;
         el.style.cursor = 'pointer';
         el.innerHTML =
           `<span class="dc-num dc-num-inv">${d}</span>` +
-          `<span class="dc-tag">${i.source === 'getaround' ? 'Getaround' : 'Bloqué'}</span>`;
+          `<span class="dc-tag">${info.tag}</span>`;
         el.addEventListener('click', () => openModal('indispo', i));
       }
 
@@ -204,10 +222,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <div class="mmsg" style="display:none"></div>`;
     } else {
-      const isGA  = raw.source === 'getaround';
-      const color = isGA ? '#7c3aed' : '#6b7280';
+      const info  = srcInfo(raw.source);
+      const color = info.color;
       html = `
-        <span class="mbadge" style="background:${color}22;color:${color};border:1px solid ${color}44">${isGA ? 'Blocage Getaround' : 'Blocage manuel'}</span>
+        <span class="mbadge" style="background:${color}22;color:${color};border:1px solid ${color}44">${info.badge}</span>
         <h2 class="mtitle">Indisponibilité</h2>
         <div class="mrows">
           <div class="mrow"><span>Véhicule</span><strong>${raw.vehicules?.nom || '—'}</strong></div>
@@ -386,7 +404,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="leg"><i style="background:#16a34a"></i>Payée</span>
         <span class="leg"><i style="background:#1d4ed8"></i>Confirmée</span>
         <span class="leg"><i style="background:#b45309"></i>En attente</span>
-        <span class="leg"><i style="background:#4c1d95"></i>Getaround</span>
+        <span class="leg"><i style="background:#16a34a"></i>Réservé (site)</span>
+        <span class="leg"><i style="background:#4c1d95"></i>Réservé Getaround</span>
+        <span class="leg"><i style="background:#6d28d9"></i>Blocage Getaround</span>
         <span class="leg"><i style="background:#374151"></i>Bloqué</span>
       </div>
     </div>
