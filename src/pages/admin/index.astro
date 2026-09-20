@@ -398,7 +398,7 @@ const updated = url.searchParams.get('updated');
     <!-- ÉTAT DES VÉHICULES AU DÉPART (km + niveau carburant + photos dommages) -->
     <section class="admin-card" data-tab-section="vehicules">
       <h2>🚗 État au départ de la location</h2>
-      <p class="subtitle">À remplir avant chaque remise des clés. Ces informations apparaissent dans le contrat envoyé par mail.</p>
+      <p class="subtitle">À remplir avant chaque remise des clés. Ces informations apparaissent dans le contrat envoyé par mail. Les instructions ci-dessous sont envoyées automatiquement au client.</p>
       <div class="etat-list" id="etat-list">
         {vehicules?.map((v) => (
           <div class="etat-row" data-id={v.id}>
@@ -444,6 +444,19 @@ const updated = url.searchParams.get('updated');
                   );
                 })}
               </div>
+            </div>
+            <div class="etat-instructions">
+              <div class="etat-instr-block">
+                <label class="etat-label">✉️ Instructions de prise en charge</label>
+                <p class="etat-instr-hint">Envoyées par e-mail au client <strong>dès la confirmation de la réservation</strong> (adresse exacte, où est garé le véhicule, comment l'ouvrir…). Laissez vide pour ne rien envoyer.</p>
+                <textarea class="etat-instr-prise" data-id={v.id} rows="5" maxlength="5000" placeholder="Ex : Le véhicule est garé au … Ouvrez-le avec l'application … Présentez-vous avec votre permis …">{(v as any).instructions_prise_en_charge ?? ''}</textarea>
+              </div>
+              <div class="etat-instr-block">
+                <label class="etat-label">✉️ Instructions de restitution</label>
+                <p class="etat-instr-hint">Envoyées par e-mail au client <strong>12 h avant la fin de la location</strong> (où rapporter le véhicule, état attendu, carburant, clés…). Laissez vide pour ne rien envoyer.</p>
+                <textarea class="etat-instr-resti" data-id={v.id} rows="5" maxlength="5000" placeholder="Ex : Garez le véhicule au … Faites le plein … Verrouillez avec l'application …">{(v as any).instructions_restitution ?? ''}</textarea>
+              </div>
+              <p class="etat-instr-hint">Le même texte est envoyé quelle que soit la langue du client. Les liens (https://…) sont cliquables dans l'e-mail.</p>
             </div>
             <div class="etat-actions">
               <button class="btn-save-etat" data-id={v.id}>💾 Enregistrer l'état</button>
@@ -970,6 +983,8 @@ const updated = url.searchParams.get('updated');
       const row = this.closest('.etat-row');
       const km     = row.querySelector('.etat-input-km').value;
       const niveau = row.querySelector('.etat-select-niveau').value;
+      const prise  = row.querySelector('.etat-instr-prise').value;
+      const resti  = row.querySelector('.etat-instr-resti').value;
       const btnEl  = this;
       btnEl.disabled = true; btnEl.textContent = '⏳…';
       try {
@@ -982,6 +997,8 @@ const updated = url.searchParams.get('updated');
             id,
             kilometrage_depart:   km !== '' ? parseInt(km) : null,
             carburant_depart_pct: niveau !== '' ? parseInt(niveau) : null,
+            instructions_prise_en_charge: prise,
+            instructions_restitution:     resti,
           }),
         });
         if (res.ok || res.status === 303) {
@@ -2156,6 +2173,11 @@ const updated = url.searchParams.get('updated');
   .etat-carburant-badge { font-size: .72rem; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 99px; }
   .etat-photos { display: flex; flex-direction: column; gap: .4rem; }
   .etat-photos-grid { display: flex; gap: .75rem; flex-wrap: wrap; }
+  .etat-instructions { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0 .5rem; }
+  .etat-instructions > p { grid-column: 1 / -1; }
+  .etat-instr-hint { font-size: .78rem; color: #6b7280; line-height: 1.5; margin: .15rem 0 .5rem; }
+  .etat-instructions textarea { width: 100%; min-height: 110px; padding: .6rem .75rem; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; font-size: .85rem; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+  .etat-instructions textarea:focus { outline: 2px solid #0d9488; outline-offset: 1px; border-color: #0d9488; }
   .etat-photo-slot { display: flex; flex-direction: column; align-items: center; gap: .35rem; }
   .btn-upload-dmg { background: #e0f2fe; color: #0369a1; border: 1px dashed #7dd3fc; padding: .4rem .8rem; border-radius: 7px; font-size: .78rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background .15s; }
   .btn-upload-dmg:hover { background: #bae6fd; }

@@ -7,6 +7,7 @@ import { blockDates, unblockDates } from '../../../lib/getaround';
 import { getReglage } from '../../../lib/reglages';
 import { buildCalendar, buildVEvent } from '../../../lib/ical';
 import { damagePhotoUrls } from '../../../lib/damage-photos';
+import { sendPickupInstructions } from '../../../lib/instruction-mails';
 // pdfkit en import dynamique — un crash pdf ne tue pas tout le webhook
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
@@ -744,6 +745,18 @@ export const POST = async ({ request }) => {
           } catch (err) {
             console.error('❌ Erreur email tiers payeur:', err);
           }
+        }
+
+        // 4d. Instructions de prise en charge (texte saisi par véhicule dans l'admin).
+        // Sans texte pour ce véhicule, rien n'est envoyé. Jamais envoyé deux fois pour une réservation.
+        try {
+          const pickup = await sendPickupInstructions(
+            { supabase, resend, from: `Ship Cars <${FROM_EMAIL}>`, logoUrl },
+            res, veh, emailClient,
+          );
+          console.log(`📨 Instructions de prise en charge : ${pickup}`);
+        } catch (err) {
+          console.error('❌ Erreur email instructions de prise en charge:', err);
         }
       }
     }

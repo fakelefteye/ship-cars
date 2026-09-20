@@ -117,6 +117,16 @@ export const POST: APIRoute = async ({ request, redirect }) => {
         if (key in data) updatePayload[key] = data[key]?.toString() || null;
       }
 
+      for (const key of ['instructions_prise_en_charge', 'instructions_restitution']) {
+        if (key in data) {
+          const value = (data[key] ?? '').toString().trim();
+          if (value.length > 5000) {
+            return new Response(JSON.stringify({ error: 'Texte trop long (5 000 caractères maximum)' }), { status: 400 });
+          }
+          updatePayload[key] = value || null;
+        }
+      }
+
       if (Object.keys(updatePayload).length === 0) {
         return new Response(JSON.stringify({ error: 'Aucune donnée à mettre à jour' }), { status: 400 });
       }
