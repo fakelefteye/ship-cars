@@ -2,6 +2,7 @@
 // Génère le contrat de location Ship Cars au format PDF
 
 import PDFDocument from 'pdfkit';
+import { damagePhotoUrls } from './damage-photos';
 
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—';
@@ -31,7 +32,7 @@ export interface ContractPdfOptions {
 async function fetchImage(url: string | undefined | null): Promise<Buffer | null> {
   if (!url) return null;
   try {
-    const r = await fetch(url);
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) return null;
     return Buffer.from(await r.arrayBuffer());
   } catch {
@@ -50,6 +51,9 @@ export async function generateContractPdf(
 ): Promise<Buffer> {
   const prixKm    = Number.isFinite(opts.prixKm)    ? opts.prixKm!    : 0.40;
   const prixLitre = Number.isFinite(opts.prixLitre) ? opts.prixLitre! : 1.80;
+
+  const damageUrls = damagePhotoUrls(veh);
+  const damageBuffers = await Promise.all(damageUrls.map(u => fetchImage(u)));
 
   const [logoBuffer, stampBuffer] = await Promise.all([
     fetchImage(opts.logoUrl),
@@ -85,7 +89,12 @@ export async function generateContractPdf(
     const COLOR_MUTED  = '#6b7280';
     const COLOR_BORDER = '#d1d5db';
 
+    // Place restante avant le bas de page (marge incluse)
+    const roomLeft = () => doc.page.height - doc.page.margins.bottom - doc.y;
+
     function sectionHeader(title: string) {
+      // Un titre ne doit pas rester seul en bas de page : il faut de la place pour lui et une ligne
+      if (roomLeft() < 12 + 22 + 18) doc.addPage();
       doc.moveDown(0.5);
       const barY = doc.y;
       doc.rect(COL, barY, W, 18).fill(COLOR_BLUE);
@@ -98,6 +107,9 @@ export async function generateContractPdf(
 
     function tableRow(label: string, value: string, shade = false) {
       const rowH = 18;
+      // Sans ce contrôle, pdfkit coupe la ligne à la limite de page : le libellé part seul sur une
+      // nouvelle page et la valeur sur la suivante (pages presque vides).
+      if (roomLeft() < rowH + 2) doc.addPage();
       const labelW = 160;
       if (shade) doc.rect(COL, doc.y, W, rowH).fill(COLOR_GREY);
       doc.rect(COL, doc.y, W, rowH).strokeColor(COLOR_BORDER).lineWidth(0.5).stroke();
@@ -274,6 +286,50 @@ export async function generateContractPdf(
     ];
     shade = false;
     for (const [l, v] of frais) { tableRow(l, v, shade); shade = !shade; }
+
+    /* ─── SECTION 8 — PHOTOS DES DOMMAGES PREEXISTANTS ────────────── */
+    if (damageUrls.length > 0) {
+      const bottom = () => doc.page.height - doc.page.margins.bottom;
+      const COLS = 4, GAP = 8;
+      const cellW = (W - GAP * (COLS - 1)) / COLS;
+      const cellH = Math.round(cellW * 0.75);
+      const ROW_H = cellH + 16;
+
+      // Titre + rappel : si l'en-tête ne tient pas avec au moins une ligne de photos, nouvelle page
+      if (doc.y + 22 + 30 + ROW_H > bottom()) doc.addPage();
+      sectionHeader('8. Etat du vehicule au depart — photos des dommages preexistants');
+      doc.font('Helvetica').fontSize(7.5).fillColor(COLOR_MUTED)
+         .text("Photos prises avant la remise des cles : elles documentent l'etat du vehicule au depart de la location.",
+               COL, doc.y, { width: W });
+      let rowY = doc.y + 6;
+
+      damageUrls.forEach((url, i) => {
+        const col = i % COLS;
+        if (col === 0 && i > 0) rowY += ROW_H;
+        if (col === 0 && rowY + ROW_H > bottom()) { doc.addPage(); rowY = doc.page.margins.top; }
+
+        const x = COL + col * (cellW + GAP);
+        doc.rect(x, rowY, cellW, cellH).strokeColor(COLOR_BORDER).lineWidth(0.5).stroke();
+        const buf = damageBuffers[i];
+        let drawn = false;
+        if (buf) {
+          try {
+            doc.image(buf, x + 1, rowY + 1, { fit: [cellW - 2, cellH - 2], align: 'center', valign: 'center' });
+            drawn = true;
+          } catch { /* format non pris en charge par pdfkit (ex. WebP) : repli sur le lien */ }
+        }
+        if (!drawn) {
+          doc.font('Helvetica').fontSize(6.5).fillColor(COLOR_MUTED)
+             .text('Photo non integrable : voir le lien ci-dessous', x + 4, rowY + cellH / 2 - 4,
+                   { width: cellW - 8, align: 'center', lineBreak: false });
+        }
+        doc.font('Helvetica').fontSize(6.5).fillColor(COLOR_MUTED)
+           .text('Photo ' + (i + 1), x, rowY + cellH + 3, { width: cellW, lineBreak: false, link: url, underline: !drawn });
+      });
+
+      doc.y = rowY + ROW_H;
+      doc.fillColor(COLOR_TEXT);
+    }
 
     /* ─── ACCEPTATION & TAMPON ────────────────────────────────────── */
     doc.moveDown(0.8);

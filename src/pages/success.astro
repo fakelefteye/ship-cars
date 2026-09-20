@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import MainLayout from '../layouts/MainLayout.astro';
+import { damagePhotoUrls } from '../lib/damage-photos';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '../lib/supabase';
 import { getReglage, formatPrixKm } from '../lib/reglages';
@@ -131,12 +132,12 @@ const prixLitreLabel = parseFloat(prixLitreRaw).toFixed(2).replace('.', ',') + '
           </table>
         </section>
 
-        {(vehicule?.dommages_url_1 || vehicule?.dommages_url_2 || vehicule?.dommages_url_3) && (
+        {damagePhotoUrls(vehicule).length > 0 && (
           <section class="contract-section">
             <h2 class="contract-section-title">Photos des dommages préexistants</h2>
             <p style="font-size:.82rem;color:#6b7280;margin-bottom:.75rem;">Ces photos ont été prises avant la remise des clés et documentent l'état du véhicule au départ de la location.</p>
             <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-              {[vehicule.dommages_url_1, vehicule.dommages_url_2, vehicule.dommages_url_3].filter(Boolean).map((url, i) => (
+              {damagePhotoUrls(vehicule).map((url, i) => (
                 <a href={url} target="_blank" rel="noopener" style="display:block;">
                   <img src={url} alt={`Dommage existant ${i+1}`} style="height:110px;width:auto;border-radius:8px;border:1px solid #e2e8f0;object-fit:cover;" loading="lazy" />
                 </a>

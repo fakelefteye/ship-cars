@@ -6,6 +6,7 @@ import { supabaseAdmin as supabase } from '../../../lib/supabase';
 import { blockDates, unblockDates } from '../../../lib/getaround';
 import { getReglage } from '../../../lib/reglages';
 import { buildCalendar, buildVEvent } from '../../../lib/ical';
+import { damagePhotoUrls } from '../../../lib/damage-photos';
 // pdfkit en import dynamique — un crash pdf ne tue pas tout le webhook
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
@@ -28,6 +29,26 @@ function fmt(d: string | null | undefined): string {
 function fmtDate(d: string | null | undefined): string {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('fr-FR');
+}
+
+// Vignettes cliquables des photos de dommages préexistants, 4 par ligne (les images sont
+// hébergées sur Supabase Storage : le lien reste cliquable même si le client bloque les images).
+function damagePhotosGrid(urls: string[]): string {
+  const COLS = 4;
+  let rows = '';
+  for (let i = 0; i < urls.length; i += COLS) {
+    const chunk = urls.slice(i, i + COLS);
+    const cells = chunk.map((url, j) => `
+      <td width="25%" valign="top" style="padding:0 8px 12px 0;">
+        <a href="${url}" style="text-decoration:none;">
+          <img src="${url}" alt="Photo ${i + j + 1}" width="150" style="display:block;width:100%;max-width:150px;height:auto;border-radius:6px;border:1px solid #e5e7eb;" />
+          <span style="font-size:11px;color:#6b7280;">Photo ${i + j + 1}</span>
+        </a>
+      </td>`).join('');
+    const filler = '<td width="25%"></td>'.repeat(COLS - chunk.length);
+    rows += `<tr>${cells}${filler}</tr>`;
+  }
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">${rows}</table>`;
 }
 
 function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | null, prixKm = '0,40 € TTC / km', prixLitre = '1,80 €/L', logoUrl = '', tamponUrl = ''): string {
@@ -87,16 +108,14 @@ function buildContractHtml(res: Record<string, any>, veh: Record<string, any> | 
         return row('Niveau de carburant au départ', `${pct}%${litres}`);
       })()}
     </table>
-    ${(veh?.dommages_url_1 || veh?.dommages_url_2 || veh?.dommages_url_3) ? `
+    ${damagePhotoUrls(veh).length ? `
     <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Photos des dommages préexistants</div>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr><td style="padding:8px 0;font-size:13px;color:#374151;">
         <em style="color:#6b7280;font-size:12px;">Ces photos ont été prises avant la remise des clés et documentent l'état du véhicule au départ.</em>
       </td></tr>
       <tr><td style="padding:4px 0;">
-        ${[veh?.dommages_url_1, veh?.dommages_url_2, veh?.dommages_url_3].filter(Boolean).map((url, i) =>
-          `<a href="${url}" style="display:inline-block;margin-right:12px;font-size:12px;color:#4dd4c8;">📷 Photo ${i + 1}</a>`
-        ).join('')}
+        ${damagePhotosGrid(damagePhotoUrls(veh))}
       </td></tr>
     </table>` : ''}
 
@@ -207,7 +226,7 @@ function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> 
     return `${pct}%${litres}`;
   })();
 
-  const damagePhotos = [veh?.dommages_url_1, veh?.dommages_url_2, veh?.dommages_url_3].filter(Boolean);
+  const damagePhotos = damagePhotoUrls(veh);
 
   return `
   <div style="background:#fff;color:#1a1a2e;border-radius:12px;padding:32px;max-width:700px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
@@ -245,7 +264,7 @@ function buildContractHtmlEn(res: Record<string, any>, veh: Record<string, any> 
     <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Pre-existing damage photos</div>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr><td style="padding:8px 0;font-size:13px;color:#374151;"><em style="color:#6b7280;font-size:12px;">Photos taken before key handover, documenting vehicle condition at pick-up.</em></td></tr>
-      <tr><td style="padding:4px 0;">${damagePhotos.map((url, i) => `<a href="${url}" style="display:inline-block;margin-right:12px;font-size:12px;color:#4dd4c8;">📷 Photo ${i + 1}</a>`).join('')}</td></tr>
+      <tr><td style="padding:4px 0;">${damagePhotosGrid(damagePhotos)}</td></tr>
     </table>` : ''}
 
     <div style="font-size:11px;font-weight:700;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.09em;padding-bottom:8px;border-bottom:1px solid #e8eaf0;margin-bottom:4px;">Driver information</div>

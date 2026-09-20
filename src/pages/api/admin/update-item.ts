@@ -3,6 +3,7 @@ export const prerender = false; // Désactive le rendu statique pour permettre l
 
 import type { APIRoute } from 'astro';
 import { supabaseAdmin } from '../../../lib/supabase';
+import { DAMAGE_PHOTO_SLOTS } from '../../../lib/damage-photos';
 
 export const POST: APIRoute = async ({ request, redirect }) => {
   try {
@@ -54,17 +55,19 @@ export const POST: APIRoute = async ({ request, redirect }) => {
 
     // Traitement selon le type
     if (type === 'vehicule') {
-      const updatePayload: Record<string, any> = {
-        nom: data.nom?.toString(),
-        modele: data.modele?.toString() || null,
-        annee: data.annee ? parseInt(data.annee as string) : null,
-        prix_journalier_base: data.prix ? parseFloat(data.prix as string) : 0,
-        image_url: data.image_url?.toString() || null,
-        image_url_2: data.image_url_2?.toString() || null,
-        image_url_3: data.image_url_3?.toString() || null,
-        image_url_4: data.image_url_4?.toString() || null,
-        image_url_5: data.image_url_5?.toString() || null,
-      };
+      // Seuls les champs présents dans la requête sont modifiés. Sinon une sauvegarde partielle
+      // (une photo de dommage, le kilométrage…) écrasait modele/annee/prix/images par null : la
+      // colonne modele étant NOT NULL, la base refusait toute la mise à jour.
+      // Le formulaire complet (formData) envoie toujours toutes ces clés : son comportement est inchangé.
+      const updatePayload: Record<string, any> = {};
+      if ('nom' in data && data.nom != null) updatePayload.nom = data.nom.toString();
+      if ('modele' in data) updatePayload.modele = data.modele?.toString() || null;
+      if ('annee' in data) updatePayload.annee = data.annee ? parseInt(data.annee as string) : null;
+      if ('prix' in data) updatePayload.prix_journalier_base = data.prix ? parseFloat(data.prix as string) : 0;
+      for (const key of ['image_url', 'image_url_2', 'image_url_3', 'image_url_4', 'image_url_5']) {
+        // null = champ absent du formulaire (image_url_4/5 n'y figurent pas) : on n'y touche pas
+        if (key in data && data[key] !== null) updatePayload[key] = data[key]?.toString() || null;
+      }
       if ('getaround_id' in data) {
         updatePayload.getaround_id = data.getaround_id?.toString() || null;
       }
@@ -109,14 +112,13 @@ export const POST: APIRoute = async ({ request, redirect }) => {
           ? parseInt(data.reservoir_litres as string)
           : null;
       }
-      if ('dommages_url_1' in data) {
-        updatePayload.dommages_url_1 = data.dommages_url_1?.toString() || null;
+      for (let n = 1; n <= DAMAGE_PHOTO_SLOTS; n++) {
+        const key = `dommages_url_${n}`;
+        if (key in data) updatePayload[key] = data[key]?.toString() || null;
       }
-      if ('dommages_url_2' in data) {
-        updatePayload.dommages_url_2 = data.dommages_url_2?.toString() || null;
-      }
-      if ('dommages_url_3' in data) {
-        updatePayload.dommages_url_3 = data.dommages_url_3?.toString() || null;
+
+      if (Object.keys(updatePayload).length === 0) {
+        return new Response(JSON.stringify({ error: 'Aucune donnée à mettre à jour' }), { status: 400 });
       }
       const { error } = await supabaseAdmin.from('vehicules').update(updatePayload).eq('id', id);
 

@@ -4,6 +4,7 @@ import MainLayout from '../../layouts/MainLayout.astro';
 import { supabaseAdmin } from '../../lib/supabase';
 import { isMaintenanceMode } from '../../lib/maintenance';
 import { randomUUID } from 'crypto';
+import { DAMAGE_PHOTO_SLOTS } from '../../lib/damage-photos';
 
 // Vérification du mot de passe
 const url = new URL(Astro.request.url);
@@ -429,9 +430,9 @@ const updated = url.searchParams.get('updated');
               </div>
             </div>
             <div class="etat-photos">
-              <label class="etat-label">Photos des dommages existants</label>
+              <label class="etat-label">Photos des dommages existants <span style="font-weight:400;color:#6b7280;">(facultatif — jusqu'à {DAMAGE_PHOTO_SLOTS}, jointes au contrat)</span></label>
               <div class="etat-photos-grid">
-                {[1,2,3].map((n) => {
+                {Array.from({ length: DAMAGE_PHOTO_SLOTS }, (_, i) => i + 1).map((n) => {
                   const url = (v as any)[`dommages_url_${n}`] ?? '';
                   return (
                     <div class="etat-photo-slot" data-id={v.id} data-n={n}>
@@ -1006,7 +1007,20 @@ const updated = url.searchParams.get('updated');
       const label      = slot_el.querySelector('.btn-upload-dmg');
       label.textContent = '⏳…';
       const fd = new FormData();
-      fd.append('file', file);
+      // Réduit la photo (JPEG, 1600 px max) : évite la limite de taille des requêtes Vercel (~4,5 Mo)
+      // et garantit un format lisible par le PDF du contrat (qui n'accepte pas le WebP).
+      let toSend = file;
+      try {
+        const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(bmp.width * scale);
+        canvas.height = Math.round(bmp.height * scale);
+        canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/jpeg', 0.82); });
+        if (blob) toSend = new File([blob], 'dommage.jpg', { type: 'image/jpeg' });
+      } catch (e) { /* format non décodable par le navigateur : on envoie le fichier tel quel */ }
+      fd.append('file', toSend);
       try {
         const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: fd, credentials: 'include' });
         const uploadData = await uploadRes.json();
@@ -1028,7 +1042,8 @@ const updated = url.searchParams.get('updated');
           img.src = url;
           label.textContent = '📷 Photo ' + slot;
         } else {
-          alert('Erreur sauvegarde photo');
+          const d = await saveRes.json().catch(function() { return {}; });
+          alert('Erreur sauvegarde photo : ' + (d.error || saveRes.status));
           label.textContent = '📷 Photo ' + slot;
         }
       } catch { alert('Erreur réseau'); label.textContent = '📷 Photo ' + slot; }
